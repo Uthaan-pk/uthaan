@@ -101,7 +101,7 @@ export default function Sidebar({ email, role }: { email: string; role: string }
 
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mb-2">Main</p>
-          {mainNav.map(item => (
+          {mainNav.filter(item => !(item.href === '/students' && role === 'student')).map(item => (
             <NavItem key={item.href} label={item.label} href={item.href} active={pathname === item.href} onClose={close} />
           ))}
           <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">Academic</p>

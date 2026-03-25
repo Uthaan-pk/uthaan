@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 type Student = { id: string; name: string; roll_no: string }
 // allMarks[exam][student_id][subject] = percent
@@ -42,8 +43,6 @@ export default function MarksEditor({
   const [selectedExam, setSelectedExam] = useState<Exam>('Mid Term')
   const [marksState, setMarksState] = useState<MarksState>(() => buildInitialState(students, allMarks))
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
   const supabase = useMemo(() => createClient(), [])
 
   function updateMark(studentId: string, subject: string, value: string) {
@@ -61,7 +60,6 @@ export default function MarksEditor({
 
   async function handleSave() {
     setSaving(true)
-    setError('')
     const rows = students.flatMap(s =>
       SUBJECTS.map(sub => ({
         student_id: s.id,
@@ -73,18 +71,14 @@ export default function MarksEditor({
     const { error: err } = await supabase.from('marks').upsert(rows, { onConflict: 'student_id,subject,exam' })
     setSaving(false)
     if (err) {
-      setError('Failed to save marks. Please try again.')
+      toast.error('Failed to save marks. Please try again.')
       return
     }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    toast.success('Marks saved!')
   }
 
   return (
     <div>
-      {error && (
-        <div className="bg-red-50 border border-red-100 rounded-lg px-4 py-3 text-xs text-red-600 mb-4">{error}</div>
-      )}
       <div className="flex items-center justify-between mb-4">
         <div className="flex gap-1.5">
           {EXAMS.map(exam => (
@@ -106,7 +100,7 @@ export default function MarksEditor({
           disabled={saving}
           className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
         >
-          {saved ? 'Saved ✓' : saving ? 'Saving...' : 'Save marks'}
+          {saving ? 'Saving...' : 'Save marks'}
         </button>
       </div>
 

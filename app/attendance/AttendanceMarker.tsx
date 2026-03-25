@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 type Student = { id: string; name: string; roll_no: string; stage: string; class_num: number }
 type StatusMap = Record<string, 'present' | 'absent'>
@@ -21,8 +22,6 @@ export default function AttendanceMarker({
 }) {
   const [status, setStatus] = useState<StatusMap>(initialStatus)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
   const supabase = useMemo(() => createClient(), [])
 
   function toggle(id: string) {
@@ -31,7 +30,6 @@ export default function AttendanceMarker({
 
   async function handleSave() {
     setSaving(true)
-    setError('')
     const rows = students.map(s => ({
       student_id: s.id,
       day: today,
@@ -40,20 +38,16 @@ export default function AttendanceMarker({
     const { error: err } = await supabase.from('attendance_logs').upsert(rows, { onConflict: 'student_id,day' })
     setSaving(false)
     if (err) {
-      setError('Failed to save attendance. Please try again.')
+      toast.error('Failed to save attendance. Please try again.')
       return
     }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    toast.success('Attendance saved!')
   }
 
   const presentCount = Object.values(status).filter(s => s === 'present').length
 
   return (
     <div>
-      {error && (
-        <div className="bg-red-50 border border-red-100 rounded-lg px-4 py-3 text-xs text-red-600 mb-4">{error}</div>
-      )}
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs text-gray-400">{presentCount} / {students.length} present</p>
         <button
@@ -61,7 +55,7 @@ export default function AttendanceMarker({
           disabled={saving}
           className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
         >
-          {saved ? 'Saved ✓' : saving ? 'Saving...' : 'Save attendance'}
+          {saving ? 'Saving...' : 'Save attendance'}
         </button>
       </div>
 

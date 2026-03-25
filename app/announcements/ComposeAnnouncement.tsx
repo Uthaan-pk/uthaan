@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 export default function ComposeAnnouncement({ userId }: { userId: string }) {
   const [open, setOpen] = useState(false)
@@ -10,15 +11,12 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
   const [body, setBody] = useState('')
   const [priority, setPriority] = useState('normal')
   const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
 
   async function handleSubmit() {
     if (!title.trim() || !body.trim()) return
     setLoading(true)
-    setError('')
     const { error: err } = await supabase.from('announcements').insert({
       title,
       body,
@@ -27,15 +25,15 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
     })
     setLoading(false)
     if (err) {
-      setError(err.message)
+      toast.error(err.message)
       return
     }
-    setSaved(true)
+    toast.success('Announcement posted!')
     setTitle('')
     setBody('')
     setPriority('normal')
+    setOpen(false)
     router.refresh()
-    setTimeout(() => { setSaved(false); setOpen(false) }, 1500)
   }
 
   if (!open) {
@@ -78,9 +76,6 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
           <option value="important">Important</option>
           <option value="urgent">Urgent</option>
         </select>
-        {error && (
-          <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600">{error}</div>
-        )}
         <div className="flex justify-end gap-2 pt-1">
           <button onClick={() => setOpen(false)} className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2">
             Cancel
@@ -90,7 +85,7 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
             disabled={loading || !title.trim() || !body.trim()}
             className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
           >
-            {saved ? 'Posted ✓' : loading ? 'Posting...' : 'Post announcement'}
+            {loading ? 'Posting...' : 'Post announcement'}
           </button>
         </div>
       </div>

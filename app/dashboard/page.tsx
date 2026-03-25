@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -94,10 +95,10 @@ export default async function DashboardPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Total students" value={studentCount ?? 0} change="Enrolled this term" icon="👥" color="green" />
-            <StatCard label="Attendance today" value="—" change="Mark to see rate" icon="📋" color="blue" />
-            <StatCard label="Active quizzes" value={quizCount ?? 0} change="Assigned & pending" icon="📝" color="amber" />
-            <StatCard label="Notes sent" value={noteCount ?? 0} change="All time" icon="📢" color="purple" />
+            <StatCard label="Total students" value={studentCount ?? 0} change="Enrolled this term" icon="👥" color="green" href="/students" />
+            <StatCard label="Attendance today" value="—" change="Mark to see rate" icon="📋" color="blue" href="/attendance" />
+            <StatCard label="Active quizzes" value={quizCount ?? 0} change="Assigned & pending" icon="📝" color="amber" href="/quizzes" />
+            <StatCard label="Notes sent" value={noteCount ?? 0} change="All time" icon="📢" color="purple" href="/notes" />
           </div>
 
           {/* Grid */}
@@ -154,8 +155,8 @@ export default async function DashboardPage() {
 }
 
 
-function StatCard({ label, value, change, icon, color }: {
-  label: string; value: number | string; change: string; icon: string; color: string
+function StatCard({ label, value, change, icon, color, href }: {
+  label: string; value: number | string; change: string; icon: string; color: string; href: string
 }) {
   const iconBg: Record<string, string> = {
     green: 'bg-green-50',
@@ -164,11 +165,11 @@ function StatCard({ label, value, change, icon, color }: {
     purple: 'bg-purple-50',
   }
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
+    <Link href={href} className="block bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all">
       <div className={`w-8 h-8 ${iconBg[color]} rounded-lg flex items-center justify-center text-sm mb-3`}>{icon}</div>
       <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">{label}</div>
       <div className="text-2xl font-semibold text-gray-900">{value}</div>
       <div className="text-[11px] text-green-700 mt-1">{change}</div>
-    </div>
+    </Link>
   )
 }

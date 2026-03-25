@@ -35,18 +35,18 @@ function getSubjectColor(subject: string) {
   return SUBJECT_COLORS[subject.toLowerCase()] ?? 'bg-gray-50 text-gray-600 border-gray-100'
 }
 
-function formatDueDate(dateStr: string) {
-  const due = new Date(dateStr)
+type DueInfo = { badge: string; badgeCls: string; cardBorderCls: string }
+
+function getDueInfo(dateStr: string): DueInfo {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const diff = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-  if (diff < 0) return { label: 'Overdue', cls: 'text-red-500' }
-  if (diff === 0) return { label: 'Due today', cls: 'text-amber-500' }
-  if (diff === 1) return { label: 'Due tomorrow', cls: 'text-amber-400' }
-  return {
-    label: `Due ${due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`,
-    cls: 'text-gray-400',
-  }
+  const due = new Date(dateStr)
+  due.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  if (diffDays < 0)  return { badge: 'Overdue',            badgeCls: 'bg-red-50 text-red-600 border-red-100',     cardBorderCls: 'border-red-200' }
+  if (diffDays === 0) return { badge: 'Due Today',          badgeCls: 'bg-amber-50 text-amber-600 border-amber-100', cardBorderCls: 'border-amber-200' }
+  if (diffDays === 1) return { badge: 'Due Tomorrow',       badgeCls: 'bg-amber-50 text-amber-500 border-amber-100', cardBorderCls: 'border-gray-100' }
+  return              { badge: `Due in ${diffDays} days`,   badgeCls: 'bg-green-50 text-green-700 border-green-100',  cardBorderCls: 'border-gray-100' }
 }
 
 export default function HomeworkFeed({
@@ -135,16 +135,16 @@ export default function HomeworkFeed({
         <div className="space-y-2">
           <p className="text-[11px] text-gray-400 uppercase tracking-widest font-medium px-1">Pending</p>
           {pending.map(assignment => {
-            const due = formatDueDate(assignment.due_date)
+            const due = getDueInfo(assignment.due_date)
             return (
-              <div key={assignment.id} className="bg-white rounded-xl border border-gray-100 p-4">
+              <div key={assignment.id} className={`bg-white rounded-xl border p-4 ${due.cardBorderCls}`}>
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1.5">
                       <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${getSubjectColor(assignment.subject)}`}>
                         {assignment.subject.charAt(0).toUpperCase() + assignment.subject.slice(1)}
                       </span>
-                      <span className={`text-[11px] ${due.cls}`}>{due.label}</span>
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${due.badgeCls}`}>{due.badge}</span>
                     </div>
                     <h3 className="text-sm font-semibold text-gray-900">{assignment.title}</h3>
                     {assignment.description && (
@@ -177,6 +177,7 @@ export default function HomeworkFeed({
                     <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${getSubjectColor(assignment.subject)}`}>
                       {assignment.subject.charAt(0).toUpperCase() + assignment.subject.slice(1)}
                     </span>
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border bg-gray-50 text-gray-400 border-gray-100">Done ✓</span>
                   </div>
                   <h3 className="text-sm font-semibold text-gray-500 line-through">{assignment.title}</h3>
                 </div>

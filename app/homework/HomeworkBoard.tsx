@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 type Assignment = {
   id: string
@@ -44,6 +45,20 @@ function getSubjectColor(subject: string) {
   return SUBJECT_COLORS[subject.toLowerCase()] ?? 'bg-gray-50 text-gray-600 border-gray-100'
 }
 
+type DueInfo = { badge: string; badgeCls: string; cardBorderCls: string }
+
+function getDueInfo(dateStr: string): DueInfo {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const due = new Date(dateStr)
+  due.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  if (diffDays < 0)   return { badge: 'Overdue',          badgeCls: 'bg-red-50 text-red-600 border-red-100',      cardBorderCls: 'border-red-200' }
+  if (diffDays === 0)  return { badge: 'Due Today',        badgeCls: 'bg-amber-50 text-amber-600 border-amber-100', cardBorderCls: 'border-amber-200' }
+  if (diffDays === 1)  return { badge: 'Due Tomorrow',     badgeCls: 'bg-amber-50 text-amber-500 border-amber-100', cardBorderCls: 'border-gray-100' }
+  return               { badge: `Due in ${diffDays} days`, badgeCls: 'bg-green-50 text-green-700 border-green-100',  cardBorderCls: 'border-gray-100' }
+}
+
 export default function HomeworkBoard({
   assignments: initialAssignments,
   completions,
@@ -68,8 +83,6 @@ export default function HomeworkBoard({
   const [stage, setStage] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
 
   // completion count per assignment_id
   const completionCounts = useMemo(() => {
@@ -91,7 +104,6 @@ export default function HomeworkBoard({
 
   function resetForm() {
     setTitle(''); setDescription(''); setSubject(''); setClassNum(''); setStage(''); setDueDate('')
-    setError(''); setSaved(false)
   }
 
   function openModal() { resetForm(); setModalOpen(true) }
@@ -100,11 +112,10 @@ export default function HomeworkBoard({
   async function handleSubmit() {
     const classNumParsed = parseInt(classNum, 10)
     if (!title.trim() || !subject.trim() || isNaN(classNumParsed) || !dueDate) {
-      setError('Title, subject, class number, and due date are required.')
+      toast.error('Title, subject, class number, and due date are required.')
       return
     }
     setSaving(true)
-    setError('')
 
     const { data, error: err } = await supabase
       .from('assignments')
@@ -121,15 +132,13 @@ export default function HomeworkBoard({
       .single()
 
     setSaving(false)
-    if (err) { setError(err.message); return }
+    if (err) { toast.error(err.message); return }
 
     setAssignments(prev => [data, ...prev])
-    setSaved(true)
-    setTimeout(() => {
-      setModalOpen(false)
-      resetForm()
-      router.refresh()
-    }, 700)
+    toast.success('Homework posted!')
+    setModalOpen(false)
+    resetForm()
+    router.refresh()
   }
 
   return (
@@ -163,11 +172,10 @@ export default function HomeworkBoard({
               const totalStudents = studentCounts[assignment.class_num] ?? 0
               const completed = completionCounts[assignment.id] ?? 0
               const pct = totalStudents > 0 ? Math.round((completed / totalStudents) * 100) : 0
-              const due = new Date(assignment.due_date)
-              const isPast = due < new Date()
+              const due = getDueInfo(assignment.due_date)
 
               return (
-                <div key={assignment.id} className="bg-white rounded-xl border border-gray-100 p-4">
+                <div key={assignment.id} className={`bg-white rounded-xl border p-4 ${due.cardBorderCls}`}>
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1.5">
@@ -177,8 +185,8 @@ export default function HomeworkBoard({
                         <span className="text-[11px] bg-gray-50 text-gray-500 border border-gray-100 px-2 py-0.5 rounded-full">
                           Class {assignment.class_num}{assignment.stage ? ` · ${assignment.stage}` : ''}
                         </span>
-                        <span className={`text-[11px] ${isPast ? 'text-red-400' : 'text-gray-400'}`}>
-                          Due {due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${due.badgeCls}`}>
+                          {due.badge}
                         </span>
                       </div>
                       <h3 className="text-sm font-semibold text-gray-900">{assignment.title}</h3>
@@ -221,12 +229,6 @@ export default function HomeworkBoard({
               </div>
 
               <div className="px-6 py-5 space-y-4">
-                {error && (
-                  <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600">
-                    {error}
-                  </div>
-                )}
-
                 <div>
                   <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">Title</label>
                   <input
@@ -297,10 +299,10 @@ export default function HomeworkBoard({
                 <button onClick={closeModal} className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2">Cancel</button>
                 <button
                   onClick={handleSubmit}
-                  disabled={saving || saved}
+                  disabled={saving}
                   className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
                 >
-                  {saved ? 'Posted ✓' : saving ? 'Posting...' : 'Post homework'}
+                  {saving ? 'Posting...' : 'Post homework'}
                 </button>
               </div>
             </div>

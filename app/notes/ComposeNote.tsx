@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 export default function ComposeNote() {
   const [open, setOpen] = useState(false)
@@ -12,28 +13,25 @@ export default function ComposeNote() {
   const [stage, setStage] = useState('')
   const [classNum, setClassNum] = useState('')
   const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
 
   async function handleSubmit() {
     if (!title.trim() || !body.trim()) return
     setLoading(true)
-    setError('')
     const payload: Record<string, string> = { title, body, audience }
     if (audience === 'stage' || audience === 'class') payload.stage = stage
     if (audience === 'class') payload.class_num = classNum
     const { error: err } = await supabase.from('notes').insert(payload)
     setLoading(false)
     if (err) {
-      setError('Failed to send note. Please try again.')
+      toast.error('Failed to send note. Please try again.')
       return
     }
-    setSaved(true)
+    toast.success('Note sent!')
     setTitle(''); setBody(''); setAudience('all'); setStage(''); setClassNum('')
+    setOpen(false)
     router.refresh()
-    setTimeout(() => { setSaved(false); setOpen(false) }, 1500)
   }
 
   if (!open) {
@@ -94,9 +92,6 @@ export default function ComposeNote() {
             />
           )}
         </div>
-        {error && (
-          <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600">{error}</div>
-        )}
         <div className="flex justify-end gap-2 pt-1">
           <button onClick={() => setOpen(false)} className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2">
             Cancel
@@ -106,7 +101,7 @@ export default function ComposeNote() {
             disabled={loading || !title.trim() || !body.trim()}
             className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
           >
-            {saved ? 'Sent ✓' : loading ? 'Sending...' : 'Send note'}
+            {loading ? 'Sending...' : 'Send note'}
           </button>
         </div>
       </div>

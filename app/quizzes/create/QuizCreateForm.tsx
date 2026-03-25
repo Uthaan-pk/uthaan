@@ -84,11 +84,22 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
 
     setSaving(true)
 
+    const dbQuestions = questions.map((q) => ({
+      text: q.text,
+      options: {
+        A: q.options[0],
+        B: q.options[1],
+        C: q.options[2],
+        D: q.options[3],
+      },
+      correct: optionLabels[q.correct],
+    }))
+
     const { error: insertError } = await supabase.from('quizzes').insert({
       title: title.trim(),
       subject: subject.trim(),
       time_limit_minutes: parseInt(timeLimit) || 30,
-      questions,
+      questions: dbQuestions,
       status,
       created_by: userId,
     })

@@ -56,14 +56,14 @@ export default function ComposeNote() {
           value={title}
           onChange={e => setTitle(e.target.value)}
           placeholder="Note title"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
         />
         <textarea
           value={body}
           onChange={e => setBody(e.target.value)}
           placeholder="Write your note here..."
           rows={3}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] resize-none"
+          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] resize-none"
         />
         <div className="flex gap-2 flex-wrap">
           <select
@@ -80,7 +80,7 @@ export default function ComposeNote() {
               value={stage}
               onChange={e => setStage(e.target.value)}
               placeholder="Stage"
-              className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+              className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
             />
           )}
           {audience === 'class' && (
@@ -88,7 +88,7 @@ export default function ComposeNote() {
               value={classNum}
               onChange={e => setClassNum(e.target.value)}
               placeholder="Class"
-              className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+              className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
             />
           )}
         </div>

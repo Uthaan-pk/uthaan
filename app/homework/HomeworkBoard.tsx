@@ -28,7 +28,7 @@ type Student = {
 }
 
 const inputCls =
-  'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]'
+  'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]'
 
 const SUBJECT_COLORS: Record<string, string> = {
   math: 'bg-blue-50 text-blue-700 border-blue-100',

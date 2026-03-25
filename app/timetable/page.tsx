@@ -76,7 +76,8 @@ export default async function TimetablePage() {
           <TimetableGrid
             rows={rows ?? []}
             teacherMap={teacherMap}
-            isStaff={isStaff}
+            currentUserId={user.id}
+            currentRole={role ?? ''}
             staffList={staffList}
           />
         </main>

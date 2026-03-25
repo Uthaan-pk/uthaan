@@ -50,14 +50,17 @@ type EditingCell = {
 export default function TimetableGrid({
   rows,
   teacherMap,
-  isStaff,
+  currentUserId,
+  currentRole,
   staffList,
 }: {
   rows: TimetableRow[]
   teacherMap: Record<string, string>
-  isStaff: boolean
+  currentUserId: string
+  currentRole: string
   staffList: { user_id: string; role: string }[]
 }) {
+  const isStaff = currentRole === 'teacher' || currentRole === 'admin'
   const router = useRouter()
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null)
 
@@ -123,15 +126,17 @@ export default function TimetableGrid({
               {c.stage ? ` · ${c.stage}` : ''}
             </button>
           ))}
-          {/* Button to create a slot for a brand-new class */}
-          <button
-            onClick={() =>
-              setEditingCell({ day: 'Monday', period: 1, existing: null, defaultClass: '', defaultStage: '' })
-            }
-            className="ml-auto text-xs font-medium px-3 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243d24] transition-colors"
-          >
-            + New class
-          </button>
+          {/* Button to create a slot for a brand-new class — admin only */}
+          {currentRole === 'admin' && (
+            <button
+              onClick={() =>
+                setEditingCell({ day: 'Monday', period: 1, existing: null, defaultClass: '', defaultStage: '' })
+              }
+              className="ml-auto text-xs font-medium px-3 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243d24] transition-colors"
+            >
+              + New class
+            </button>
+          )}
         </div>
       )}
 
@@ -212,7 +217,8 @@ export default function TimetableGrid({
                                   {teacherLabel}
                                 </div>
                               )}
-                              {isStaff && (
+                              {(currentRole === 'admin' ||
+                                (currentRole === 'teacher' && row.teacher_id === currentUserId)) && (
                                 <button
                                   onClick={() => openCell(day, period)}
                                   className="mt-1.5 text-[10px] text-gray-400 hover:text-gray-700 underline transition-colors"
@@ -221,8 +227,8 @@ export default function TimetableGrid({
                                 </button>
                               )}
                             </div>
-                          ) : isStaff ? (
-                            /* Empty cell — staff sees + */
+                          ) : currentRole === 'admin' ? (
+                            /* Empty cell — admin sees + */
                             <button
                               onClick={() => openCell(day, period)}
                               className="w-full rounded-lg flex items-center justify-center text-gray-300 hover:text-[#6fcf6f] hover:bg-[#6fcf6f]/5 transition-colors text-base font-light"

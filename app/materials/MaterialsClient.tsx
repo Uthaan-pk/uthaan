@@ -58,7 +58,6 @@ export default function MaterialsClient({
 
     setUploading(true)
 
-    const ext = file.name.split('.').pop()
     const storagePath = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
 
     const { error: uploadError } = await supabase.storage
@@ -85,7 +84,7 @@ export default function MaterialsClient({
         class_num: classNumValue,
         file_name: file.name,
         file_url: urlData.publicUrl,
-        created_by: userId,
+        uploaded_by: userId,
       })
       .select()
       .single()

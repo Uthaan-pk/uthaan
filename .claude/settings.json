@@ -1,10 +1,13 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(ls /Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]/)",
+      "Bash(find /Users/asadchaudhry/Desktop/uthaan -path */supabase/migrations* -o -path */database*)",
+      "Bash(find /Users/asadchaudhry/Desktop/uthaan -path *node_modules -prune -o -name *.sql -o -name migrations* -type f)",
+      "Bash(find /Users/asadchaudhry/Desktop/uthaan -name *.env* -o -name .env*)"
+    ],
     "additionalDirectories": [
       "/Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]"
-    ],
-    "allow": [
-      "Bash(ls /Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]/)"
     ]
   }
 }

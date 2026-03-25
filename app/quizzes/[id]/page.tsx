@@ -20,9 +20,10 @@ type DBQuestion = {
 const optionLabels = ['A', 'B', 'C', 'D']
 
 function normalizeQuestion(q: DBQuestion): Question {
+  const opts = q.options ?? { A: '', B: '', C: '', D: '' }
   return {
-    text: q.text,
-    options: [q.options.A, q.options.B, q.options.C, q.options.D],
+    text: q.text ?? '',
+    options: [opts.A ?? '', opts.B ?? '', opts.C ?? '', opts.D ?? ''],
     correct: optionLabels.indexOf(q.correct),
   }
 }
@@ -249,6 +250,31 @@ export default async function QuizPage({
                   })}
                 </div>
               </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  // Guard: quiz has no questions
+  if (questions.length === 0) {
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role={role ?? ''} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+            <h1 className="text-sm font-semibold text-gray-900">{quiz.title}</h1>
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              Spring Term 2026
+            </span>
+          </header>
+          <main className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm text-gray-500 mb-4">This quiz has no questions yet.</div>
+              <Link href="/quizzes" className="text-xs text-[#1a2e1a] underline underline-offset-2">
+                ← Back to quizzes
+              </Link>
             </div>
           </main>
         </div>

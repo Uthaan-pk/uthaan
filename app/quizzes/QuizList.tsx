@@ -96,6 +96,13 @@ export default function QuizList({ quizzes: initialQuizzes }: { quizzes: Quiz[] 
                     {quiz.status.charAt(0).toUpperCase() + quiz.status.slice(1)}
                   </span>
 
+                  <Link
+                    href={`/quizzes/${quiz.id}/edit`}
+                    className="text-[10px] text-gray-400 hover:text-gray-600 border border-gray-200 rounded-md px-2 py-0.5 transition-colors"
+                  >
+                    Edit
+                  </Link>
+
                   {canToggle && (
                     <button
                       onClick={() => handleToggle(quiz)}

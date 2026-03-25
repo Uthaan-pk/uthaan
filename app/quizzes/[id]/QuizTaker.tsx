@@ -111,6 +111,15 @@ export default function QuizTaker({ quiz, userId }: { quiz: Quiz; userId: string
       ? 'text-amber-600'
       : 'text-gray-600'
 
+  // Guard: no questions
+  if (quiz.questions.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+        <div className="text-sm text-gray-500">This quiz has no questions.</div>
+      </div>
+    )
+  }
+
   // Post-submit view
   if (submitted) {
     const pct = total > 0 ? Math.round((score / total) * 100) : 0

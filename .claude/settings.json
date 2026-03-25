@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]"
+    ],
+    "allow": [
+      "Bash(ls /Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]/)"
+    ]
+  }
+}

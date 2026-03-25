@@ -3,11 +3,20 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import toast from 'react-hot-toast'
 
 type Question = {
   text: string
   options: [string, string, string, string]
   correct: number
+}
+
+type InitialData = {
+  title: string
+  subject: string
+  timeLimit: string
+  status: 'active' | 'inactive' | 'draft'
+  questions: Question[]
 }
 
 function emptyQuestion(): Question {
@@ -16,17 +25,26 @@ function emptyQuestion(): Question {
 
 const optionLabels = ['A', 'B', 'C', 'D']
 
-export default function QuizCreateForm({ userId }: { userId: string }) {
+export default function QuizCreateForm({
+  userId,
+  quizId,
+  initialData,
+}: {
+  userId: string
+  quizId?: string
+  initialData?: InitialData
+}) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
 
-  const [title, setTitle] = useState('')
-  const [subject, setSubject] = useState('')
-  const [timeLimit, setTimeLimit] = useState('30')
-  const [status, setStatus] = useState<'active' | 'inactive' | 'draft'>('draft')
-  const [questions, setQuestions] = useState<Question[]>([emptyQuestion()])
+  const isEditing = !!quizId
+
+  const [title, setTitle] = useState(initialData?.title ?? '')
+  const [subject, setSubject] = useState(initialData?.subject ?? '')
+  const [timeLimit, setTimeLimit] = useState(initialData?.timeLimit ?? '30')
+  const [status, setStatus] = useState<'active' | 'inactive' | 'draft'>(initialData?.status ?? 'draft')
+  const [questions, setQuestions] = useState<Question[]>(initialData?.questions ?? [emptyQuestion()])
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function addQuestion() {
@@ -95,24 +113,46 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
       correct: optionLabels[q.correct],
     }))
 
-    const { error: insertError } = await supabase.from('quizzes').insert({
-      title: title.trim(),
-      subject: subject.trim(),
-      time_limit: parseInt(timeLimit) || 30,
-      questions: dbQuestions,
-      status,
-      created_by: userId,
-    })
+    if (isEditing) {
+      const { error: updateError } = await supabase
+        .from('quizzes')
+        .update({
+          title: title.trim(),
+          subject: subject.trim(),
+          time_limit: parseInt(timeLimit) || 30,
+          questions: dbQuestions,
+          status,
+        })
+        .eq('id', quizId)
 
-    setSaving(false)
+      setSaving(false)
 
-    if (insertError) {
-      setError(insertError.message)
-      return
+      if (updateError) {
+        setError(updateError.message)
+        return
+      }
+
+      toast.success('Quiz updated!')
+      router.push('/quizzes')
+    } else {
+      const { error: insertError } = await supabase.from('quizzes').insert({
+        title: title.trim(),
+        subject: subject.trim(),
+        time_limit: parseInt(timeLimit) || 30,
+        questions: dbQuestions,
+        status,
+        created_by: userId,
+      })
+
+      setSaving(false)
+
+      if (insertError) {
+        setError(insertError.message)
+        return
+      }
+
+      router.push('/quizzes')
     }
-
-    setSaved(true)
-    router.push('/quizzes')
   }
 
   return (
@@ -272,10 +312,10 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
       <div className="flex justify-end pb-6">
         <button
           type="submit"
-          disabled={saving || saved}
+          disabled={saving}
           className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
         >
-          {saving ? 'Creating...' : saved ? 'Created!' : 'Create quiz'}
+          {saving ? (isEditing ? 'Saving...' : 'Creating...') : isEditing ? 'Save changes' : 'Create quiz'}
         </button>
       </div>
     </form>

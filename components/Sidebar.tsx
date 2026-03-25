@@ -17,6 +17,7 @@ const academicNav = [
   { label: 'Quizzes', href: '/quizzes' },
   { label: 'Timetable', href: '/timetable' },
   { label: 'Homework', href: '/homework' },
+  { label: 'Results', href: '/results' },
 ]
 
 function getInitials(name: string) {

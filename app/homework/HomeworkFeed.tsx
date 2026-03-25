@@ -49,6 +49,16 @@ function getDueInfo(dateStr: string): DueInfo {
   return              { badge: `Due in ${diffDays} days`,   badgeCls: 'bg-green-50 text-green-700 border-green-100',  cardBorderCls: 'border-gray-100' }
 }
 
+function getDiffDays(dateStr: string): number {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const due = new Date(dateStr)
+  due.setHours(0, 0, 0, 0)
+  return Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+const DESC_LIMIT = 120
+
 export default function HomeworkFeed({
   assignments,
   completions,
@@ -64,6 +74,8 @@ export default function HomeworkFeed({
   const [localDone, setLocalDone] = useState<Set<string>>(
     () => new Set(completions.map(c => c.assignment_id))
   )
+  const [expandedDesc, setExpandedDesc] = useState<Set<string>>(new Set())
+  const [showCompleted, setShowCompleted] = useState(false)
 
   async function toggle(assignmentId: string) {
     if (toggling) return
@@ -92,6 +104,14 @@ export default function HomeworkFeed({
     router.refresh()
   }
 
+  function toggleDesc(id: string) {
+    setExpandedDesc(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
   if (assignments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -112,8 +132,76 @@ export default function HomeworkFeed({
   const pending = assignments.filter(a => !localDone.has(a.id))
   const done = assignments.filter(a => localDone.has(a.id))
 
+  const overdue  = pending.filter(a => getDiffDays(a.due_date) < 0)
+  const dueSoon  = pending.filter(a => { const d = getDiffDays(a.due_date); return d >= 0 && d <= 2 })
+  const upcoming = pending.filter(a => getDiffDays(a.due_date) > 2)
+
+  function PendingCard({ assignment, leftBorderCls }: { assignment: Assignment; leftBorderCls: string }) {
+    const due = getDueInfo(assignment.due_date)
+    const isDescLong = assignment.description && assignment.description.length > DESC_LIMIT
+    const isExpanded = expandedDesc.has(assignment.id)
+
+    return (
+      <div className={`bg-white rounded-xl border border-gray-100 border-l-4 ${leftBorderCls} p-4 flex flex-col gap-3`}>
+        {/* Top: badges + checkbox */}
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap mb-2">
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${getSubjectColor(assignment.subject)}`}>
+                {assignment.subject.charAt(0).toUpperCase() + assignment.subject.slice(1)}
+              </span>
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border bg-[#6fcf6f]/10 text-[#1a2e1a] border-[#6fcf6f]/25">
+                Class {assignment.class_num}
+              </span>
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${due.badgeCls}`}>
+                {due.badge}
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-gray-900 leading-snug">{assignment.title}</h3>
+          </div>
+
+          {/* Checkbox circle */}
+          <button
+            onClick={() => toggle(assignment.id)}
+            disabled={toggling === assignment.id}
+            title="Mark as done"
+            className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#6fcf6f] transition-colors disabled:opacity-40"
+          />
+        </div>
+
+        {/* Description */}
+        {assignment.description && (
+          <div>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {isExpanded || !isDescLong
+                ? assignment.description
+                : assignment.description.slice(0, DESC_LIMIT) + '…'}
+            </p>
+            {isDescLong && (
+              <button
+                onClick={() => toggleDesc(assignment.id)}
+                className="text-[11px] font-medium text-[#6fcf6f] hover:text-[#1a2e1a] mt-1 transition-colors"
+              >
+                {isExpanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Mark as complete button */}
+        <button
+          onClick={() => toggle(assignment.id)}
+          disabled={toggling === assignment.id}
+          className="w-full text-xs font-medium text-gray-400 hover:text-[#1a2e1a] border border-gray-100 hover:border-[#6fcf6f]/40 hover:bg-[#6fcf6f]/5 rounded-lg py-2 transition-colors disabled:opacity-40"
+        >
+          {toggling === assignment.id ? 'Saving…' : 'Mark as complete'}
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
@@ -130,71 +218,92 @@ export default function HomeworkFeed({
         </div>
       </div>
 
-      {/* Pending */}
-      {pending.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[11px] text-gray-400 uppercase tracking-widest font-medium px-1">Pending</p>
-          {pending.map(assignment => {
-            const due = getDueInfo(assignment.due_date)
-            return (
-              <div key={assignment.id} className={`bg-white rounded-xl border p-4 ${due.cardBorderCls}`}>
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${getSubjectColor(assignment.subject)}`}>
-                        {assignment.subject.charAt(0).toUpperCase() + assignment.subject.slice(1)}
-                      </span>
-                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${due.badgeCls}`}>{due.badge}</span>
-                    </div>
-                    <h3 className="text-sm font-semibold text-gray-900">{assignment.title}</h3>
-                    {assignment.description && (
-                      <p className="text-xs text-gray-400 mt-1 leading-relaxed">{assignment.description}</p>
-                    )}
-                  </div>
-                  {/* Unchecked circle */}
-                  <button
-                    onClick={() => toggle(assignment.id)}
-                    disabled={toggling === assignment.id}
-                    title="Mark as done"
-                    className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#6fcf6f] transition-colors disabled:opacity-40"
-                  />
-                </div>
-              </div>
-            )
-          })}
+      {/* Overdue */}
+      {overdue.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-[11px] text-red-400 uppercase tracking-widest font-medium px-1">
+            Overdue · {overdue.length}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {overdue.map(a => <PendingCard key={a.id} assignment={a} leftBorderCls="border-l-red-400" />)}
+          </div>
         </div>
       )}
 
-      {/* Completed */}
+      {/* Due soon */}
+      {dueSoon.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-[11px] text-orange-400 uppercase tracking-widest font-medium px-1">
+            Due soon · {dueSoon.length}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {dueSoon.map(a => <PendingCard key={a.id} assignment={a} leftBorderCls="border-l-orange-400" />)}
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming */}
+      {upcoming.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-[11px] text-[#6fcf6f] uppercase tracking-widest font-medium px-1">
+            Upcoming · {upcoming.length}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {upcoming.map(a => <PendingCard key={a.id} assignment={a} leftBorderCls="border-l-[#6fcf6f]" />)}
+          </div>
+        </div>
+      )}
+
+      {/* Completed — collapsed by default */}
       {done.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[11px] text-gray-400 uppercase tracking-widest font-medium px-1">Completed</p>
-          {done.map(assignment => (
-            <div key={assignment.id} className="bg-white rounded-xl border border-gray-100 p-4 opacity-55">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${getSubjectColor(assignment.subject)}`}>
-                      {assignment.subject.charAt(0).toUpperCase() + assignment.subject.slice(1)}
-                    </span>
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border bg-gray-50 text-gray-400 border-gray-100">Done ✓</span>
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowCompleted(v => !v)}
+            className="flex items-center gap-2 text-[11px] text-gray-400 uppercase tracking-widest font-medium px-1 hover:text-gray-600 transition-colors"
+          >
+            <span>Completed · {done.length}</span>
+            <svg
+              width="10" height="10" viewBox="0 0 10 10" fill="none"
+              stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: showCompleted ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
+            >
+              <polyline points="1,3 5,7 9,3" />
+            </svg>
+          </button>
+
+          {showCompleted && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {done.map(assignment => (
+                <div key={assignment.id} className="bg-gray-50 rounded-xl border border-gray-100 border-l-4 border-l-gray-200 p-4 opacity-60">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${getSubjectColor(assignment.subject)}`}>
+                          {assignment.subject.charAt(0).toUpperCase() + assignment.subject.slice(1)}
+                        </span>
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border bg-gray-100 text-gray-400 border-gray-200">
+                          Done ✓
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-gray-400 line-through leading-snug">{assignment.title}</h3>
+                    </div>
+
+                    {/* Checked circle */}
+                    <button
+                      onClick={() => toggle(assignment.id)}
+                      disabled={toggling === assignment.id}
+                      title="Mark as not done"
+                      className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-[#6fcf6f] border-2 border-[#6fcf6f] flex items-center justify-center transition-colors disabled:opacity-40"
+                    >
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="1,4.5 3.5,7 8,1.5" />
+                      </svg>
+                    </button>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-500 line-through">{assignment.title}</h3>
                 </div>
-                {/* Checked circle */}
-                <button
-                  onClick={() => toggle(assignment.id)}
-                  disabled={toggling === assignment.id}
-                  title="Mark as not done"
-                  className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-[#6fcf6f] border-2 border-[#6fcf6f] flex items-center justify-center transition-colors disabled:opacity-40"
-                >
-                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="1,4.5 3.5,7 8,1.5" />
-                  </svg>
-                </button>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

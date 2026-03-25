@@ -95,7 +95,7 @@ export default async function DashboardPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Total students" value={studentCount ?? 0} change="Enrolled this term" icon="👥" color="green" href="/students" />
+            <StatCard label="Total students" value={studentCount ?? 0} change="Enrolled this term" icon="👥" color="green" href={role === 'student' ? '/dashboard' : '/students'} />
             <StatCard label="Attendance today" value="—" change="Mark to see rate" icon="📋" color="blue" href="/attendance" />
             <StatCard label="Active quizzes" value={quizCount ?? 0} change="Assigned & pending" icon="📝" color="amber" href="/quizzes" />
             <StatCard label="Notes sent" value={noteCount ?? 0} change="All time" icon="📢" color="purple" href="/notes" />

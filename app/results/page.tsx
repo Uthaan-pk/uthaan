@@ -15,7 +15,7 @@ export default async function Page() {
     .single()
 
   const role = roleData?.role
-  if (role !== 'admin' && role !== 'teacher') redirect('/dashboard')
+  if (role === 'student') redirect('/dashboard')
 
   const { data: students } = await supabase
     .from('students')

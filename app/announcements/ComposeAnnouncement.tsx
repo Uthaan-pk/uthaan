@@ -10,6 +10,7 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [priority, setPriority] = useState('normal')
+  const [classNum, setClassNum] = useState('all')
   const [loading, setLoading] = useState(false)
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
@@ -18,9 +19,10 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
     if (!title.trim() || !body.trim()) return
     setLoading(true)
     const { error: err } = await supabase.from('announcements').insert({
-      title,
-      body,
+      title: title.trim(),
+      body: body.trim(),
       priority,
+      class_num: classNum === 'all' ? null : parseInt(classNum, 10),
       created_by: userId,
     })
     setLoading(false)
@@ -32,6 +34,7 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
     setTitle('')
     setBody('')
     setPriority('normal')
+    setClassNum('all')
     setOpen(false)
     router.refresh()
   }
@@ -67,15 +70,27 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
           rows={4}
           className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] resize-none"
         />
-        <select
-          value={priority}
-          onChange={e => setPriority(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
-        >
-          <option value="normal">Normal</option>
-          <option value="important">Important</option>
-          <option value="urgent">Urgent</option>
-        </select>
+        <div className="flex gap-2 flex-wrap">
+          <select
+            value={priority}
+            onChange={e => setPriority(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+          >
+            <option value="normal">Normal</option>
+            <option value="important">Important</option>
+            <option value="urgent">Urgent</option>
+          </select>
+          <select
+            value={classNum}
+            onChange={e => setClassNum(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+          >
+            <option value="all">All classes</option>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map(n => (
+              <option key={n} value={String(n)}>Class {n}</option>
+            ))}
+          </select>
+        </div>
         <div className="flex justify-end gap-2 pt-1">
           <button onClick={() => setOpen(false)} className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2">
             Cancel

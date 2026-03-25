@@ -11,11 +11,16 @@ const ROLES = [
   { value: 'parent', label: 'Parent' },
 ]
 
+const TEACHER_CODE = process.env.NEXT_PUBLIC_TEACHER_CODE ?? ''
+const PARENT_CODE = process.env.NEXT_PUBLIC_PARENT_CODE ?? ''
+
 export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('student')
+  const [accessCode, setAccessCode] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -27,9 +32,35 @@ export default function SignupPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleSignup() {
-    setLoading(true)
+  // Reset access code when role changes
+  useEffect(() => {
+    setAccessCode('')
     setError('')
+  }, [role])
+
+  function validateCode(): boolean {
+    if (role === 'teacher') {
+      if (accessCode !== TEACHER_CODE) {
+        setError('Invalid access code. Contact your school admin.')
+        return false
+      }
+    }
+    if (role === 'parent') {
+      if (accessCode !== PARENT_CODE) {
+        setError('Invalid access code. Contact your school admin.')
+        return false
+      }
+    }
+    return true
+  }
+
+  async function handleSignup() {
+    setError('')
+    setSuccess('')
+
+    if (!validateCode()) return
+
+    setLoading(true)
 
     const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
     if (signUpError) {
@@ -45,18 +76,28 @@ export default function SignupPage() {
       return
     }
 
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({ user_id: userId, role })
+    // Assign role via API route (uses service role key, bypasses RLS)
+    const res = await fetch('/api/auth/assign-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role }),
+    })
 
-    if (roleError) {
+    if (!res.ok) {
       setError('Account created but role assignment failed. Please contact your school admin.')
       setLoading(false)
+      // Still redirect after 3 seconds
+      setTimeout(() => router.push('/dashboard'), 3000)
       return
     }
 
+    setSuccess('Account created successfully!')
+    setLoading(false)
     router.push('/dashboard')
   }
+
+  const needsCode = role === 'teacher' || role === 'parent'
+  const codeLabel = role === 'teacher' ? 'Teacher code' : 'Parent code'
 
   return (
     <div className="min-h-screen flex">
@@ -151,6 +192,28 @@ export default function SignupPage() {
                 ))}
               </select>
             </div>
+
+            {needsCode && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">
+                  {codeLabel}
+                </label>
+                <input
+                  type="text"
+                  value={accessCode}
+                  onChange={e => setAccessCode(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSignup()}
+                  placeholder="Enter your access code"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] transition-all"
+                />
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-50 border border-green-100 rounded-lg px-4 py-3 text-xs text-green-700">
+                {success}
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-100 rounded-lg px-4 py-3 text-xs text-red-600">

@@ -276,7 +276,7 @@ export default async function QuizPage({
                 id: quiz.id,
                 title: quiz.title,
                 subject: quiz.subject,
-                time_limit_minutes: quiz.time_limit_minutes,
+                time_limit: quiz.time_limit,
                 questions: questions,
               }}
               userId={user.id}

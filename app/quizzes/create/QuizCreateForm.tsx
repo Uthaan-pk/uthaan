@@ -98,7 +98,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
     const { error: insertError } = await supabase.from('quizzes').insert({
       title: title.trim(),
       subject: subject.trim(),
-      time_limit_minutes: parseInt(timeLimit) || 30,
+      time_limit: parseInt(timeLimit) || 30,
       questions: dbQuestions,
       status,
       created_by: userId,

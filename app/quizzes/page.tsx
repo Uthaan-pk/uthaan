@@ -21,7 +21,7 @@ export default async function QuizzesPage() {
   if (isStaff) {
     const { data: quizzes } = await supabase
       .from('quizzes')
-      .select('id, title, subject, time_limit_minutes, questions, status, created_at')
+      .select('id, title, subject, time_limit, questions, status, created_at')
       .eq('created_by', user.id)
       .order('created_at', { ascending: false })
 
@@ -50,7 +50,7 @@ export default async function QuizzesPage() {
   // Student view
   const { data: quizzes } = await supabase
     .from('quizzes')
-    .select('id, title, subject, time_limit_minutes, questions, status, created_at')
+    .select('id, title, subject, time_limit, questions, status, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
@@ -94,7 +94,7 @@ export default async function QuizzesPage() {
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-gray-900 truncate">{quiz.title}</div>
                       <div className="text-xs text-gray-400 mt-0.5">
-                        {quiz.subject} · {quiz.time_limit_minutes} min · {questionCount} question{questionCount !== 1 ? 's' : ''}
+                        {quiz.subject} · {quiz.time_limit} min · {questionCount} question{questionCount !== 1 ? 's' : ''}
                       </div>
                     </div>
                     <div className="flex-shrink-0">

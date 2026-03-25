@@ -14,7 +14,7 @@ type Quiz = {
   title: string
   subject: string
   status: string
-  time_limit_minutes: number
+  time_limit: number
   created_at: string
 }
 
@@ -52,7 +52,7 @@ export default function QuizStaffView({
             <span className="text-gray-400">Subject: </span>{quiz.subject || '—'}
           </div>
           <div className="text-xs bg-gray-50 text-gray-600 px-3 py-1.5 rounded-lg">
-            <span className="text-gray-400">Time limit: </span>{quiz.time_limit_minutes} min
+            <span className="text-gray-400">Time limit: </span>{quiz.time_limit} min
           </div>
           <div className="text-xs bg-gray-50 text-gray-600 px-3 py-1.5 rounded-lg">
             <span className="text-gray-400">Questions: </span>{questions.length}

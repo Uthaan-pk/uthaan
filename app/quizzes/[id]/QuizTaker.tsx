@@ -13,7 +13,7 @@ type Quiz = {
   id: string
   title: string
   subject: string
-  time_limit_minutes: number
+  time_limit: number
   questions: Question[]
 }
 
@@ -31,7 +31,7 @@ export default function QuizTaker({ quiz, userId }: { quiz: Quiz; userId: string
     new Array(quiz.questions.length).fill(null)
   )
   const [selected, setSelected] = useState<number | null>(null)
-  const [timeLeft, setTimeLeft] = useState(quiz.time_limit_minutes * 60)
+  const [timeLeft, setTimeLeft] = useState(quiz.time_limit * 60)
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
   const [submitting, setSubmitting] = useState(false)

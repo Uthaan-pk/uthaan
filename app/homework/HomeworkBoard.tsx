@@ -74,6 +74,8 @@ export default function HomeworkBoard({
   const supabase = useMemo(() => createClient(), [])
   const [assignments, setAssignments] = useState(initialAssignments)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   // Form state
   const [title, setTitle] = useState('')
@@ -106,8 +108,18 @@ export default function HomeworkBoard({
     setTitle(''); setDescription(''); setSubject(''); setClassNum(''); setStage(''); setDueDate('')
   }
 
-  function openModal() { resetForm(); setModalOpen(true) }
-  function closeModal() { if (saving) return; setModalOpen(false); resetForm() }
+  function openModal() { setEditingId(null); resetForm(); setModalOpen(true) }
+  function openEditModal(a: Assignment) {
+    setEditingId(a.id)
+    setTitle(a.title)
+    setDescription(a.description ?? '')
+    setSubject(a.subject)
+    setClassNum(String(a.class_num))
+    setStage(a.stage ?? '')
+    setDueDate(a.due_date)
+    setModalOpen(true)
+  }
+  function closeModal() { if (saving) return; setModalOpen(false); setEditingId(null); resetForm() }
 
   async function handleSubmit() {
     const classNumParsed = parseInt(classNum, 10)
@@ -116,6 +128,34 @@ export default function HomeworkBoard({
       return
     }
     setSaving(true)
+
+    if (editingId) {
+      const { error: err } = await supabase
+        .from('assignments')
+        .update({
+          title: title.trim(),
+          description: description.trim(),
+          subject: subject.trim(),
+          class_num: classNumParsed,
+          stage: stage.trim(),
+          due_date: dueDate,
+        })
+        .eq('id', editingId)
+
+      setSaving(false)
+      if (err) { toast.error(err.message); return }
+
+      setAssignments(prev => prev.map(a =>
+        a.id === editingId
+          ? { ...a, title: title.trim(), description: description.trim(), subject: subject.trim(), class_num: classNumParsed, stage: stage.trim(), due_date: dueDate }
+          : a
+      ))
+      toast.success('Homework updated!')
+      setModalOpen(false)
+      setEditingId(null)
+      resetForm()
+      return
+    }
 
     const { data, error: err } = await supabase
       .from('assignments')
@@ -139,6 +179,15 @@ export default function HomeworkBoard({
     setModalOpen(false)
     resetForm()
     router.refresh()
+  }
+
+  async function handleDelete(id: string) {
+    setDeleting(id)
+    const { error: err } = await supabase.from('assignments').delete().eq('id', id)
+    setDeleting(null)
+    if (err) { toast.error(err.message); return }
+    setAssignments(prev => prev.filter(a => a.id !== id))
+    toast.success('Homework deleted.')
   }
 
   return (
@@ -195,7 +244,7 @@ export default function HomeworkBoard({
                       )}
                     </div>
 
-                    {/* Completion stats */}
+                    {/* Completion stats + actions */}
                     <div className="flex-shrink-0 text-right min-w-[4rem]">
                       <div className="text-lg font-bold text-gray-900">{pct}%</div>
                       <div className="text-[11px] text-gray-400">{completed}/{totalStudents}</div>
@@ -204,6 +253,21 @@ export default function HomeworkBoard({
                           className="bg-[#6fcf6f] h-1.5 rounded-full transition-all"
                           style={{ width: `${pct}%` }}
                         />
+                      </div>
+                      <div className="flex justify-end gap-1 mt-2">
+                        <button
+                          onClick={() => openEditModal(assignment)}
+                          className="text-[10px] text-gray-400 hover:text-gray-700 border border-gray-200 rounded px-1.5 py-0.5 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(assignment.id)}
+                          disabled={deleting === assignment.id}
+                          className="text-[10px] text-gray-400 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded px-1.5 py-0.5 transition-colors disabled:opacity-50"
+                        >
+                          {deleting === assignment.id ? '…' : 'Delete'}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -224,7 +288,7 @@ export default function HomeworkBoard({
               onClick={e => e.stopPropagation()}
             >
               <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-                <h3 className="text-sm font-semibold text-gray-900">Post homework</h3>
+                <h3 className="text-sm font-semibold text-gray-900">{editingId ? 'Edit homework' : 'Post homework'}</h3>
                 <button onClick={closeModal} className="text-gray-300 hover:text-gray-500 text-xl leading-none">×</button>
               </div>
 
@@ -302,7 +366,7 @@ export default function HomeworkBoard({
                   disabled={saving}
                   className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
                 >
-                  {saving ? 'Posting...' : 'Post homework'}
+                  {saving ? (editingId ? 'Saving...' : 'Posting...') : (editingId ? 'Save changes' : 'Post homework')}
                 </button>
               </div>
             </div>

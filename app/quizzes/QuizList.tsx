@@ -9,7 +9,7 @@ type Quiz = {
   id: string
   title: string
   subject: string
-  time_limit_minutes: number
+  time_limit: number
   questions: any[]
   status: string
   created_at: string
@@ -87,7 +87,7 @@ export default function QuizList({ quizzes: initialQuizzes }: { quizzes: Quiz[] 
                     {quiz.title}
                   </Link>
                   <div className="text-xs text-gray-400 mt-0.5">
-                    {quiz.subject} · {quiz.time_limit_minutes} min · {questionCount} question{questionCount !== 1 ? 's' : ''}
+                    {quiz.subject} · {quiz.time_limit} min · {questionCount} question{questionCount !== 1 ? 's' : ''}
                   </div>
                 </div>
 

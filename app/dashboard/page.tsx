@@ -80,7 +80,7 @@ export default async function DashboardPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Topbar */}
-        <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">
             Good {getHour()}, <span className="capitalize">{role}</span> 👋
           </h1>
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
         <main className="flex-1 overflow-y-auto p-6">
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <StatCard label="Total students" value={studentCount ?? 0} change="Enrolled this term" icon="👥" color="green" />
             <StatCard label="Attendance today" value="—" change="Mark to see rate" icon="📋" color="blue" />
             <StatCard label="Active quizzes" value={quizCount ?? 0} change="Assigned & pending" icon="📝" color="amber" />
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* Notes feed */}
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">

@@ -98,6 +98,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
@@ -144,6 +145,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Overlay — rendered only when drawer is open */}
@@ -156,7 +158,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
 
       {/* Drawer — always in DOM, slides via transform */}
       <div
-        className={`fixed top-0 right-0 h-full w-96 bg-white z-50 shadow-2xl flex flex-col transition-transform duration-200 ease-out ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white z-50 shadow-2xl flex flex-col transition-transform duration-200 ease-out ${
           selectedStudent ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

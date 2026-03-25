@@ -42,7 +42,7 @@ export default async function AttendancePage() {
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role={role ?? ''} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Attendance</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
               {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -105,7 +105,7 @@ export default async function AttendancePage() {
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl">
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <StatCard label="Days present" value={presentDays} icon="✅" color="green" />
               <StatCard label="Days absent" value={totalDays - presentDays} icon="❌" color="red" />
               <StatCard label="Attendance rate" value={`${rate}%`} icon="📊" color="blue" />

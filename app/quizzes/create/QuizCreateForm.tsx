@@ -23,7 +23,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
   const [title, setTitle] = useState('')
   const [subject, setSubject] = useState('')
   const [timeLimit, setTimeLimit] = useState('30')
-  const [status, setStatus] = useState<'draft' | 'active'>('draft')
+  const [status, setStatus] = useState<'active' | 'inactive' | 'draft'>('draft')
   const [questions, setQuestions] = useState<Question[]>([emptyQuestion()])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -161,11 +161,12 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
           <label className="text-xs font-medium text-gray-600">Status</label>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as 'draft' | 'active')}
+            onChange={(e) => setStatus(e.target.value as 'active' | 'inactive' | 'draft')}
             className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
           >
-            <option value="draft">Draft</option>
             <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="draft">Draft</option>
           </select>
         </div>
       </div>

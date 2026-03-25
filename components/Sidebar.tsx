@@ -30,7 +30,7 @@ export default function Sidebar({ email, role }: { email: string; role: string }
 
   return (
     <>
-      {/* Hamburger — mobile only */}
+      {/* Hamburger — mobile only, always visible */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Open menu"
@@ -43,7 +43,7 @@ export default function Sidebar({ email, role }: { email: string; role: string }
         </svg>
       </button>
 
-      {/* Backdrop — mobile only */}
+      {/* Backdrop — mobile only, shown when open */}
       {open && (
         <div
           className="md:hidden fixed inset-0 bg-black/40 z-40"
@@ -51,13 +51,15 @@ export default function Sidebar({ email, role }: { email: string; role: string }
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-56 bg-[#1a2e1a] flex flex-col flex-shrink-0
-        transition-transform duration-200 ease-out
-        md:static md:z-auto md:translate-x-0
-        ${open ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+      {/* Sidebar:
+          mobile closed  → hidden (display:none, completely out of layout)
+          mobile open    → flex fixed overlay (z-50)
+          desktop always → md:flex md:static (normal flow, no toggle) */}
+      <aside
+        className={`flex-col w-56 bg-[#1a2e1a] flex-shrink-0 md:flex md:static md:z-auto ${
+          open ? 'flex fixed inset-y-0 left-0 z-50' : 'hidden'
+        }`}
+      >
         <div className="px-5 py-6 border-b border-white/10 flex items-center justify-between">
           <div>
             <div className="text-2xl font-bold text-[#6fcf6f] tracking-tight">Uthaan</div>

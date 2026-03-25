@@ -17,7 +17,7 @@ export default async function CreateQuizPage() {
   const role = roleData?.role
   const isStaff = role === 'teacher' || role === 'admin'
 
-  if (!isStaff) redirect('/quizzes')
+  if (!isStaff) redirect('/dashboard')
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">

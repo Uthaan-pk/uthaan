@@ -11,7 +11,21 @@ type Question = {
   correct: number
 }
 
+type DBQuestion = {
+  text: string
+  options: { A: string; B: string; C: string; D: string }
+  correct: string
+}
+
 const optionLabels = ['A', 'B', 'C', 'D']
+
+function normalizeQuestion(q: DBQuestion): Question {
+  return {
+    text: q.text,
+    options: [q.options.A, q.options.B, q.options.C, q.options.D],
+    correct: optionLabels.indexOf(q.correct),
+  }
+}
 
 export default async function QuizPage({
   params,
@@ -66,7 +80,9 @@ export default async function QuizPage({
     )
   }
 
-  const questions: Question[] = Array.isArray(quiz.questions) ? quiz.questions : []
+  const questions: Question[] = Array.isArray(quiz.questions)
+    ? (quiz.questions as DBQuestion[]).map(normalizeQuestion)
+    : []
 
   if (isStaff) {
     return (

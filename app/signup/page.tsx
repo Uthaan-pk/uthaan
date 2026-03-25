@@ -5,9 +5,16 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-export default function LoginPage() {
+const ROLES = [
+  { value: 'student', label: 'Student' },
+  { value: 'teacher', label: 'Teacher' },
+  { value: 'parent', label: 'Parent' },
+]
+
+export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState('student')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -20,16 +27,35 @@ export default function LoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleLogin() {
+  async function handleSignup() {
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError('Invalid email or password. Please try again.')
+
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+    if (signUpError) {
+      setError(signUpError.message)
       setLoading(false)
-    } else {
-      router.push('/dashboard')
+      return
     }
+
+    const userId = data.user?.id
+    if (!userId) {
+      setError('Signup succeeded but no user returned. Please try logging in.')
+      setLoading(false)
+      return
+    }
+
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .insert({ user_id: userId, role })
+
+    if (roleError) {
+      setError('Account created but role assignment failed. Please contact your school admin.')
+      setLoading(false)
+      return
+    }
+
+    router.push('/dashboard')
   }
 
   return (
@@ -69,7 +95,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right panel — login form */}
+      {/* Right panel — signup form */}
       <div className="flex-1 flex items-center justify-center bg-[#f8f7f4] p-8">
         <div className="w-full max-w-sm">
 
@@ -79,8 +105,8 @@ export default function LoginPage() {
             <div className="text-xs text-gray-400 uppercase tracking-widest mt-0.5">School Management</div>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
-          <p className="text-sm text-gray-400 mb-8">Sign in to your school dashboard</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Create account</h1>
+          <p className="text-sm text-gray-400 mb-8">Join your school on Uthaan</p>
 
           <div className="space-y-4">
             <div>
@@ -91,7 +117,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                onKeyDown={e => e.key === 'Enter' && handleSignup()}
                 placeholder="you@school.com"
                 className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] transition-all"
               />
@@ -105,10 +131,25 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                onKeyDown={e => e.key === 'Enter' && handleSignup()}
                 placeholder="••••••••••"
                 className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] transition-all"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5 uppercase tracking-wide">
+                I am a
+              </label>
+              <select
+                value={role}
+                onChange={e => setRole(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] transition-all appearance-none"
+              >
+                {ROLES.map(r => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
             </div>
 
             {error && (
@@ -118,18 +159,18 @@ export default function LoginPage() {
             )}
 
             <button
-              onClick={handleLogin}
+              onClick={handleSignup}
               disabled={loading}
               className="w-full bg-[#1a2e1a] hover:bg-[#243d24] text-white font-medium py-3 rounded-lg text-sm transition-colors disabled:opacity-50 mt-2"
             >
-              {loading ? 'Signing in...' : 'Sign in to Uthaan'}
+              {loading ? 'Creating account...' : 'Create account'}
             </button>
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-[#1a2e1a] font-medium hover:underline">
-              Create account
+            Already have an account?{' '}
+            <Link href="/login" className="text-[#1a2e1a] font-medium hover:underline">
+              Sign in
             </Link>
           </p>
 

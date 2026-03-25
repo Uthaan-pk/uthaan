@@ -17,6 +17,156 @@ export default async function DashboardPage() {
 
   const role = roleData?.role
 
+  // ── Parent dashboard ──────────────────────────────────────────────────────
+  if (role === 'parent') {
+    const { data: link } = await supabase
+      .from('parent_student')
+      .select('student_id')
+      .eq('parent_id', user.id)
+      .single()
+
+    if (!link) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role="parent" />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">No child linked to your account</div>
+              <div className="text-xs text-gray-400">Contact the school administrator to link your child.</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    const { data: child } = await supabase
+      .from('students')
+      .select('id, name, class_num, roll_no, stage')
+      .eq('id', link.student_id)
+      .single()
+
+    if (!child) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role="parent" />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">Student record not found</div>
+              <div className="text-xs text-gray-400">Contact the school administrator.</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    const [attRes, marksRes, completionsRes, assignmentsRes, announcementsRes] = await Promise.all([
+      supabase.from('attendance_logs').select('status').eq('student_id', child.id),
+      supabase.from('marks').select('percent').eq('student_id', child.id),
+      supabase.from('assignment_completions').select('assignment_id').eq('student_id', child.id),
+      supabase.from('assignments').select('id, due_date').eq('class_num', child.class_num),
+      supabase
+        .from('announcements')
+        .select('id, title, priority, created_at')
+        .or(`class_num.eq.${child.class_num},class_num.is.null`)
+        .order('created_at', { ascending: false })
+        .limit(3),
+    ])
+
+    const att = attRes.data ?? []
+    const presentCount = att.filter(l => l.status === 'present').length
+    const attRate = att.length > 0 ? Math.round((presentCount / att.length) * 100) : null
+
+    const percents = (marksRes.data ?? []).map(m => m.percent ?? 0)
+    const avgMarks = percents.length > 0 ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : null
+
+    const doneIds = new Set((completionsRes.data ?? []).map(c => c.assignment_id))
+    const today = new Date().toISOString().split('T')[0]
+    const pendingCount = (assignmentsRes.data ?? []).filter(a => !doneIds.has(a.id) && a.due_date >= today).length
+
+    const announcements = announcementsRes.data ?? []
+
+    const priorityBadge: Record<string, string> = {
+      important: 'bg-amber-50 text-amber-800',
+      urgent: 'bg-red-50 text-red-700',
+    }
+
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role="parent" />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+            <h1 className="text-sm font-semibold text-gray-900">Parent Dashboard</h1>
+            <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
+              {child.name} · Class {child.class_num}
+            </span>
+          </header>
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-3xl space-y-6">
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                  label="Attendance"
+                  value={attRate !== null ? `${attRate}%` : '—'}
+                  change={`${presentCount}/${att.length} days`}
+                  icon="📋"
+                  color={attRate !== null && attRate < 75 ? 'red' : 'green'}
+                  href="/attendance"
+                />
+                <StatCard
+                  label="Avg marks"
+                  value={avgMarks !== null ? `${avgMarks}%` : '—'}
+                  change="All subjects"
+                  icon="📊"
+                  color="blue"
+                  href="/marks"
+                />
+                <StatCard
+                  label="Pending homework"
+                  value={pendingCount}
+                  change="Due upcoming"
+                  icon="📚"
+                  color="amber"
+                  href="/homework"
+                />
+                <StatCard
+                  label="Class"
+                  value={`Class ${child.class_num}`}
+                  change={child.stage ?? child.roll_no}
+                  icon="🏫"
+                  color="purple"
+                  href="/my-child"
+                />
+              </div>
+
+              {/* Recent announcements */}
+              <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-50">
+                  <h2 className="text-sm font-semibold text-gray-900">Recent announcements</h2>
+                </div>
+                {announcements.length > 0 ? announcements.map((a: any) => (
+                  <div key={a.id} className="px-5 py-3.5 border-b border-gray-50 last:border-0">
+                    {a.priority !== 'normal' && (
+                      <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mb-1 ${priorityBadge[a.priority] ?? 'bg-gray-50 text-gray-600'}`}>
+                        {a.priority.charAt(0).toUpperCase() + a.priority.slice(1)}
+                      </span>
+                    )}
+                    <div className="text-sm font-medium text-gray-900">{a.title}</div>
+                    <div className="text-[10px] text-gray-300 mt-0.5">
+                      {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </div>
+                  </div>
+                )) : (
+                  <div className="px-5 py-8 text-center text-sm text-gray-400">No announcements</div>
+                )}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Staff / student dashboard ─────────────────────────────────────────────
   const { data: notes } = await supabase
     .from('notes')
     .select('*')

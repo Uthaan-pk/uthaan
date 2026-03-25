@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 const mainNav = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Students', href: '/students' },
+  { label: 'My Child', href: '/my-child' },
   { label: 'Notes', href: '/notes' },
   { label: 'Announcements', href: '/announcements' },
 ]
@@ -105,11 +106,20 @@ export default function Sidebar({ email, role }: { email: string; role: string }
 
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mb-2">Main</p>
-          {mainNav.filter(item => !(item.href === '/students' && role === 'student')).map(item => (
+          {mainNav.filter(item => {
+            if (item.href === '/students' && (role === 'student' || role === 'parent')) return false
+            if (item.href === '/notes' && role === 'parent') return false
+            if (item.href === '/my-child' && role !== 'parent') return false
+            return true
+          }).map(item => (
             <NavItem key={item.href} label={item.label} href={item.href} active={pathname === item.href} onClose={close} />
           ))}
           <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">Academic</p>
-          {academicNav.filter(item => !(item.href === '/results' && role === 'student')).map(item => (
+          {academicNav.filter(item => {
+            if (item.href === '/results' && role === 'student') return false
+            if ((item.href === '/timetable' || item.href === '/materials') && role === 'parent') return false
+            return true
+          }).map(item => (
             <NavItem key={item.href} label={item.label} href={item.href} active={pathname === item.href} onClose={close} />
           ))}
           {role === 'admin' && (

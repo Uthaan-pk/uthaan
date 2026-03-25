@@ -17,6 +17,8 @@ type InitialData = {
   timeLimit: string
   status: 'active' | 'inactive' | 'draft'
   questions: Question[]
+  classNum: number | null
+  maxAttempts: number
 }
 
 function emptyQuestion(): Question {
@@ -43,6 +45,10 @@ export default function QuizCreateForm({
   const [subject, setSubject] = useState(initialData?.subject ?? '')
   const [timeLimit, setTimeLimit] = useState(initialData?.timeLimit ?? '30')
   const [status, setStatus] = useState<'active' | 'inactive' | 'draft'>(initialData?.status ?? 'draft')
+  const [classNum, setClassNum] = useState<string>(
+    initialData?.classNum != null ? String(initialData.classNum) : 'all'
+  )
+  const [maxAttempts, setMaxAttempts] = useState(String(initialData?.maxAttempts ?? 1))
   const [questions, setQuestions] = useState<Question[]>(initialData?.questions ?? [emptyQuestion()])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -90,7 +96,7 @@ export default function QuizCreateForm({
     return null
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
 
@@ -113,6 +119,9 @@ export default function QuizCreateForm({
       correct: optionLabels[q.correct],
     }))
 
+    const classNumValue = classNum === 'all' ? null : parseInt(classNum)
+    const maxAttemptsValue = parseInt(maxAttempts) || 1
+
     if (isEditing) {
       const { error: updateError } = await supabase
         .from('quizzes')
@@ -122,6 +131,8 @@ export default function QuizCreateForm({
           time_limit: parseInt(timeLimit) || 30,
           questions: dbQuestions,
           status,
+          class_num: classNumValue,
+          max_attempts: maxAttemptsValue,
         })
         .eq('id', quizId)
 
@@ -141,6 +152,8 @@ export default function QuizCreateForm({
         time_limit: parseInt(timeLimit) || 30,
         questions: dbQuestions,
         status,
+        class_num: classNumValue,
+        max_attempts: maxAttemptsValue,
         created_by: userId,
       })
 
@@ -208,6 +221,33 @@ export default function QuizCreateForm({
             <option value="inactive">Inactive</option>
             <option value="draft">Draft</option>
           </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600">Assign to class</label>
+            <select
+              value={classNum}
+              onChange={(e) => setClassNum(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+            >
+              <option value="all">All classes</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={String(n)}>Class {n}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600">Max attempts allowed</label>
+            <input
+              type="number"
+              min="1"
+              value={maxAttempts}
+              onChange={(e) => setMaxAttempts(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+            />
+          </div>
         </div>
       </div>
 

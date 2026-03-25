@@ -47,23 +47,49 @@ export default async function QuizzesPage() {
     )
   }
 
-  // Student view
+  // Student view — look up student record by email (same pattern as homework)
+  const { data: student } = await supabase
+    .from('students')
+    .select('id, class_num')
+    .eq('email', user.email!)
+    .single()
+
+  if (!student) {
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role={role ?? ''} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-sm font-medium text-gray-900 mb-1">No student record found</div>
+            <div className="text-xs text-gray-400">Your account is not linked to a student. Contact your administrator.</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Fetch active quizzes assigned to this student's class or all classes
   const { data: quizzes } = await supabase
     .from('quizzes')
-    .select('id, title, subject, time_limit, questions, status, created_at')
+    .select('id, title, subject, time_limit, questions, status, created_at, max_attempts')
     .eq('status', 'active')
+    .or(`class_num.eq.${student.class_num},class_num.is.null`)
     .order('created_at', { ascending: false })
 
   const quizIds = (quizzes ?? []).map((q) => q.id)
 
-  let submittedQuizIds: string[] = []
+  // Count submissions per quiz_id to determine remaining attempts
+  const submissionCounts: Record<string, number> = {}
   if (quizIds.length > 0) {
     const { data: submissions } = await supabase
       .from('quiz_submissions')
       .select('quiz_id')
       .eq('user_id', user.id)
       .in('quiz_id', quizIds)
-    submittedQuizIds = (submissions ?? []).map((s) => s.quiz_id)
+
+    for (const s of (submissions ?? [])) {
+      submissionCounts[s.quiz_id] = (submissionCounts[s.quiz_id] ?? 0) + 1
+    }
   }
 
   return (
@@ -74,7 +100,7 @@ export default async function QuizzesPage() {
         <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">Quizzes</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Spring Term 2026
+            Class {student.class_num}
           </span>
         </header>
 
@@ -86,8 +112,10 @@ export default async function QuizzesPage() {
               </div>
 
               {quizzes && quizzes.length > 0 ? quizzes.map((quiz) => {
-                const submitted = submittedQuizIds.includes(quiz.id)
                 const questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0
+                const subCount = submissionCounts[quiz.id] ?? 0
+                const maxAtt = quiz.max_attempts ?? 1
+                const fullyAttempted = subCount >= maxAtt
 
                 return (
                   <div key={quiz.id} className="px-5 py-4 border-b border-gray-50 last:border-0 flex items-center justify-between gap-4">
@@ -98,7 +126,7 @@ export default async function QuizzesPage() {
                       </div>
                     </div>
                     <div className="flex-shrink-0">
-                      {submitted ? (
+                      {fullyAttempted ? (
                         <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600">
                           Submitted
                         </span>

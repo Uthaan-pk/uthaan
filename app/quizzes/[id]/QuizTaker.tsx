@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 type Question = {
@@ -25,7 +26,19 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
 }
 
-export default function QuizTaker({ quiz, userId }: { quiz: Quiz; userId: string }) {
+export default function QuizTaker({
+  quiz,
+  userId,
+  attemptNumber,
+  maxAttempts,
+  onRetry,
+}: {
+  quiz: Quiz
+  userId: string
+  attemptNumber: number
+  maxAttempts: number
+  onRetry: () => void
+}) {
   const [current, setCurrent] = useState(0)
   const [answers, setAnswers] = useState<(number | null)[]>(
     new Array(quiz.questions.length).fill(null)
@@ -124,6 +137,7 @@ export default function QuizTaker({ quiz, userId }: { quiz: Quiz; userId: string
   if (submitted) {
     const pct = total > 0 ? Math.round((score / total) * 100) : 0
     const passed = pct >= 50
+    const attemptsRemaining = attemptNumber < maxAttempts
 
     return (
       <div className="space-y-6">
@@ -196,6 +210,25 @@ export default function QuizTaker({ quiz, userId }: { quiz: Quiz; userId: string
             })}
           </div>
         </div>
+
+        {/* Navigation buttons */}
+        <div className="flex items-center justify-between pb-6">
+          <Link
+            href="/quizzes"
+            className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2 rounded-lg transition-colors"
+          >
+            ← Back to Quizzes
+          </Link>
+          {attemptsRemaining && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              Retry Quiz
+            </button>
+          )}
+        </div>
       </div>
     )
   }
@@ -214,6 +247,13 @@ export default function QuizTaker({ quiz, userId }: { quiz: Quiz; userId: string
 
   return (
     <div className="space-y-4">
+      {/* Attempt indicator */}
+      {maxAttempts > 1 && (
+        <div className="text-xs text-gray-400 text-right">
+          Attempt {attemptNumber} of {maxAttempts}
+        </div>
+      )}
+
       {/* Progress bar + timer */}
       <div className="bg-white rounded-xl border border-gray-100 px-5 py-4">
         <div className="flex items-center justify-between mb-3">

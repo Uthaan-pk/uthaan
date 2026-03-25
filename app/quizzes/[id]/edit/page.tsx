@@ -56,6 +56,8 @@ export default async function EditQuizPage({
     timeLimit: String(quiz.time_limit ?? 30),
     status: (quiz.status ?? 'draft') as 'active' | 'inactive' | 'draft',
     questions,
+    classNum: quiz.class_num ?? null,
+    maxAttempts: quiz.max_attempts ?? 1,
   }
 
   return (

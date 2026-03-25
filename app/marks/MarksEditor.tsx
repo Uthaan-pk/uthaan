@@ -137,7 +137,7 @@ export default function MarksEditor({
                         max="100"
                         value={marksState[selectedExam]?.[s.id]?.[sub] ?? ''}
                         onChange={e => updateMark(s.id, sub, e.target.value)}
-                        className="w-16 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+                        className="w-16 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
                         placeholder="—"
                       />
                     </td>

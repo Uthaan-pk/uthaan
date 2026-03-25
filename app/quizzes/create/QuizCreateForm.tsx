@@ -117,7 +117,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Chapter 3 – Cell Biology"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
           />
         </div>
 
@@ -129,7 +129,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="e.g. Biology"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
               max="180"
               value={timeLimit}
               onChange={(e) => setTimeLimit(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
             />
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as 'draft' | 'active')}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
           >
             <option value="draft">Draft</option>
             <option value="active">Active</option>
@@ -187,7 +187,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
                 value={question.text}
                 onChange={(e) => updateQuestionText(qIndex, e.target.value)}
                 placeholder="Enter your question here..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] resize-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] resize-none"
               />
             </div>
 
@@ -204,7 +204,7 @@ export default function QuizCreateForm({ userId }: { userId: string }) {
                     value={opt}
                     onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
                     placeholder={`Option ${optionLabels[optIndex]}`}
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
                   />
                 </div>
               ))}

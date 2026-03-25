@@ -92,7 +92,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search students..."
-          className="w-full max-w-sm bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+          className="w-full max-w-sm bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
         />
       </div>
 

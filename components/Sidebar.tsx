@@ -15,6 +15,8 @@ const academicNav = [
   { label: 'Marks', href: '/marks' },
   { label: 'Attendance', href: '/attendance' },
   { label: 'Quizzes', href: '/quizzes' },
+  { label: 'Timetable', href: '/timetable' },
+  { label: 'Homework', href: '/homework' },
 ]
 
 function getInitials(name: string) {
@@ -108,6 +110,12 @@ export default function Sidebar({ email, role }: { email: string; role: string }
           {academicNav.map(item => (
             <NavItem key={item.href} label={item.label} href={item.href} active={pathname === item.href} onClose={close} />
           ))}
+          {role === 'admin' && (
+            <>
+              <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">Admin</p>
+              <NavItem label="Admin Panel" href="/admin" active={pathname === '/admin'} onClose={close} />
+            </>
+          )}
         </nav>
 
         <div className="px-3 py-4 border-t border-white/10">

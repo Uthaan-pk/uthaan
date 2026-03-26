@@ -18,6 +18,7 @@ const academicNav = [
   { label: 'Quizzes', href: '/quizzes' },
   { label: 'Timetable', href: '/timetable' },
   { label: 'Homework', href: '/homework' },
+  { label: 'Submissions', href: '/submissions' },
   { label: 'Materials', href: '/materials' },
   { label: 'Results', href: '/results' },
 ]
@@ -117,7 +118,7 @@ export default function Sidebar({ email, role }: { email: string; role: string }
           <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">Academic</p>
           {academicNav.filter(item => {
             if (item.href === '/results' && role === 'student') return false
-            if ((item.href === '/timetable' || item.href === '/materials') && role === 'parent') return false
+            if ((item.href === '/timetable' || item.href === '/materials' || item.href === '/submissions') && role === 'parent') return false
             return true
           }).map(item => (
             <NavItem key={item.href} label={item.label} href={item.href} active={pathname === item.href} onClose={close} />

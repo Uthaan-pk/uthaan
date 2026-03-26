@@ -19,15 +19,12 @@ export default async function DashboardPage() {
 
   // ── Parent dashboard ──────────────────────────────────────────────────────
   if (role === 'parent') {
-    const { data: link, error: linkError } = await supabase
+    const { data: link } = await supabase
       .from('parent_student')
       .select('student_id')
       .eq('parent_id', user.id)
       .single()
 
-    console.log('[parent-dashboard] parent_id used:', user.id)
-    console.log('[parent-dashboard] link result:', link)
-    console.log('[parent-dashboard] link error:', linkError)
 
     if (!link) {
       return (
@@ -43,15 +40,12 @@ export default async function DashboardPage() {
       )
     }
 
-    const { data: child, error: childError } = await supabase
+    const { data: child } = await supabase
       .from('students')
       .select('id, name, class_num, roll_no, stage')
       .eq('id', link.student_id)
       .single()
 
-    console.log('[parent-dashboard] student_id used:', link.student_id)
-    console.log('[parent-dashboard] child result:', child)
-    console.log('[parent-dashboard] child error:', childError)
 
     if (!child) {
       return (

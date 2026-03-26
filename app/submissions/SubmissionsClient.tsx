@@ -333,14 +333,13 @@ export default function SubmissionsClient({
                       </span>
                     )}
                     {sub?.file_url && (
-                      <a
-                        href={sub.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] text-[#1a2e1a] hover:underline"
+                      <button
+                        onClick={() => handleViewFile(sub.file_url!, sub.id)}
+                        disabled={viewingFile === sub.id}
+                        className="text-[11px] text-[#1a2e1a] hover:underline disabled:opacity-50"
                       >
-                        View file
-                      </a>
+                        {viewingFile === sub.id ? '…' : 'View file'}
+                      </button>
                     )}
                   </div>
                 </div>

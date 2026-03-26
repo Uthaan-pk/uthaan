@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import MarksEditor from './MarksEditor'
+import GradebookClient from './GradebookClient'
+import MarksTabShell from './MarksTabShell'
 import { parseGradeText, type GradeWeights } from '@/lib/calculateGrade'
 
 const CURRENT_YEAR = '2025-2026'
@@ -21,12 +23,14 @@ export default async function MarksPage() {
   const isStaff = role === 'teacher' || role === 'admin'
 
   if (isStaff) {
-    const [studentsRes, marksRes, weightsRes, quizSubsRes, assignmentSubsRes] = await Promise.all([
+    const [studentsRes, marksRes, weightsRes, quizSubsRes, assignmentSubsRes, assignmentsRes, gradebookMarksRes] = await Promise.all([
       supabase.from('students').select('id, name, roll_no, user_id').order('name'),
       supabase.from('marks').select('student_id, subject, exam, percent'),
       supabase.from('grade_weights').select('*').eq('academic_year', CURRENT_YEAR).single(),
       supabase.from('quiz_submissions').select('user_id, score, quizzes(questions)'),
       supabase.from('assignment_submissions').select('student_id, grade').not('grade', 'is', null),
+      supabase.from('assignments').select('id, title, subject, class_num').order('created_at', { ascending: false }),
+      supabase.from('marks').select('id, student_id, subject, score, term, assignment_id, source').not('assignment_id', 'is', null),
     ])
 
     const students = studentsRes.data ?? []
@@ -94,12 +98,23 @@ export default async function MarksPage() {
             </span>
           </header>
           <main className="flex-1 overflow-y-auto p-6">
-            <MarksEditor
-              students={students}
-              allMarks={allMarks}
-              gradeWeights={gradeWeights}
-              quizAvgByStudentId={quizAvgByStudentId}
-              assignmentAvgByStudentId={assignmentAvgByStudentId}
+            <MarksTabShell
+              marksEditor={
+                <MarksEditor
+                  students={students}
+                  allMarks={allMarks}
+                  gradeWeights={gradeWeights}
+                  quizAvgByStudentId={quizAvgByStudentId}
+                  assignmentAvgByStudentId={assignmentAvgByStudentId}
+                />
+              }
+              gradebook={
+                <GradebookClient
+                  students={students}
+                  assignments={assignmentsRes.data ?? []}
+                  initialMarks={(gradebookMarksRes.data ?? []) as any}
+                />
+              }
             />
           </main>
         </div>

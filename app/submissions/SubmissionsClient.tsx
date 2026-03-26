@@ -2,7 +2,10 @@
 
 import { useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { parseGradeText } from '@/lib/calculateGrade'
 import toast from 'react-hot-toast'
+
+const CURRENT_TERM = 'Spring Term 2026'
 
 type Assignment = {
   id: string
@@ -255,6 +258,24 @@ export default function SubmissionsClient({
       .update({ reviewed: true, reviewed_at: reviewedAt, teacher_note: note || null, grade: grade || null })
       .eq('id', sub.id)
       .select()
+
+    if (!error && grade) {
+      const score = parseGradeText(grade)
+      const assignment = assignments.find(a => a.id === sub.assignment_id)
+      if (score !== null && assignment) {
+        await supabase.from('marks').upsert(
+          {
+            student_id: sub.student_id,
+            subject: assignment.subject,
+            score,
+            term: CURRENT_TERM,
+            assignment_id: sub.assignment_id,
+            source: 'submission',
+          },
+          { onConflict: 'student_id,assignment_id' }
+        )
+      }
+    }
 
     setActingReview(null)
 

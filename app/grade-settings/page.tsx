@@ -14,7 +14,8 @@ export default async function GradeSettingsPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (roleData?.role !== 'admin') redirect('/dashboard')
+  const role = roleData?.role
+  if (role !== 'admin' && role !== 'teacher') redirect('/dashboard')
 
   const { data: weights } = await supabase
     .from('grade_weights')
@@ -23,7 +24,7 @@ export default async function GradeSettingsPage() {
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role="admin" />
+      <Sidebar email={user.email!} role={role} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">Grade Settings</h1>

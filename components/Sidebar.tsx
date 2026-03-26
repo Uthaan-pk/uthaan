@@ -123,6 +123,14 @@ export default function Sidebar({ email, role }: { email: string; role: string }
           }).map(item => (
             <NavItem key={item.href} label={item.label} href={item.href} active={pathname === item.href} onClose={close} />
           ))}
+          {(role === 'admin' || role === 'teacher') && (
+            <NavItem label="Grade Settings" href="/grade-settings" active={pathname === '/grade-settings'} onClose={close} icon={
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="7" cy="7" r="2" />
+                <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" />
+              </svg>
+            } />
+          )}
           {role === 'admin' && (
             <>
               <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">Admin</p>
@@ -131,12 +139,6 @@ export default function Sidebar({ email, role }: { email: string; role: string }
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="20" height="14" x="2" y="5" rx="2"/>
                   <line x1="2" y1="10" x2="22" y2="10"/>
-                </svg>
-              } />
-              <NavItem label="Grade Settings" href="/grade-settings" active={pathname === '/grade-settings'} onClose={close} icon={
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="7" cy="7" r="2" />
-                  <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" />
                 </svg>
               } />
             </>

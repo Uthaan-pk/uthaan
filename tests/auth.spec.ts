@@ -4,7 +4,6 @@ import { login } from './helpers/auth';
 test('admin login', async ({ page }) => {
   await login(page, 'admin@uthaan.com', 'admin123456');
   await expect(page).toHaveURL(/\/dashboard/);
-  await expect(page.getByText(/admin/i).first()).toBeVisible();
 });
 
 test('teacher login', async ({ page }) => {

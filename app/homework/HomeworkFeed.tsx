@@ -204,15 +204,15 @@ export default function HomeworkFeed({
     <div className="max-w-3xl space-y-6">
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+        <div className={`bg-white rounded-xl border border-gray-100 border-l-4 ${overdue.length > 0 ? 'border-l-red-400' : 'border-l-amber-300'} px-4 py-3`}>
           <div className="text-2xl font-bold text-gray-900">{pending.length}</div>
           <div className="text-xs text-gray-400 mt-0.5">Pending</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+        <div className="bg-white rounded-xl border border-gray-100 border-l-4 border-l-[#6fcf6f] px-4 py-3">
           <div className="text-2xl font-bold text-[#6fcf6f]">{localDone.size}</div>
           <div className="text-xs text-gray-400 mt-0.5">Completed</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+        <div className="bg-white rounded-xl border border-gray-100 border-l-4 border-l-gray-200 px-4 py-3">
           <div className="text-2xl font-bold text-gray-900">{assignments.length}</div>
           <div className="text-xs text-gray-400 mt-0.5">Total</div>
         </div>

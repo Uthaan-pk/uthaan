@@ -45,7 +45,7 @@ function getSubjectColor(subject: string) {
   return SUBJECT_COLORS[subject.toLowerCase()] ?? 'bg-gray-50 text-gray-600 border-gray-100'
 }
 
-type DueInfo = { badge: string; badgeCls: string; cardBorderCls: string }
+type DueInfo = { badge: string; badgeCls: string; leftBorderCls: string }
 
 function getDueInfo(dateStr: string): DueInfo {
   const today = new Date()
@@ -53,10 +53,10 @@ function getDueInfo(dateStr: string): DueInfo {
   const due = new Date(dateStr)
   due.setHours(0, 0, 0, 0)
   const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-  if (diffDays < 0)   return { badge: 'Overdue',          badgeCls: 'bg-red-50 text-red-600 border-red-100',      cardBorderCls: 'border-red-200' }
-  if (diffDays === 0)  return { badge: 'Due Today',        badgeCls: 'bg-amber-50 text-amber-600 border-amber-100', cardBorderCls: 'border-amber-200' }
-  if (diffDays === 1)  return { badge: 'Due Tomorrow',     badgeCls: 'bg-amber-50 text-amber-500 border-amber-100', cardBorderCls: 'border-gray-100' }
-  return               { badge: `Due in ${diffDays} days`, badgeCls: 'bg-green-50 text-green-700 border-green-100',  cardBorderCls: 'border-gray-100' }
+  if (diffDays < 0)   return { badge: 'Overdue',          badgeCls: 'bg-red-50 text-red-600 border-red-100',      leftBorderCls: 'border-l-red-400' }
+  if (diffDays === 0)  return { badge: 'Due Today',        badgeCls: 'bg-amber-50 text-amber-600 border-amber-100', leftBorderCls: 'border-l-amber-400' }
+  if (diffDays === 1)  return { badge: 'Due Tomorrow',     badgeCls: 'bg-amber-50 text-amber-500 border-amber-100', leftBorderCls: 'border-l-amber-300' }
+  return               { badge: `Due in ${diffDays} days`, badgeCls: 'bg-green-50 text-green-700 border-green-100',  leftBorderCls: 'border-l-[#6fcf6f]' }
 }
 
 export default function HomeworkBoard({
@@ -212,8 +212,16 @@ export default function HomeworkBoard({
         {/* List */}
         {assignments.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 py-16 flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-2xl bg-[#f8f7f4] flex items-center justify-center mb-3">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="14" height="14" rx="2" />
+                <line x1="7" y1="7" x2="13" y2="7" />
+                <line x1="7" y1="10" x2="13" y2="10" />
+                <line x1="7" y1="13" x2="10" y2="13" />
+              </svg>
+            </div>
             <p className="text-sm text-gray-400 font-medium">No homework posted yet</p>
-            <p className="text-xs text-gray-300 mt-1">Click "Post homework" to create the first assignment</p>
+            <p className="text-xs text-gray-300 mt-1">Click "Post homework" to get started</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -224,7 +232,7 @@ export default function HomeworkBoard({
               const due = getDueInfo(assignment.due_date)
 
               return (
-                <div key={assignment.id} className={`bg-white rounded-xl border p-4 ${due.cardBorderCls}`}>
+                <div key={assignment.id} className={`bg-white rounded-xl border border-gray-100 border-l-4 ${due.leftBorderCls} p-4`}>
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1.5">

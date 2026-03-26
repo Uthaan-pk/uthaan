@@ -23,6 +23,7 @@ type Submission = {
   reviewed: boolean
   reviewed_at: string | null
   teacher_note: string | null
+  grade: string | null
   student?: { name: string; class_num: number | null } | null
 }
 
@@ -51,6 +52,12 @@ const LABEL: Record<SubStatus, string> = {
   not_submitted: 'Not Submitted',
   submitted:     'Submitted',
   reviewed:      'Reviewed',
+}
+
+const BORDER_LEFT: Record<SubStatus, string> = {
+  not_submitted: 'border-l-gray-200',
+  submitted:     'border-l-yellow-400',
+  reviewed:      'border-l-[#6fcf6f]',
 }
 
 const inputCls =
@@ -85,7 +92,9 @@ export default function SubmissionsClient({
   const [selectedAssignment, setSelectedAssignment] = useState(assignments[0]?.id ?? '')
   const [filterReview, setFilterReview] = useState<ReviewFilter>('all')
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({})
+  const [reviewGrades, setReviewGrades] = useState<Record<string, string>>({})
   const [actingReview, setActingReview] = useState<string | null>(null)
+  const [viewingFile, setViewingFile] = useState<string | null>(null)
 
   // ── Derived ───────────────────────────────────────────────────────────────
   // Student: map assignment_id → their one submission
@@ -192,14 +201,34 @@ export default function SubmissionsClient({
     toast.success('Submitted!')
   }
 
+  async function handleViewFile(fileUrl: string, subId: string) {
+    const marker = '/submissions/'
+    const idx = fileUrl.indexOf(marker)
+    if (idx === -1) { toast.error('Invalid file URL.'); return }
+    const filePath = fileUrl.slice(idx + marker.length)
+
+    setViewingFile(subId)
+    const { data, error } = await supabase.storage
+      .from('submissions')
+      .createSignedUrl(filePath, 60)
+    setViewingFile(null)
+
+    if (error || !data?.signedUrl) {
+      toast.error(error?.message ?? 'Could not generate file link.')
+      return
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  }
+
   async function handleMarkReviewed(sub: Submission) {
     setActingReview(sub.id)
     const note = reviewNotes[sub.id]?.trim() ?? ''
+    const grade = reviewGrades[sub.id]?.trim() ?? ''
     const reviewedAt = new Date().toISOString()
 
     const { error } = await supabase
       .from('assignment_submissions')
-      .update({ reviewed: true, reviewed_at: reviewedAt, teacher_note: note || null })
+      .update({ reviewed: true, reviewed_at: reviewedAt, teacher_note: note || null, grade: grade || null })
       .eq('id', sub.id)
 
     setActingReview(null)
@@ -209,7 +238,7 @@ export default function SubmissionsClient({
     setSubmissions(prev =>
       prev.map(s =>
         s.id === sub.id
-          ? { ...s, reviewed: true, reviewed_at: reviewedAt, teacher_note: note || null }
+          ? { ...s, reviewed: true, reviewed_at: reviewedAt, teacher_note: note || null, grade: grade || null }
           : s
       )
     )
@@ -232,7 +261,7 @@ export default function SubmissionsClient({
             const sub = subMap[a.id]
             const status = subStatus(sub)
             return (
-              <div key={a.id} className="bg-white rounded-xl border border-gray-100 p-4">
+              <div key={a.id} className={`bg-white rounded-xl border border-gray-100 border-l-4 ${BORDER_LEFT[status]} p-4`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -247,9 +276,19 @@ export default function SubmissionsClient({
                     {a.description && (
                       <div className="text-xs text-gray-400 mt-0.5 leading-relaxed">{a.description}</div>
                     )}
-                    {status === 'reviewed' && sub?.teacher_note && (
-                      <div className="text-[11px] text-[#1a2e1a] bg-[#6fcf6f]/10 border border-[#6fcf6f]/20 rounded-lg px-3 py-1.5 mt-2 leading-relaxed">
-                        <span className="font-medium">Teacher: </span>{sub.teacher_note}
+                    {status === 'reviewed' && (sub?.grade || sub?.teacher_note) && (
+                      <div className="mt-2 bg-[#6fcf6f]/10 border border-[#6fcf6f]/20 rounded-lg px-3 py-2 space-y-1">
+                        {sub.grade && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Grade</span>
+                            <span className="text-sm font-semibold text-[#1a2e1a]">{sub.grade}</span>
+                          </div>
+                        )}
+                        {sub.teacher_note && (
+                          <div className="text-[11px] text-[#1a2e1a] leading-relaxed">
+                            <span className="font-medium">Note: </span>{sub.teacher_note}
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="text-[11px] text-gray-300 mt-1.5">
@@ -460,11 +499,22 @@ export default function SubmissionsClient({
                   const status = subStatus(sub)
                   return (
                     <tr key={sub.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-3.5 font-medium text-gray-900 whitespace-nowrap">
-                        {sub.student?.name ?? '—'}
-                        {sub.student?.class_num != null && (
-                          <span className="ml-1.5 text-[11px] text-gray-300">Class {sub.student.class_num}</span>
-                        )}
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-[#1a2e1a]/[0.07] flex items-center justify-center flex-shrink-0">
+                            <span className="text-[11px] font-bold text-[#1a2e1a] select-none">
+                              {sub.student?.name
+                                ? sub.student.name.split(' ').map((p: string) => p[0]).join('').slice(0, 2).toUpperCase()
+                                : '?'}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900 leading-none">{sub.student?.name ?? '—'}</div>
+                            {sub.student?.class_num != null && (
+                              <div className="text-[11px] text-gray-400 mt-0.5">Class {sub.student.class_num}</div>
+                            )}
+                          </div>
+                        </div>
                       </td>
 
                       <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
@@ -475,14 +525,13 @@ export default function SubmissionsClient({
 
                       <td className="px-5 py-3.5">
                         {sub.file_url ? (
-                          <a
-                            href={sub.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors whitespace-nowrap"
+                          <button
+                            onClick={() => handleViewFile(sub.file_url!, sub.id)}
+                            disabled={viewingFile === sub.id}
+                            className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors whitespace-nowrap disabled:opacity-50"
                           >
-                            File ↗
-                          </a>
+                            {viewingFile === sub.id ? '…' : 'File ↗'}
+                          </button>
                         ) : (
                           <span className="text-[11px] text-gray-500">Text</span>
                         )}
@@ -493,6 +542,9 @@ export default function SubmissionsClient({
                           <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border w-fit ${BADGE[status]}`}>
                             {LABEL[status]}
                           </span>
+                          {sub.grade && (
+                            <span className="text-[11px] font-semibold text-[#1a2e1a]">{sub.grade}</span>
+                          )}
                           {sub.teacher_note && (
                             <span className="text-[11px] text-gray-400 italic max-w-xs truncate">
                               "{sub.teacher_note}"
@@ -504,23 +556,37 @@ export default function SubmissionsClient({
                       {isTeacher && (
                         <td className="px-5 py-3.5">
                           {sub.reviewed ? (
-                            <span className="text-[11px] text-gray-300">Done</span>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/20">
+                              <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="1,4.5 3.5,7 8,1.5" />
+                              </svg>
+                              Reviewed
+                            </span>
                           ) : (
-                            <div className="flex items-center gap-2 min-w-[220px]">
+                            <div className="flex flex-col gap-1.5 min-w-[220px]">
                               <input
                                 type="text"
-                                value={reviewNotes[sub.id] ?? ''}
-                                onChange={e => setReviewNotes(prev => ({ ...prev, [sub.id]: e.target.value }))}
-                                placeholder="Note (optional)"
-                                className="flex-1 border border-gray-200 rounded px-2 py-1 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+                                value={reviewGrades[sub.id] ?? ''}
+                                onChange={e => setReviewGrades(prev => ({ ...prev, [sub.id]: e.target.value }))}
+                                placeholder="Grade (e.g. A+, 85/100)"
+                                className="w-full border border-gray-200 rounded px-2 py-1 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
                               />
-                              <button
-                                onClick={() => handleMarkReviewed(sub)}
-                                disabled={actingReview === sub.id}
-                                className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
-                              >
-                                {actingReview === sub.id ? '…' : 'Mark Reviewed'}
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={reviewNotes[sub.id] ?? ''}
+                                  onChange={e => setReviewNotes(prev => ({ ...prev, [sub.id]: e.target.value }))}
+                                  placeholder="Note (optional)"
+                                  className="flex-1 border border-gray-200 rounded px-2 py-1 text-xs text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+                                />
+                                <button
+                                  onClick={() => handleMarkReviewed(sub)}
+                                  disabled={actingReview === sub.id}
+                                  className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                >
+                                  {actingReview === sub.id ? '…' : 'Mark Reviewed'}
+                                </button>
+                              </div>
                             </div>
                           )}
                         </td>

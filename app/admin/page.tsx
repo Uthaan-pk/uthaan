@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import Sidebar from '@/components/Sidebar'
 import ParentLinker from './ParentLinker'
 
@@ -50,7 +51,7 @@ export default async function AdminPage() {
   ] = await Promise.all([
     supabase.from('user_roles').select('*', { count: 'exact', head: true }).eq('role', 'teacher'),
     supabase.from('students').select('*', { count: 'exact', head: true }),
-    supabase.from('parent_student').select('id, parent_id, student_id, students(name, roll_no)'),
+    supabase.from('parent_student').select('id, parent_id, student_id'),
     supabase.from('attendance_logs').select('status').gte('day', monday),
     supabase.from('user_roles').select('user_id').in('role', ['teacher', 'admin']),
     supabase.from('quizzes').select('created_by'),
@@ -78,16 +79,24 @@ export default async function AdminPage() {
   const allAssignments = allAssignmentsRes.data ?? []
 
   // ── Parent links ──────────────────────────────────────────────────────────
-  // Look up parent emails via user_roles → auth.users (limited: use email from students or profile)
-  // We store parent emails by querying user_roles for parent user_ids, then joining via a known identifier.
-  // Since we only have user_id in user_roles, we display truncated IDs unless email is derivable.
-  // The ParentLinker will show what we have; linking uses the API route for email lookup.
+  // Look up parent emails via the admin client (bypasses RLS on auth.users)
+  const studentById = Object.fromEntries(
+    (studentsRes.data ?? []).map(s => [s.id, s])
+  )
+
+  let emailById: Record<string, string> = {}
+  if (rawLinks.length > 0) {
+    const adminClient = createAdminClient()
+    const { data: { users } } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    emailById = Object.fromEntries(users.map(u => [u.id, u.email ?? '—']))
+  }
+
   const parentLinks = rawLinks.map((l: any) => ({
     id: l.id as string,
     parent_id: l.parent_id as string,
-    parent_email: `···${(l.parent_id as string).slice(-8)}`,
-    student_name: (l.students as any)?.name ?? '—',
-    student_roll: (l.students as any)?.roll_no ?? '—',
+    parent_email: emailById[l.parent_id] ?? `···${(l.parent_id as string).slice(-8)}`,
+    student_name: studentById[l.student_id]?.name ?? '—',
+    student_roll: studentById[l.student_id]?.roll_no ?? '—',
   }))
 
   // ── Stats ─────────────────────────────────────────────────────────────────

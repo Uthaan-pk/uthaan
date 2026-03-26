@@ -19,20 +19,13 @@ export default async function DashboardPage() {
 
   // ── Parent dashboard ──────────────────────────────────────────────────────
   if (role === 'parent') {
-    const { data: parentRows } = await supabase
+    const { data: link } = await supabase
       .from('parent_student')
-      .select('student_id, students(id, name, class_num, roll_no, stage)')
+      .select('student_id')
       .eq('parent_id', user.id)
+      .single()
 
-    const child = (parentRows?.[0]?.students ?? null) as {
-      id: string
-      name: string
-      class_num: number
-      roll_no: string | null
-      stage: string | null
-    } | null
-
-    if (!child) {
+    if (!link) {
       return (
         <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
           <Sidebar email={user.email!} role="parent" />
@@ -40,6 +33,26 @@ export default async function DashboardPage() {
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">No child linked to your account</div>
               <div className="text-xs text-gray-400">Contact the school administrator to link your child.</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    const { data: child } = await supabase
+      .from('students')
+      .select('id, name, class_num, roll_no, stage')
+      .eq('id', link.student_id)
+      .single()
+
+    if (!child) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role="parent" />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">Student record not found</div>
+              <div className="text-xs text-gray-400">Contact the school administrator.</div>
             </div>
           </div>
         </div>

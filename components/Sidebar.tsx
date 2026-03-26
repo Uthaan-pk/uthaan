@@ -131,16 +131,18 @@ export default function Sidebar({ email, role }: { email: string; role: string }
               </svg>
             } />
           )}
+          {(role === 'admin' || role === 'student' || role === 'parent') && (
+            <NavItem label="Fees" href="/fees" active={pathname === '/fees'} onClose={close} icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="20" height="14" x="2" y="5" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+            } />
+          )}
           {role === 'admin' && (
             <>
               <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">Admin</p>
               <NavItem label="Admin Panel" href="/admin" active={pathname === '/admin'} onClose={close} />
-              <NavItem label="Fees" href="/fees" active={pathname === '/fees'} onClose={close} icon={
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="14" x="2" y="5" rx="2"/>
-                  <line x1="2" y1="10" x2="22" y2="10"/>
-                </svg>
-              } />
             </>
           )}
         </nav>

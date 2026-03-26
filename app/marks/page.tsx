@@ -241,13 +241,16 @@ export default async function MarksPage() {
   }
 
   // Student view
-  const { data: student } = await supabase
-    .from('students')
-    .select('id, name, roll_no')
+  const { data: studentRoleData } = await supabase
+    .from('user_roles')
+    .select('student_id')
     .eq('user_id', user.id)
+    .eq('role', 'student')
     .single()
 
-  if (!student) {
+  const studentId = studentRoleData?.student_id
+
+  if (!studentId) {
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role={role ?? ''} />
@@ -264,7 +267,7 @@ export default async function MarksPage() {
   const { data: marks } = await supabase
     .from('marks')
     .select('subject, exam, percent')
-    .eq('student_id', student.id)
+    .eq('student_id', studentId)
     .order('exam')
     .order('subject')
 

@@ -51,7 +51,7 @@ export default async function MarksPage() {
     // Quiz averages: user_id → avg score %
     const quizPctByUserId: Record<string, number[]> = {}
     quizSubsRes.data?.forEach(sub => {
-      const q = sub.quizzes as { questions: unknown[] } | null
+      const q = (sub.quizzes as unknown) as { questions: any[] } | null
       if (!q?.questions?.length) return
       const pct = (sub.score / q.questions.length) * 100
       if (!quizPctByUserId[sub.user_id]) quizPctByUserId[sub.user_id] = []

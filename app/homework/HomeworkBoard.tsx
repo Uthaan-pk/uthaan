@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
-type Assignment = {
+export type Assignment = {
   id: string
   title: string
   description: string

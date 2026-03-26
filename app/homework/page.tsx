@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
-import HomeworkBoard from './HomeworkBoard'
+import HomeworkBoard, { type Assignment } from './HomeworkBoard'
 import HomeworkFeed from './HomeworkFeed'
 
 export default async function HomeworkPage() {
@@ -49,7 +49,7 @@ export default async function HomeworkPage() {
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <HomeworkBoard
-              assignments={assignmentsRes.data ?? []}
+              assignments={(assignmentsRes.data as unknown as Assignment[]) ?? []}
               completions={completionsRes.data ?? []}
               students={studentsRes.data ?? []}
               createdBy={user.id}

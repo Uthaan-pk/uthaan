@@ -8,9 +8,10 @@ export default async function SubmissionsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Fetch role + student_id together — avoids a second round-trip for the student path
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, student_id')
     .eq('user_id', user.id)
     .single()
 
@@ -21,11 +22,33 @@ export default async function SubmissionsPage() {
 
   // ── Student view ──────────────────────────────────────────────────────────
   if (role === 'student') {
-    const { data: student } = await supabase
-      .from('students')
-      .select('id, name, class_num')
-      .eq('email', user.email!)
-      .single()
+    const studentId = roleData?.student_id
+
+    if (!studentId) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role={role} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">No student record found</div>
+              <div className="text-xs text-gray-400">Your account is not linked to a student. Contact your administrator.</div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Fetch student record (for class_num) and submissions in parallel
+    const [studentRes, submissionsRes] = await Promise.all([
+      supabase.from('students').select('id, class_num').eq('id', studentId).single(),
+      supabase
+        .from('assignment_submissions')
+        .select('id, assignment_id, student_id, file_url, text_response, submitted_at, reviewed, reviewed_at, teacher_note, grade')
+        .eq('student_id', studentId)
+        .limit(200),
+    ])
+
+    const student = studentRes.data
 
     if (!student) {
       return (
@@ -41,17 +64,12 @@ export default async function SubmissionsPage() {
       )
     }
 
-    const [assignmentsRes, submissionsRes] = await Promise.all([
-      supabase
-        .from('assignments')
-        .select('id, title, subject, description, due_date')
-        .eq('class_num', student.class_num)
-        .order('due_date', { ascending: true }),
-      supabase
-        .from('assignment_submissions')
-        .select('*')
-        .eq('student_id', student.id),
-    ])
+    const { data: assignments } = await supabase
+      .from('assignments')
+      .select('id, title, subject, description, due_date')
+      .eq('class_num', student.class_num)
+      .order('due_date', { ascending: true })
+      .limit(200)
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -67,7 +85,7 @@ export default async function SubmissionsPage() {
             <SubmissionsClient
               view="student"
               studentId={student.id}
-              assignments={assignmentsRes.data ?? []}
+              assignments={assignments ?? []}
               submissions={submissionsRes.data ?? []}
               allStudents={[]}
             />
@@ -82,15 +100,18 @@ export default async function SubmissionsPage() {
     supabase
       .from('assignments')
       .select('id, title, subject, class_num, due_date')
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false })
+      .limit(500),
     supabase
       .from('assignment_submissions')
-      .select('*, student:students(name, class_num)')
-      .order('submitted_at', { ascending: false }),
+      .select('id, assignment_id, student_id, file_url, text_response, submitted_at, reviewed, reviewed_at, teacher_note, grade, student:students(name, class_num)')
+      .order('submitted_at', { ascending: false })
+      .limit(500),
     supabase
       .from('students')
       .select('id, name, class_num')
-      .order('name'),
+      .order('name')
+      .limit(500),
   ])
 
   return (

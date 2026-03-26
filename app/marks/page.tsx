@@ -13,9 +13,10 @@ export default async function MarksPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Fetch role + student_id in one query — student section reuses student_id directly
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, student_id')
     .eq('user_id', user.id)
     .single()
 
@@ -24,13 +25,13 @@ export default async function MarksPage() {
 
   if (isStaff) {
     const [studentsRes, marksRes, weightsRes, quizSubsRes, assignmentSubsRes, assignmentsRes, gradebookMarksRes] = await Promise.all([
-      supabase.from('students').select('id, name, roll_no, user_id').order('name'),
-      supabase.from('marks').select('student_id, subject, exam, percent'),
-      supabase.from('grade_weights').select('*').eq('academic_year', CURRENT_YEAR).single(),
-      supabase.from('quiz_submissions').select('user_id, score, quizzes(questions)'),
-      supabase.from('assignment_submissions').select('student_id, grade').not('grade', 'is', null),
-      supabase.from('assignments').select('id, title, subject, class_num').order('created_at', { ascending: false }),
-      supabase.from('marks').select('id, student_id, subject, score, term, assignment_id, source').not('assignment_id', 'is', null),
+      supabase.from('students').select('id, name, roll_no, user_id').order('name').limit(500),
+      supabase.from('marks').select('student_id, subject, exam, percent').limit(2000),
+      supabase.from('grade_weights').select('assignment_weight, exam_weight, final_weight, quiz_weight').eq('academic_year', CURRENT_YEAR).single(),
+      supabase.from('quiz_submissions').select('user_id, score, quizzes(questions)').limit(1000),
+      supabase.from('assignment_submissions').select('student_id, grade').not('grade', 'is', null).limit(1000),
+      supabase.from('assignments').select('id, title, subject, class_num').order('created_at', { ascending: false }).limit(500),
+      supabase.from('marks').select('id, student_id, subject, score, term, assignment_id, source').not('assignment_id', 'is', null).limit(500),
     ])
 
     const students = studentsRes.data ?? []
@@ -144,11 +145,12 @@ export default async function MarksPage() {
       )
     }
 
-    const { data: child } = await supabase
-      .from('students')
-      .select('id, name, roll_no')
-      .eq('id', link.student_id)
-      .single()
+    const [childRes, marksRes] = await Promise.all([
+      supabase.from('students').select('id, name, roll_no').eq('id', link.student_id).single(),
+      supabase.from('marks').select('subject, exam, percent').eq('student_id', link.student_id).order('exam').order('subject').limit(200),
+    ])
+
+    const child = childRes.data
 
     if (!child) {
       return (
@@ -164,13 +166,7 @@ export default async function MarksPage() {
       )
     }
 
-    const { data: marks } = await supabase
-      .from('marks')
-      .select('subject, exam, percent')
-      .eq('student_id', child.id)
-      .order('exam')
-      .order('subject')
-
+    const marks = marksRes.data
     const byExam: Record<string, { subject: string; percent: number }[]> = {}
     marks?.forEach(m => {
       if (!byExam[m.exam]) byExam[m.exam] = []
@@ -240,15 +236,8 @@ export default async function MarksPage() {
     )
   }
 
-  // Student view
-  const { data: studentRoleData } = await supabase
-    .from('user_roles')
-    .select('student_id')
-    .eq('user_id', user.id)
-    .eq('role', 'student')
-    .single()
-
-  const studentId = studentRoleData?.student_id
+  // Student view — student_id comes from the initial user_roles query, no second round-trip
+  const studentId = roleData?.student_id
 
   if (!studentId) {
     return (
@@ -270,6 +259,7 @@ export default async function MarksPage() {
     .eq('student_id', studentId)
     .order('exam')
     .order('subject')
+    .limit(200)
 
   const byExam: Record<string, { subject: string; percent: number }[]> = {}
   marks?.forEach(m => {

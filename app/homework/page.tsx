@@ -9,9 +9,10 @@ export default async function HomeworkPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Fetch role + student_id together — avoids a second round-trip for the student path
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, student_id')
     .eq('user_id', user.id)
     .single()
 
@@ -19,18 +20,22 @@ export default async function HomeworkPage() {
   const isStaff = role === 'teacher' || role === 'admin'
 
   if (isStaff) {
-    const { data: assignments } = await supabase
-      .from('assignments')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    const { data: completions } = await supabase
-      .from('assignment_completions')
-      .select('assignment_id, student_id')
-
-    const { data: students } = await supabase
-      .from('students')
-      .select('id, class_num')
+    // All three queries are independent — run in parallel
+    const [assignmentsRes, completionsRes, studentsRes] = await Promise.all([
+      supabase
+        .from('assignments')
+        .select('id, title, description, subject, class_num, due_date, created_by')
+        .order('created_at', { ascending: false })
+        .limit(500),
+      supabase
+        .from('assignment_completions')
+        .select('assignment_id, student_id')
+        .limit(2000),
+      supabase
+        .from('students')
+        .select('id, class_num')
+        .limit(500),
+    ])
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -44,9 +49,9 @@ export default async function HomeworkPage() {
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <HomeworkBoard
-              assignments={assignments ?? []}
-              completions={completions ?? []}
-              students={students ?? []}
+              assignments={assignmentsRes.data ?? []}
+              completions={completionsRes.data ?? []}
+              students={studentsRes.data ?? []}
               createdBy={user.id}
             />
           </main>
@@ -77,11 +82,12 @@ export default async function HomeworkPage() {
       )
     }
 
-    const { data: child } = await supabase
-      .from('students')
-      .select('id, name, class_num')
-      .eq('id', link.student_id)
-      .single()
+    const [childRes, completionsRes] = await Promise.all([
+      supabase.from('students').select('id, name, class_num').eq('id', link.student_id).single(),
+      supabase.from('assignment_completions').select('assignment_id').eq('student_id', link.student_id).limit(200),
+    ])
+
+    const child = childRes.data
 
     if (!child) {
       return (
@@ -97,19 +103,13 @@ export default async function HomeworkPage() {
       )
     }
 
-    const [assignmentsRes, completionsRes] = await Promise.all([
-      supabase
-        .from('assignments')
-        .select('id, title, description, subject, class_num, due_date')
-        .eq('class_num', child.class_num)
-        .order('due_date', { ascending: true }),
-      supabase
-        .from('assignment_completions')
-        .select('assignment_id')
-        .eq('student_id', child.id),
-    ])
+    const { data: assignments } = await supabase
+      .from('assignments')
+      .select('id, title, description, subject, class_num, due_date')
+      .eq('class_num', child.class_num)
+      .order('due_date', { ascending: true })
+      .limit(200)
 
-    const assignments = assignmentsRes.data ?? []
     const doneIds = new Set((completionsRes.data ?? []).map(c => c.assignment_id))
 
     return (
@@ -124,11 +124,11 @@ export default async function HomeworkPage() {
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-2xl space-y-2">
-              {assignments.length === 0 ? (
+              {assignments?.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-100 px-5 py-10 text-center text-sm text-gray-400">
                   No homework posted
                 </div>
-              ) : assignments.map(a => (
+              ) : assignments?.map(a => (
                 <div
                   key={a.id}
                   className={`bg-white rounded-xl border p-4 ${doneIds.has(a.id) ? 'opacity-50 border-gray-100' : 'border-gray-100'}`}
@@ -165,12 +165,30 @@ export default async function HomeworkPage() {
     )
   }
 
-  // Student view — matched by email (no user_id column in students)
-  const { data: student } = await supabase
-    .from('students')
-    .select('id, class_num, stage')
-    .eq('email', user.email!)
-    .single()
+  // Student view — student_id comes from the initial user_roles query, no second round-trip
+  const studentId = roleData?.student_id
+
+  if (!studentId) {
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role={role ?? ''} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-sm font-medium text-gray-900 mb-1">No student record found</div>
+            <div className="text-xs text-gray-400">Your account is not linked to a student. Contact your administrator.</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Fetch student record (for class_num) and completions in parallel
+  const [studentRes, completionsRes] = await Promise.all([
+    supabase.from('students').select('id, class_num').eq('id', studentId).single(),
+    supabase.from('assignment_completions').select('assignment_id, completed_at').eq('student_id', studentId).limit(200),
+  ])
+
+  const student = studentRes.data
 
   if (!student) {
     return (
@@ -188,14 +206,10 @@ export default async function HomeworkPage() {
 
   const { data: assignments } = await supabase
     .from('assignments')
-    .select('*')
+    .select('id, title, description, subject, class_num, due_date')
     .eq('class_num', student.class_num)
     .order('due_date', { ascending: true })
-
-  const { data: completions } = await supabase
-    .from('assignment_completions')
-    .select('assignment_id, completed_at')
-    .eq('student_id', student.id)
+    .limit(200)
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -210,7 +224,7 @@ export default async function HomeworkPage() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <HomeworkFeed
             assignments={assignments ?? []}
-            completions={completions ?? []}
+            completions={completionsRes.data ?? []}
             studentId={student.id}
           />
         </main>

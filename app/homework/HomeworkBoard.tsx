@@ -73,6 +73,7 @@ export default function HomeworkBoard({
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
   const [assignments, setAssignments] = useState(initialAssignments)
+  const [selectedClass, setSelectedClass] = useState<number | ''>('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -94,6 +95,18 @@ export default function HomeworkBoard({
     })
     return map
   }, [completions])
+
+  // sorted unique class numbers from assignments
+  const classes = useMemo(() => {
+    const set = new Set<number>()
+    assignments.forEach(a => set.add(a.class_num))
+    return Array.from(set).sort((a, b) => a - b)
+  }, [assignments])
+
+  const filteredAssignments = useMemo(
+    () => selectedClass === '' ? assignments : assignments.filter(a => a.class_num === selectedClass),
+    [assignments, selectedClass]
+  )
 
   // student count per class_num
   const studentCounts = useMemo(() => {
@@ -194,19 +207,34 @@ export default function HomeworkBoard({
     <>
       <div className="max-w-3xl space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <p className="text-sm font-semibold text-gray-900">
-              {assignments.length} assignment{assignments.length !== 1 ? 's' : ''} posted
+              {filteredAssignments.length} assignment{filteredAssignments.length !== 1 ? 's' : ''}
+              {selectedClass !== '' ? ` · Class ${selectedClass}` : ' posted'}
             </p>
             <p className="text-xs text-gray-400 mt-0.5">Track homework completion across classes</p>
           </div>
-          <button
-            onClick={openModal}
-            className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            Post homework
-          </button>
+          <div className="flex items-center gap-2">
+            {classes.length > 1 && (
+              <select
+                value={selectedClass}
+                onChange={e => setSelectedClass(e.target.value === '' ? '' : Number(e.target.value))}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+              >
+                <option value="">All classes</option>
+                {classes.map(c => (
+                  <option key={c} value={c}>Class {c}</option>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={openModal}
+              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              Post homework
+            </button>
+          </div>
         </div>
 
         {/* List */}
@@ -223,9 +251,13 @@ export default function HomeworkBoard({
             <p className="text-sm text-gray-400 font-medium">No homework posted yet</p>
             <p className="text-xs text-gray-300 mt-1">Click "Post homework" to get started</p>
           </div>
+        ) : filteredAssignments.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 py-14 text-center">
+            <p className="text-sm text-gray-400">No assignments for Class {selectedClass}</p>
+          </div>
         ) : (
           <div className="space-y-3">
-            {assignments.map(assignment => {
+            {filteredAssignments.map(assignment => {
               const totalStudents = studentCounts[assignment.class_num] ?? 0
               const completed = completionCounts[assignment.id] ?? 0
               const pct = totalStudents > 0 ? Math.round((completed / totalStudents) * 100) : 0

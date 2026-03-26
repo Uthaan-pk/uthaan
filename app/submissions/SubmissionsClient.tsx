@@ -89,14 +89,35 @@ export default function SubmissionsClient({
   const [uploadPhase, setUploadPhase] = useState<null | 'uploading' | 'saving'>(null)
 
   // ── Teacher / admin state ─────────────────────────────────────────────────
-  const [selectedAssignment, setSelectedAssignment] = useState(assignments[0]?.id ?? '')
-  const [filterReview, setFilterReview] = useState<ReviewFilter>('all')
-  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({})
-  const [reviewGrades, setReviewGrades] = useState<Record<string, string>>({})
-  const [actingReview, setActingReview] = useState<string | null>(null)
-  const [viewingFile, setViewingFile] = useState<string | null>(null)
+  const [selectedClass, setSelectedClass]       = useState<number | ''>('')
+  const [selectedAssignment, setSelectedAssignment] = useState('')
+  const [filterReview, setFilterReview]         = useState<ReviewFilter>('all')
+  const [reviewNotes, setReviewNotes]           = useState<Record<string, string>>({})
+  const [reviewGrades, setReviewGrades]         = useState<Record<string, string>>({})
+  const [actingReview, setActingReview]         = useState<string | null>(null)
+  const [viewingFile, setViewingFile]           = useState<string | null>(null)
 
   // ── Derived ───────────────────────────────────────────────────────────────
+  // Sorted unique class numbers across all assignments (teacher/admin only)
+  const classes = useMemo(() => {
+    const set = new Set<number>()
+    assignments.forEach(a => { if (a.class_num != null) set.add(a.class_num) })
+    return Array.from(set).sort((a, b) => a - b)
+  }, [assignments])
+
+  // Assignments belonging to the selected class
+  const classAssignments = useMemo(
+    () => selectedClass === '' ? [] : assignments.filter(a => a.class_num === selectedClass),
+    [assignments, selectedClass]
+  )
+
+  function handleClassChange(classNum: number | '') {
+    setSelectedClass(classNum)
+    setSelectedAssignment(
+      classNum === '' ? '' : (assignments.find(a => a.class_num === classNum)?.id ?? '')
+    )
+  }
+
   // Student: map assignment_id → their one submission
   const subMap = useMemo(() => {
     const m: Record<string, Submission> = {}
@@ -230,6 +251,7 @@ export default function SubmissionsClient({
       .from('assignment_submissions')
       .update({ reviewed: true, reviewed_at: reviewedAt, teacher_note: note || null, grade: grade || null })
       .eq('id', sub.id)
+      .select()
 
     setActingReview(null)
 
@@ -444,25 +466,40 @@ export default function SubmissionsClient({
     <div className="max-w-4xl space-y-4">
       {/* Controls */}
       <div className="bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap gap-3 items-center">
+        {/* Class filter — always first */}
+        <select
+          value={selectedClass}
+          onChange={e => handleClassChange(e.target.value === '' ? '' : Number(e.target.value))}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+        >
+          <option value="">Select class…</option>
+          {classes.map(c => (
+            <option key={c} value={c}>Class {c}</option>
+          ))}
+        </select>
+
+        {/* Assignment filter — scoped to selected class */}
         <div className="flex-1 min-w-52">
           <select
             value={selectedAssignment}
             onChange={e => setSelectedAssignment(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+            disabled={selectedClass === ''}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {assignments.length === 0 && <option value="">No assignments</option>}
-            {assignments.map(a => (
-              <option key={a.id} value={a.id}>
-                {a.title} — {a.subject}{a.class_num != null ? ` (Class ${a.class_num})` : ''}
-              </option>
+            {selectedClass === '' && <option value="">Select a class first</option>}
+            {selectedClass !== '' && classAssignments.length === 0 && <option value="">No assignments for this class</option>}
+            {classAssignments.map(a => (
+              <option key={a.id} value={a.id}>{a.title} — {a.subject}</option>
             ))}
           </select>
         </div>
 
+        {/* Review filter */}
         <select
           value={filterReview}
           onChange={e => setFilterReview(e.target.value as ReviewFilter)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+          disabled={selectedClass === ''}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <option value="all">All</option>
           <option value="reviewed">Reviewed</option>
@@ -472,11 +509,16 @@ export default function SubmissionsClient({
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        {filteredSubs.length === 0 ? (
+        {selectedClass === '' ? (
+          <div className="px-5 py-14 text-center">
+            <div className="text-sm text-gray-400">Select a class to view submissions</div>
+            <div className="text-xs text-gray-300 mt-1">Use the Class filter above to get started</div>
+          </div>
+        ) : filteredSubs.length === 0 ? (
           <div className="px-5 py-14 text-center">
             <div className="text-sm text-gray-400">
-              {assignments.length === 0
-                ? 'No assignments found'
+              {classAssignments.length === 0
+                ? 'No assignments for this class'
                 : filterReview !== 'all'
                   ? 'No submissions matching filter'
                   : 'No submissions yet for this assignment'}

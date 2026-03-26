@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import MarksEditor from './MarksEditor'
+import { parseGradeText, type GradeWeights } from '@/lib/calculateGrade'
+
+const CURRENT_YEAR = '2025-2026'
 
 export default async function MarksPage() {
   const supabase = await createClient()
@@ -18,21 +21,66 @@ export default async function MarksPage() {
   const isStaff = role === 'teacher' || role === 'admin'
 
   if (isStaff) {
-    const { data: students } = await supabase
-      .from('students')
-      .select('id, name, roll_no')
-      .order('name')
+    const [studentsRes, marksRes, weightsRes, quizSubsRes, assignmentSubsRes] = await Promise.all([
+      supabase.from('students').select('id, name, roll_no, user_id').order('name'),
+      supabase.from('marks').select('student_id, subject, exam, percent'),
+      supabase.from('grade_weights').select('*').eq('academic_year', CURRENT_YEAR).single(),
+      supabase.from('quiz_submissions').select('user_id, score, quizzes(questions)'),
+      supabase.from('assignment_submissions').select('student_id, grade').not('grade', 'is', null),
+    ])
 
-    const { data: marksData } = await supabase
-      .from('marks')
-      .select('student_id, subject, exam, percent')
+    const students = studentsRes.data ?? []
+    const marksData = marksRes.data ?? []
+    const gradeWeights: GradeWeights | null = weightsRes.data
+      ? {
+          assignment_weight: weightsRes.data.assignment_weight,
+          exam_weight:       weightsRes.data.exam_weight,
+          final_weight:      weightsRes.data.final_weight,
+          quiz_weight:       weightsRes.data.quiz_weight,
+        }
+      : null
 
     // allMarks[exam][student_id][subject] = percent
     const allMarks: Record<string, Record<string, Record<string, number | null>>> = {}
-    marksData?.forEach(m => {
+    marksData.forEach(m => {
       if (!allMarks[m.exam]) allMarks[m.exam] = {}
       if (!allMarks[m.exam][m.student_id]) allMarks[m.exam][m.student_id] = {}
       allMarks[m.exam][m.student_id][m.subject] = m.percent
+    })
+
+    // Quiz averages: user_id → avg score %
+    const quizPctByUserId: Record<string, number[]> = {}
+    quizSubsRes.data?.forEach(sub => {
+      const q = sub.quizzes as { questions: unknown[] } | null
+      if (!q?.questions?.length) return
+      const pct = (sub.score / q.questions.length) * 100
+      if (!quizPctByUserId[sub.user_id]) quizPctByUserId[sub.user_id] = []
+      quizPctByUserId[sub.user_id].push(pct)
+    })
+
+    // Map to student_id via students.user_id
+    const quizAvgByStudentId: Record<string, number> = {}
+    students.forEach(s => {
+      if (!s.user_id) return
+      const scores = quizPctByUserId[s.user_id]
+      if (scores?.length) {
+        quizAvgByStudentId[s.id] = scores.reduce((a, b) => a + b, 0) / scores.length
+      }
+    })
+
+    // Assignment averages: student_id → avg of parsed numeric grades
+    const assignmentPctByStudentId: Record<string, number[]> = {}
+    assignmentSubsRes.data?.forEach(sub => {
+      if (!sub.grade) return
+      const pct = parseGradeText(sub.grade)
+      if (pct === null) return
+      if (!assignmentPctByStudentId[sub.student_id]) assignmentPctByStudentId[sub.student_id] = []
+      assignmentPctByStudentId[sub.student_id].push(pct)
+    })
+
+    const assignmentAvgByStudentId: Record<string, number> = {}
+    Object.entries(assignmentPctByStudentId).forEach(([sid, scores]) => {
+      assignmentAvgByStudentId[sid] = scores.reduce((a, b) => a + b, 0) / scores.length
     })
 
     return (
@@ -46,7 +94,13 @@ export default async function MarksPage() {
             </span>
           </header>
           <main className="flex-1 overflow-y-auto p-6">
-            <MarksEditor students={students ?? []} allMarks={allMarks} />
+            <MarksEditor
+              students={students}
+              allMarks={allMarks}
+              gradeWeights={gradeWeights}
+              quizAvgByStudentId={quizAvgByStudentId}
+              assignmentAvgByStudentId={assignmentAvgByStudentId}
+            />
           </main>
         </div>
       </div>
@@ -199,7 +253,6 @@ export default async function MarksPage() {
     .order('exam')
     .order('subject')
 
-  // Group by exam for display
   const byExam: Record<string, { subject: string; percent: number }[]> = {}
   marks?.forEach(m => {
     if (!byExam[m.exam]) byExam[m.exam] = []

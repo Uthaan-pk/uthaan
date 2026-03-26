@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-type Assignment = {
+export type Assignment = {
   id: string
   title: string
   description: string

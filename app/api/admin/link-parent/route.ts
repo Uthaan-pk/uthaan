@@ -38,15 +38,24 @@ export async function POST(req: NextRequest) {
     .from('user_roles')
     .upsert({ user_id: parentUser.id, role: 'parent' }, { onConflict: 'user_id' })
 
+  // Check for existing link before inserting
+  const { data: existing } = await adminClient
+    .from('parent_student')
+    .select('id')
+    .eq('parent_id', parentUser.id)
+    .eq('student_id', studentId)
+    .single()
+
+  if (existing) {
+    return NextResponse.json({ error: 'This parent is already linked to that student' }, { status: 409 })
+  }
+
   // Insert link
   const { error: linkError } = await adminClient
     .from('parent_student')
     .insert({ parent_id: parentUser.id, student_id: studentId })
 
   if (linkError) {
-    if (linkError.code === '23505') {
-      return NextResponse.json({ error: 'This parent is already linked to that student' }, { status: 409 })
-    }
     return NextResponse.json({ error: linkError.message }, { status: 500 })
   }
 

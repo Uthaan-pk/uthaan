@@ -19,31 +19,18 @@ export default async function DashboardPage() {
 
   // ── Parent dashboard ──────────────────────────────────────────────────────
   if (role === 'parent') {
-    const { data: link } = await supabase
+    const { data: parentRows } = await supabase
       .from('parent_student')
-      .select('student_id')
+      .select('student_id, students(id, name, class_num, roll_no, stage)')
       .eq('parent_id', user.id)
-      .single()
 
-    if (!link) {
-      return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-          <Sidebar email={user.email!} role="parent" />
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-sm font-medium text-gray-900 mb-1">No child linked to your account</div>
-              <div className="text-xs text-gray-400">Contact the school administrator to link your child.</div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    const { data: child } = await supabase
-      .from('students')
-      .select('id, name, class_num, roll_no, stage')
-      .eq('id', link.student_id)
-      .single()
+    const child = (parentRows?.[0]?.students ?? null) as {
+      id: string
+      name: string
+      class_num: number
+      roll_no: string | null
+      stage: string | null
+    } | null
 
     if (!child) {
       return (
@@ -51,8 +38,8 @@ export default async function DashboardPage() {
           <Sidebar email={user.email!} role="parent" />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-sm font-medium text-gray-900 mb-1">Student record not found</div>
-              <div className="text-xs text-gray-400">Contact the school administrator.</div>
+              <div className="text-sm font-medium text-gray-900 mb-1">No child linked to your account</div>
+              <div className="text-xs text-gray-400">Contact the school administrator to link your child.</div>
             </div>
           </div>
         </div>
@@ -131,7 +118,7 @@ export default async function DashboardPage() {
                 <StatCard
                   label="Class"
                   value={`Class ${child.class_num}`}
-                  change={child.stage ?? child.roll_no}
+                  change={child.stage ?? child.roll_no ?? ''}
                   icon="🏫"
                   color="purple"
                   href="/my-child"

@@ -6,7 +6,9 @@
       "Bash(find /Users/asadchaudhry/Desktop/uthaan -path *node_modules -prune -o -name *.sql -o -name migrations* -type f)",
       "Bash(find /Users/asadchaudhry/Desktop/uthaan -name *.env* -o -name .env*)",
       "Bash(ls -la /Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]/)",
-      "Bash(find /Users/asadchaudhry/Desktop/uthaan -path */node_modules -prune -o -name *.schema.* -o -name *database* -type f)"
+      "Bash(find /Users/asadchaudhry/Desktop/uthaan -path */node_modules -prune -o -name *.schema.* -o -name *database* -type f)",
+      "WebFetch(domain:uthaan-one.vercel.app)",
+      "Bash(npx playwright:*)"
     ],
     "additionalDirectories": [
       "/Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]"

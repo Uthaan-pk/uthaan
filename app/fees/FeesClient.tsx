@@ -10,7 +10,7 @@ type Student = {
   class_num: number | null
 }
 
-type Fee = {
+export type Fee = {
   id: string
   student_id: string
   amount: number

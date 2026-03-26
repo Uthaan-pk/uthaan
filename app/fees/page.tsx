@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
-import FeesClient from './FeesClient'
+import FeesClient, { type Fee } from './FeesClient'
 
 export default async function FeesPage() {
   const supabase = await createClient()
@@ -24,7 +24,7 @@ export default async function FeesPage() {
     const [feesRes, studentsRes] = await Promise.all([
       supabase
         .from('fees')
-        .select('id, student_id, amount, due_date, paid, paid_at, term, created_at, student:students(name, class_num)')
+        .select('id, student_id, amount, due_date, paid, paid_at, term, created_at, student:students!inner(name, class_num)')
         .order('created_at', { ascending: false })
         .limit(500),
       supabase
@@ -38,7 +38,7 @@ export default async function FeesPage() {
       <div className="flex h-screen overflow-hidden">
         <Sidebar email={user.email!} role="admin" />
         <FeesClient
-          initialFees={feesRes.data ?? []}
+          initialFees={(feesRes.data as unknown as Fee[]) ?? []}
           students={studentsRes.data ?? []}
         />
       </div>

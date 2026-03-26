@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import MarksEditor from './MarksEditor'
-import GradebookClient from './GradebookClient'
+import GradebookClient, { type Assignment as GradebookAssignment } from './GradebookClient'
 import MarksTabShell from './MarksTabShell'
 import { parseGradeText, type GradeWeights } from '@/lib/calculateGrade'
 
@@ -112,7 +112,7 @@ export default async function MarksPage() {
               gradebook={
                 <GradebookClient
                   students={students}
-                  assignments={assignmentsRes.data ?? []}
+                  assignments={(assignmentsRes.data as unknown as GradebookAssignment[]) ?? []}
                   initialMarks={(gradebookMarksRes.data ?? []) as any}
                 />
               }

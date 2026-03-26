@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
-type Student = { id: string; name: string; roll_no: string; stage: string; class_num: number }
+export type Student = { id: string; name: string; roll_no: string; stage: string; class_num: number }
 type StatusMap = Record<string, 'present' | 'absent'>
 
 function getInitials(name: string) {

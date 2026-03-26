@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
-import AttendanceMarker from './AttendanceMarker'
+import AttendanceMarker, { type Student as AttendanceStudent } from './AttendanceMarker'
 
 const statusStyles: Record<string, string> = {
   present: 'bg-green-50 text-green-800',
@@ -51,7 +51,7 @@ export default async function AttendancePage() {
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-2xl">
               <AttendanceMarker
-                students={students ?? []}
+                students={(students as unknown as AttendanceStudent[]) ?? []}
                 initialStatus={initialStatus}
                 today={today}
               />

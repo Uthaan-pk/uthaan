@@ -8,7 +8,7 @@ const CURRENT_TERM = 'Spring Term 2026'
 const SUBJECTS = ['Urdu', 'English', 'Math', 'Science', 'Islamiat']
 
 type Student = { id: string; name: string; roll_no: string }
-type Assignment = { id: string; title: string; subject: string; class_num?: number | null }
+export type Assignment = { id: string; title: string; subject: string; class_num?: number | null }
 type GradebookMark = {
   id: string
   student_id: string

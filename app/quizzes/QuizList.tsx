@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-type Quiz = {
+export type Quiz = {
   id: string
   title: string
   subject: string

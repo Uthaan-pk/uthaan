@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import TimetableGrid from './TimetableGrid'
+import { type TimetableRow } from './TimetableForm'
 
 export default async function TimetablePage() {
   const supabase = await createClient()
@@ -74,7 +75,7 @@ export default async function TimetablePage() {
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <TimetableGrid
-            rows={rows ?? []}
+            rows={(rows as unknown as TimetableRow[]) ?? []}
             teacherMap={teacherMap}
             currentUserId={user.id}
             currentRole={role ?? ''}

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
-import SubmissionsClient from './SubmissionsClient'
+import SubmissionsClient, { type Assignment, type Submission, type StudentRecord } from './SubmissionsClient'
 
 export default async function SubmissionsPage() {
   const supabase = await createClient()
@@ -85,8 +85,8 @@ export default async function SubmissionsPage() {
             <SubmissionsClient
               view="student"
               studentId={student.id}
-              assignments={assignments ?? []}
-              submissions={submissionsRes.data ?? []}
+              assignments={(assignments as unknown as Assignment[]) ?? []}
+              submissions={(submissionsRes.data as unknown as Submission[]) ?? []}
               allStudents={[]}
             />
           </main>
@@ -128,9 +128,9 @@ export default async function SubmissionsPage() {
           <SubmissionsClient
             view={role as 'teacher' | 'admin'}
             studentId=""
-            assignments={assignmentsRes.data ?? []}
-            submissions={submissionsRes.data ?? []}
-            allStudents={studentsRes.data ?? []}
+            assignments={(assignmentsRes.data as unknown as Assignment[]) ?? []}
+            submissions={(submissionsRes.data as unknown as Submission[]) ?? []}
+            allStudents={(studentsRes.data as unknown as StudentRecord[]) ?? []}
           />
         </main>
       </div>

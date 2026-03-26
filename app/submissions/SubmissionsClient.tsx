@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 
 const CURRENT_TERM = 'Spring Term 2026'
 
-type Assignment = {
+export type Assignment = {
   id: string
   title: string
   subject: string
@@ -16,7 +16,7 @@ type Assignment = {
   description?: string | null
 }
 
-type Submission = {
+export type Submission = {
   id: string
   assignment_id: string
   student_id: string
@@ -30,7 +30,7 @@ type Submission = {
   student?: { name: string; class_num: number | null } | null
 }
 
-type StudentRecord = {
+export type StudentRecord = {
   id: string
   name: string
   class_num: number | null

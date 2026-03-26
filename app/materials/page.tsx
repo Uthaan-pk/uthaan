@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
-import MaterialsClient from './MaterialsClient'
+import MaterialsClient, { type Material } from './MaterialsClient'
 
 export default async function MaterialsPage() {
   const supabase = await createClient()
@@ -35,7 +35,7 @@ export default async function MaterialsPage() {
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <MaterialsClient
-              initialMaterials={materials ?? []}
+              initialMaterials={(materials as unknown as Material[]) ?? []}
               isStaff={true}
               userId={user.id}
             />
@@ -84,7 +84,7 @@ export default async function MaterialsPage() {
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <MaterialsClient
-            initialMaterials={materials ?? []}
+            initialMaterials={(materials as unknown as Material[]) ?? []}
             isStaff={false}
             userId={user.id}
           />

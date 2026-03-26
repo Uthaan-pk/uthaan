@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
-type Material = {
+export type Material = {
   id: string
   title: string
   subject: string

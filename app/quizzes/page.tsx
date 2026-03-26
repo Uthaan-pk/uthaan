@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
-import QuizList from './QuizList'
+import QuizList, { type Quiz } from './QuizList'
 
 export default async function QuizzesPage() {
   const supabase = await createClient()
@@ -39,7 +39,7 @@ export default async function QuizzesPage() {
 
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-3xl">
-              <QuizList quizzes={quizzes ?? []} />
+              <QuizList quizzes={(quizzes as unknown as Quiz[]) ?? []} />
             </div>
           </main>
         </div>

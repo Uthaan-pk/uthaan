@@ -111,16 +111,13 @@ export default function SubmissionsClient({
   // Assignments belonging to the selected class
   const classAssignments = useMemo(() => {
     if (selectedClass === '') return []
-    const filtered = assignments.filter(a => String(a.class_num) === String(selectedClass))
-    console.log('[SubmissionsClient] all assignments:', assignments)
-    console.log(`[SubmissionsClient] selectedClass=${selectedClass}, matched:`, filtered)
-    return filtered
+    return assignments.filter(a => a.class_num === selectedClass)
   }, [assignments, selectedClass])
 
   function handleClassChange(classNum: number | '') {
     setSelectedClass(classNum)
     setSelectedAssignment(
-      classNum === '' ? '' : (assignments.find(a => String(a.class_num) === String(classNum))?.id ?? '')
+      classNum === '' ? '' : (assignments.find(a => a.class_num === classNum)?.id ?? '')
     )
   }
 

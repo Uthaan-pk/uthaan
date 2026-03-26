@@ -67,6 +67,10 @@ export default async function AdminPage() {
   const teacherCount = teacherCountRes.count ?? 0
   const studentCount = studentCountRes.count ?? 0
   const rawLinks = parentLinksRes.data ?? []
+
+  console.log('[admin] parentLinksRes.data:', parentLinksRes.data)
+  console.log('[admin] parentLinksRes.error:', parentLinksRes.error)
+  console.log('[admin] rawLinks count:', rawLinks.length)
   const weekLogs = weekLogsRes.data ?? []
   const teachers = teachersRes.data ?? []
   const quizzes = quizzesRes.data ?? []
@@ -87,9 +91,19 @@ export default async function AdminPage() {
   let emailById: Record<string, string> = {}
   if (rawLinks.length > 0) {
     const adminClient = createAdminClient()
-    const { data: { users } } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    const { data: { users }, error: usersError } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    console.log('[admin] listUsers error:', usersError)
+    console.log('[admin] listUsers count:', users?.length)
     emailById = Object.fromEntries(users.map(u => [u.id, u.email ?? '—']))
   }
+
+  console.log('[admin] parentLinks to render:', parentLinksRes.data?.map(l => ({
+    id: (l as any).id,
+    parent_id: (l as any).parent_id,
+    student_id: (l as any).student_id,
+    resolved_email: emailById[(l as any).parent_id] ?? 'NOT FOUND',
+    resolved_student: studentById[(l as any).student_id]?.name ?? 'NOT FOUND',
+  })))
 
   const parentLinks = rawLinks.map((l: any) => ({
     id: l.id as string,

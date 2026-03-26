@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { CreditCard } from 'lucide-react'
 
 const mainNav = [
   { label: 'Dashboard', href: '/dashboard' },
@@ -126,6 +127,7 @@ export default function Sidebar({ email, role }: { email: string; role: string }
             <>
               <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">Admin</p>
               <NavItem label="Admin Panel" href="/admin" active={pathname === '/admin'} onClose={close} />
+              <NavItem label="Fees" href="/fees" active={pathname === '/fees'} onClose={close} icon={CreditCard} />
             </>
           )}
         </nav>
@@ -151,7 +153,7 @@ export default function Sidebar({ email, role }: { email: string; role: string }
   )
 }
 
-function NavItem({ label, href, active, onClose }: { label: string; href: string; active: boolean; onClose: () => void }) {
+function NavItem({ label, href, active, onClose, icon: Icon }: { label: string; href: string; active: boolean; onClose: () => void; icon?: React.ElementType }) {
   return (
     <Link
       href={href}
@@ -162,6 +164,7 @@ function NavItem({ label, href, active, onClose }: { label: string; href: string
           : 'text-white/50 hover:text-white/80 hover:bg-white/5'
       }`}
     >
+      {Icon && <Icon size={14} strokeWidth={1.75} />}
       {label}
     </Link>
   )

@@ -3,9 +3,26 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import GradeSettingsClient from './GradeSettingsClient'
 
+type WeightRow = {
+  id: string
+  academic_year: string
+  class_num: number
+  subject: string
+  teacher_id: string
+  assignment_weight: number
+  exam_weight: number
+  final_weight: number
+  quiz_weight: number
+  created_by: string | null
+  created_at: string
+}
+
 export default async function GradeSettingsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
@@ -17,10 +34,20 @@ export default async function GradeSettingsPage() {
   const role = roleData?.role
   if (role !== 'admin' && role !== 'teacher') redirect('/dashboard')
 
-  const { data: weights } = await supabase
+  let query = supabase
     .from('grade_weights')
-    .select('id, academic_year, assignment_weight, exam_weight, final_weight, quiz_weight, created_by, created_at')
+    .select(
+      'id, academic_year, class_num, subject, teacher_id, assignment_weight, exam_weight, final_weight, quiz_weight, created_by, created_at'
+    )
     .order('academic_year', { ascending: false })
+    .order('class_num', { ascending: true })
+    .order('subject', { ascending: true })
+
+  if (role === 'teacher') {
+    query = query.eq('teacher_id', user.id)
+  }
+
+  const { data: weights } = await query
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -30,7 +57,11 @@ export default async function GradeSettingsPage() {
           <h1 className="text-sm font-semibold text-gray-900">Grade Settings</h1>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <GradeSettingsClient existingWeights={weights ?? []} userId={user.id} />
+          <GradeSettingsClient
+            existingWeights={(weights ?? []) as WeightRow[]}
+            userId={user.id}
+            role={role}
+          />
         </main>
       </div>
     </div>

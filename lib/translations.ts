@@ -35,6 +35,24 @@ export type TranslationKeys =
   | 'recentAnnouncements'
   | 'welcomeToUthaan'
   | 'springTerm2026'
+  | 'noChildLinkedYet'
+  | 'contactSchoolAdministrator'
+  | 'studentRecordNotFound'
+  | 'overallRate'
+  | 'averageMark'
+  | 'acrossAllSubjects'
+  | 'assignmentsFor'
+  | 'myAverage'
+  | 'viewGradebook'
+  | 'submitNow'
+  | 'allClear'
+  | 'timetableView'
+  | 'viewSchedule'
+  | 'checkActive'
+  | 'gradeNow'
+  | 'notMarkedToday'
+  | 'markNow'
+  | 'noneActive'
 
 export const translations: Record<Language, Record<TranslationKeys, string>> = {
   en: {
@@ -72,6 +90,24 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     recentAnnouncements: 'Recent Announcements',
     welcomeToUthaan: 'Welcome to Uthaan!',
     springTerm2026: 'Spring Term 2026',
+    noChildLinkedYet: 'No child linked yet',
+    contactSchoolAdministrator: 'Contact the school administrator.',
+    studentRecordNotFound: 'Student record not found',
+    overallRate: 'Overall rate',
+    averageMark: 'Average Mark',
+    acrossAllSubjects: 'Across all subjects',
+    assignmentsFor: 'Assignments for',
+    myAverage: 'My Average',
+    viewGradebook: 'View gradebook',
+    submitNow: 'Submit now',
+    allClear: 'All clear',
+    timetableView: 'Timetable',
+    viewSchedule: 'View schedule',
+    checkActive: 'Check active',
+    gradeNow: 'Grade now',
+    notMarkedToday: 'Not marked today',
+    markNow: 'Mark now',
+    noneActive: 'None active',
   },
   ur: {
     dashboard: 'ڈیش بورڈ',
@@ -108,5 +144,23 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     recentAnnouncements: 'حالیہ اعلانات',
     welcomeToUthaan: 'اُٹھان میں خوش آمدید!',
     springTerm2026: 'بہار سمسٹر 2026',
+    noChildLinkedYet: 'ابھی کوئی بچہ منسلک نہیں ہے',
+    contactSchoolAdministrator: 'اسکول ایڈمنسٹریٹر سے رابطہ کریں۔',
+    studentRecordNotFound: 'طالب علم کا ریکارڈ نہیں ملا',
+    overallRate: 'مجموعی شرح',
+    averageMark: 'اوسط نمبر',
+    acrossAllSubjects: 'تمام مضامین میں',
+    assignmentsFor: 'کے لیے اسائنمنٹس',
+    myAverage: 'میرا اوسط',
+    viewGradebook: 'گریڈ بک دیکھیں',
+    submitNow: 'ابھی جمع کریں',
+    allClear: 'سب ٹھیک ہے',
+    timetableView: 'ٹائم ٹیبل',
+    viewSchedule: 'شیڈول دیکھیں',
+    checkActive: 'فعال کوئزز دیکھیں',
+    gradeNow: 'ابھی گریڈ کریں',
+    notMarkedToday: 'آج حاضری نہیں لگی',
+    markNow: 'ابھی نشان لگائیں',
+    noneActive: 'کوئی فعال نہیں',
   },
 }

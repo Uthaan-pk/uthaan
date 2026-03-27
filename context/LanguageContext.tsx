@@ -31,6 +31,7 @@ export function LanguageProvider({
     if (saved === 'en' || saved === 'ur') {
       setLangState(saved)
       document.documentElement.lang = saved
+      document.cookie = `uthaan_lang=${saved}; path=/; max-age=31536000; samesite=lax`
     }
   }, [])
 
@@ -38,15 +39,17 @@ export function LanguageProvider({
     setLangState(newLang)
     localStorage.setItem('uthaan_lang', newLang)
     document.documentElement.lang = newLang
+    document.cookie = `uthaan_lang=${newLang}; path=/; max-age=31536000; samesite=lax`
   }
 
-  const value = useMemo(() => {
-    return {
+  const value = useMemo(
+    () => ({
       lang,
       setLang,
-      t: translations[lang] ?? translations.en,
-    }
-  }, [lang])
+      t: lang === 'ur' ? translations.ur : translations.en,
+    }),
+    [lang]
+  )
 
   return (
     <LanguageContext.Provider value={value}>

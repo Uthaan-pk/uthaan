@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import Link from 'next/link'
 import CopyLinkButton from '@/components/CopyLinkButton'
+import SignupsActions from './SignupsActions'
 
 type Lang = 'en' | 'ur'
 
@@ -74,14 +75,16 @@ export default async function SignupsPage() {
   const { data: signups } = await supabase
     .from('school_signups')
     .select('*')
+    .eq('status', 'pending')
     .order('created_at', { ascending: false })
 
-  const pending = (signups ?? []).filter((s) => s.status === 'pending').length
+  const pending = signups?.length ?? 0
   const onboardingLink = 'https://uthaan-one.vercel.app/onboarding'
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
       <Sidebar email={user.email!} role="admin" />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -91,7 +94,9 @@ export default async function SignupsPage() {
             >
               ← {t.admin}
             </Link>
+
             <span className="text-gray-200">/</span>
+
             <h1 className="text-sm font-semibold text-gray-900">
               {t.schoolSignups}
             </h1>
@@ -111,9 +116,11 @@ export default async function SignupsPage() {
                 <div className="text-sm text-gray-400 mb-2">
                   {t.noSchoolSignupsYet}
                 </div>
+
                 <div className="text-xs text-gray-300">
                   {t.shareToOnboard}
                 </div>
+
                 <div className="text-xs font-mono text-[#1a2e1a] mt-1">
                   {onboardingLink}
                 </div>
@@ -131,12 +138,15 @@ export default async function SignupsPage() {
                           <div className="text-sm font-semibold text-gray-900">
                             {s.school_name}
                           </div>
+
                           <span
                             className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                               s.status === 'pending'
                                 ? 'bg-amber-50 text-amber-700'
-                                : s.status === 'done'
+                                : s.status === 'approved'
                                 ? 'bg-green-50 text-green-700'
+                                : s.status === 'rejected'
+                                ? 'bg-red-50 text-red-700'
                                 : 'bg-gray-50 text-gray-500'
                             }`}
                           >
@@ -226,14 +236,7 @@ export default async function SignupsPage() {
                           })}
                         </div>
 
-                        <a
-                          href={`https://wa.me/${s.phone.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 inline-block text-xs font-medium text-green-700 bg-green-50 border border-green-100 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors"
-                        >
-                          {t.whatsapp} →
-                        </a>
+                        <SignupsActions id={s.id} phone={s.phone} />
                       </div>
                     </div>
                   </div>

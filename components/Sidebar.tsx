@@ -20,25 +20,29 @@ function NavItem({
   active,
   onClose,
   icon,
+  isUrdu,
 }: {
   label: string
   href: string
   active: boolean
   onClose: () => void
   icon?: React.ReactNode
+  isUrdu: boolean
 }) {
   return (
     <Link
       href={href}
       onClick={onClose}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors ${
+        isUrdu ? 'text-[15px] leading-7' : 'text-sm'
+      } ${
         active
           ? 'bg-[#6fcf6f]/15 text-[#6fcf6f] font-medium'
           : 'text-white/50 hover:text-white/80 hover:bg-white/5'
       }`}
     >
       {icon}
-      {label}
+      <span>{label}</span>
     </Link>
   )
 }
@@ -85,7 +89,8 @@ export default function Sidebar({
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   )
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
+  const isUrdu = lang === 'ur'
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -159,7 +164,13 @@ export default function Sidebar({
             <div className="text-2xl font-bold text-[#6fcf6f] tracking-tight">
               Uthaan
             </div>
-            <div className="text-[10px] text-white/30 uppercase tracking-widest mt-0.5">
+            <div
+              className={`text-white/30 mt-0.5 ${
+                isUrdu
+                  ? 'text-xs tracking-normal'
+                  : 'text-[10px] uppercase tracking-widest'
+              }`}
+            >
               {t.schoolManagement}
             </div>
           </div>
@@ -187,7 +198,13 @@ export default function Sidebar({
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mb-2">
+          <p
+            className={`text-white/30 px-2 mb-2 ${
+              isUrdu
+                ? 'text-xs tracking-normal'
+                : 'text-[10px] uppercase tracking-widest'
+            }`}
+          >
             {t.main}
           </p>
 
@@ -196,6 +213,7 @@ export default function Sidebar({
             href="/dashboard"
             active={pathname === '/dashboard'}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
           {isStaff && (
@@ -204,6 +222,7 @@ export default function Sidebar({
               href="/students"
               active={pathname === '/students'}
               onClose={close}
+              isUrdu={isUrdu}
             />
           )}
 
@@ -213,6 +232,7 @@ export default function Sidebar({
               href="/my-child"
               active={pathname === '/my-child'}
               onClose={close}
+              isUrdu={isUrdu}
             />
           )}
 
@@ -221,9 +241,16 @@ export default function Sidebar({
             href="/announcements"
             active={pathname === '/announcements'}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
-          <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">
+          <p
+            className={`text-white/30 px-2 mt-4 mb-2 ${
+              isUrdu
+                ? 'text-xs tracking-normal'
+                : 'text-[10px] uppercase tracking-widest'
+            }`}
+          >
             {t.academic}
           </p>
 
@@ -232,6 +259,7 @@ export default function Sidebar({
             href="/assignments"
             active={pathname.startsWith('/assignments')}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
           <NavItem
@@ -239,6 +267,7 @@ export default function Sidebar({
             href="/marks"
             active={pathname === '/marks'}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
           <NavItem
@@ -246,6 +275,7 @@ export default function Sidebar({
             href="/attendance"
             active={pathname === '/attendance'}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
           <NavItem
@@ -253,6 +283,7 @@ export default function Sidebar({
             href="/quizzes"
             active={pathname.startsWith('/quizzes')}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
           <NavItem
@@ -260,6 +291,7 @@ export default function Sidebar({
             href="/timetable"
             active={pathname === '/timetable'}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
           <NavItem
@@ -267,6 +299,7 @@ export default function Sidebar({
             href="/materials"
             active={pathname === '/materials'}
             onClose={close}
+            isUrdu={isUrdu}
           />
 
           {(isStaff || role === 'student' || isParent) && (
@@ -275,6 +308,7 @@ export default function Sidebar({
               href="/fees"
               active={pathname === '/fees'}
               onClose={close}
+              isUrdu={isUrdu}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -300,6 +334,7 @@ export default function Sidebar({
               href="/grade-settings"
               active={pathname === '/grade-settings'}
               onClose={close}
+              isUrdu={isUrdu}
               icon={
                 <svg
                   width="14"
@@ -320,7 +355,13 @@ export default function Sidebar({
 
           {role === 'admin' && (
             <>
-              <p className="text-[10px] text-white/30 uppercase tracking-widest px-2 mt-4 mb-2">
+              <p
+                className={`text-white/30 px-2 mt-4 mb-2 ${
+                  isUrdu
+                    ? 'text-xs tracking-normal'
+                    : 'text-[10px] uppercase tracking-widest'
+                }`}
+              >
                 {t.admin}
               </p>
 
@@ -329,6 +370,7 @@ export default function Sidebar({
                 href="/admin"
                 active={pathname === '/admin'}
                 onClose={close}
+                isUrdu={isUrdu}
               />
 
               <NavItem
@@ -336,6 +378,7 @@ export default function Sidebar({
                 href="/admin/signups"
                 active={pathname === '/admin/signups'}
                 onClose={close}
+                isUrdu={isUrdu}
               />
             </>
           )}
@@ -350,17 +393,29 @@ export default function Sidebar({
             </div>
 
             <div className="min-w-0">
-              <div className="text-xs text-white/80 font-medium truncate">
+              <div
+                className={`text-white/80 font-medium truncate ${
+                  isUrdu ? 'text-sm' : 'text-xs'
+                }`}
+              >
                 {username}
               </div>
-              <div className="text-[10px] text-white/35 capitalize">
+              <div
+                className={`text-white/35 capitalize ${
+                  isUrdu ? 'text-xs' : 'text-[10px]'
+                }`}
+              >
                 {role}
               </div>
             </div>
           </div>
 
           <form action="/auth/signout" method="post" className="mt-3">
-            <button className="w-full text-xs text-white/30 hover:text-red-400 transition-colors text-left px-2 py-1">
+            <button
+              className={`w-full hover:text-red-400 transition-colors text-left px-2 py-1 text-white/30 ${
+                isUrdu ? 'text-sm' : 'text-xs'
+              }`}
+            >
               {t.signOut} →
             </button>
           </form>

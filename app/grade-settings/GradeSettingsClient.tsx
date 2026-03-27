@@ -46,6 +46,17 @@ export default function GradeSettingsClient({
   const [finals, setFinals] = useState('25')
   const [quiz, setQuiz] = useState('25')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  function resetForm() {
+    setYear('2025-2026')
+    setClassNum('1')
+    setSubject('urdu')
+    setAssignment('25')
+    setExam('25')
+    setFinals('25')
+    setQuiz('25')
+  }
 
   function loadRow(row: WeightRow) {
     setYear(row.academic_year)
@@ -147,6 +158,37 @@ export default function GradeSettingsClient({
     toast.success(existingRow ? 'Weights updated!' : 'Weights saved!')
   }
 
+  async function handleDelete() {
+    if (!existingRow) {
+      toast.error('Select an existing row first.')
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Delete grade weights for ${existingRow.academic_year}, Class ${existingRow.class_num}, ${existingRow.subject}?`
+    )
+
+    if (!confirmed) return
+
+    setDeleting(true)
+
+    const { error } = await supabase
+      .from('grade_weights')
+      .delete()
+      .eq('id', existingRow.id)
+
+    setDeleting(false)
+
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+
+    setWeights((prev) => prev.filter((w) => w.id !== existingRow.id))
+    resetForm()
+    toast.success('Weights deleted!')
+  }
+
   return (
     <div className="max-w-3xl space-y-5">
       {weights.length > 0 && (
@@ -207,7 +249,7 @@ export default function GradeSettingsClient({
             {existingRow ? 'Edit' : 'New'} Grade Weights
           </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Weights are now saved per academic year, class, and subject.
+            Weights are saved per academic year, class, and subject.
           </p>
         </div>
 
@@ -293,13 +335,25 @@ export default function GradeSettingsClient({
             </span>
           </div>
 
-          <button
-            onClick={handleSave}
-            disabled={saving || !totalOk}
-            className="w-full bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium py-2.5 rounded-lg disabled:opacity-50 transition-colors"
-          >
-            {saving ? 'Saving…' : existingRow ? 'Update weights' : 'Save weights'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleSave}
+              disabled={saving || !totalOk}
+              className="flex-1 bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium py-2.5 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {saving ? 'Saving…' : existingRow ? 'Update weights' : 'Save weights'}
+            </button>
+
+            {existingRow && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 disabled:opacity-50 transition-colors"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

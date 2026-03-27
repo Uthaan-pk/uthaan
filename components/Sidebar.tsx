@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/context/LanguageContext'
 
@@ -49,11 +49,17 @@ function NavItem({
 
 function LangToggle() {
   const { lang, setLang } = useLanguage()
+  const router = useRouter()
+
+  function handleLangChange(nextLang: 'en' | 'ur') {
+    setLang(nextLang)
+    router.refresh()
+  }
 
   return (
     <div className="flex gap-1 bg-white/10 rounded-lg p-1 mb-3">
       <button
-        onClick={() => setLang('en')}
+        onClick={() => handleLangChange('en')}
         className={`flex-1 py-1 rounded text-xs font-medium transition-colors ${
           lang === 'en'
             ? 'bg-[#6fcf6f] text-[#1a2e1a]'
@@ -63,7 +69,7 @@ function LangToggle() {
         EN
       </button>
       <button
-        onClick={() => setLang('ur')}
+        onClick={() => handleLangChange('ur')}
         className={`flex-1 py-1 rounded text-xs font-medium transition-colors ${
           lang === 'ur'
             ? 'bg-[#6fcf6f] text-[#1a2e1a]'

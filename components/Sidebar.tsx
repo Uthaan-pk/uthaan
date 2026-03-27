@@ -26,16 +26,12 @@ function LangToggle() {
   const [lang, setLangState] = useState<'en'|'ur'>('en')
   useEffect(() => {
     const saved = localStorage.getItem('uthaan_lang') as 'en'|'ur'|null
-    if (saved) {
-      setLangState(saved)
-      document.documentElement.dir = saved === 'ur' ? 'rtl' : 'ltr'
-    }
+    if (saved) setLangState(saved)
   }, [])
   function toggle(l: 'en'|'ur') {
     setLangState(l)
     localStorage.setItem('uthaan_lang', l)
-    document.documentElement.dir = l === 'ur' ? 'rtl' : 'ltr'
-    document.documentElement.lang = l
+    // Do NOT change document dir — keeps layout LTR always
   }
   return (
     <div className="flex gap-1 bg-white/10 rounded-lg p-1 mb-3">

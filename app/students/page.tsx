@@ -19,7 +19,7 @@ export default async function StudentsPage() {
 
   const { data: students } = await supabase
     .from('students')
-    .select('id, name, student_id, stage, class, status, created_at')
+    .select('id, name, roll_no, email, stage, class_num, created_at')
     .order('name')
 
   return (

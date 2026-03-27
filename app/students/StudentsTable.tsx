@@ -6,10 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 type Student = {
   id: string
   name: string
-  student_id: string
+  roll_no: string
+  email: string | null
   stage: string
-  class: string
-  status: string
+  class_num: number | null
   created_at: string
 }
 
@@ -106,7 +106,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
               <th className="text-left px-4 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">ID</th>
               <th className="text-left px-4 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">Stage</th>
               <th className="text-left px-4 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">Class</th>
-              <th className="text-left px-4 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -124,21 +123,13 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                     <span className="font-medium text-gray-900">{student.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3.5 text-gray-400 text-xs font-mono">{student.student_id}</td>
+                <td className="px-4 py-3.5 text-gray-400 text-xs font-mono">{student.roll_no}</td>
                 <td className="px-4 py-3.5 text-gray-500 text-sm">{student.stage}</td>
-                <td className="px-4 py-3.5 text-gray-500 text-sm">{student.class}</td>
-                <td className="px-4 py-3.5">
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${student.status === 'active' ? 'bg-[#6fcf6f]' : 'bg-gray-300'}`} />
-                    <span className={`text-xs capitalize ${student.status === 'active' ? 'text-green-700' : 'text-gray-400'}`}>
-                      {student.status}
-                    </span>
-                  </div>
-                </td>
+                <td className="px-4 py-3.5 text-gray-500 text-sm">{student.class_num ?? '—'}</td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-sm text-gray-400">
+                <td colSpan={4} className="px-5 py-12 text-center text-sm text-gray-400">
                   {search ? `No students match "${search}"` : 'No students found'}
                 </td>
               </tr>
@@ -172,7 +163,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-gray-900 truncate">{selectedStudent.name}</div>
-                  <div className="text-[11px] text-gray-400 font-mono mt-0.5">{selectedStudent.student_id}</div>
+                  <div className="text-[11px] text-gray-400 font-mono mt-0.5">{selectedStudent.roll_no}</div>
                 </div>
               </div>
               <button
@@ -194,17 +185,14 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                 </div>
                 <div className="bg-[#f8f7f4] rounded-lg p-3">
                   <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Class</div>
-                  <div className="text-sm font-medium text-gray-900">{selectedStudent.class}</div>
+                  <div className="text-sm font-medium text-gray-900">{selectedStudent.class_num ?? '—'}</div>
                 </div>
-                <div className="bg-[#f8f7f4] rounded-lg p-3 col-span-2">
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Status</div>
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${selectedStudent.status === 'active' ? 'bg-[#6fcf6f]' : 'bg-gray-300'}`} />
-                    <span className={`text-sm font-medium capitalize ${selectedStudent.status === 'active' ? 'text-green-700' : 'text-gray-500'}`}>
-                      {selectedStudent.status}
-                    </span>
+                {selectedStudent.email && (
+                  <div className="bg-[#f8f7f4] rounded-lg p-3 col-span-2">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Email</div>
+                    <div className="text-sm font-medium text-gray-900 truncate">{selectedStudent.email}</div>
                   </div>
-                </div>
+                )}
               </div>
 
               {drawerLoading ? (

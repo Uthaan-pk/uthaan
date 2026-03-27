@@ -2,7 +2,6 @@ export type Lang = 'en' | 'ur'
 
 export const t = {
   en: {
-    // Navigation
     dashboard: 'Dashboard',
     students: 'Students',
     announcements: 'Announcements',
@@ -17,8 +16,6 @@ export const t = {
     adminPanel: 'Admin Panel',
     signOut: 'Sign out',
     myChild: 'My Child',
-
-    // Dashboard
     toGrade: 'To grade',
     allCaughtUp: 'All caught up',
     gradeNow: 'Grade now →',
@@ -35,17 +32,11 @@ export const t = {
     viewAllStudents: 'View all students →',
     recentAnnouncements: 'Recent announcements',
     springTerm: 'Spring Term 2026',
-
-    // Assignments
     postAssignment: '+ Post assignment',
     viewSubmissions: 'View submissions',
     submitted: 'submitted',
     graded: 'graded',
     allClasses: 'All classes',
-    allFilter: 'all',
-    pendingFilter: 'pending',
-    gradedFilter: 'graded',
-    dueLabel: 'Due',
     overdue: 'Overdue',
     dueToday2: 'Due Today',
     dueTomorrow: 'Due Tomorrow',
@@ -58,20 +49,14 @@ export const t = {
     yourResponse: 'Your response',
     orUploadFile: 'Or upload a file',
     typeAnswerHere: 'Type your answer here…',
-
-    // Gradebook
     clickToEdit: 'Click any cell to edit · Enter to save · Esc to cancel',
     autoFromSub: 'auto from submission',
     manualEntry: 'manual entry',
     student: 'Student',
     avg: 'Avg',
-
-    // Attendance
     present: 'Present',
     absent: 'Absent',
     saveAttendance: 'Save attendance',
-
-    // Auth
     welcomeBack: 'Welcome back',
     signIn: 'Sign in to your school dashboard',
     email: 'Email address',
@@ -79,14 +64,12 @@ export const t = {
     signInBtn: 'Sign in to Uthaan',
     noAccount: "Don't have an account?",
     createAccount: 'Create account',
-
-    // Onboarding
     getStarted: 'Get your school on Uthaan',
     getStartedSub: "Fill out this form and we'll set up your school within 24 hours. Free to get started.",
     schoolName: 'School name',
     city: 'City',
     principalName: 'Principal / Head Teacher name',
-    totalStudents: 'Total number of students',
+    studentCount: 'Total number of students',
     adminEmail: 'Admin email address',
     phone: 'WhatsApp / Phone number',
     submitRequest: 'Submit request',
@@ -95,7 +78,6 @@ export const t = {
     back: 'Back',
   },
   ur: {
-    // Navigation
     dashboard: 'ڈیش بورڈ',
     students: 'طلباء',
     announcements: 'اعلانات',
@@ -110,8 +92,6 @@ export const t = {
     adminPanel: 'ایڈمن پینل',
     signOut: 'سائن آؤٹ',
     myChild: 'میرا بچہ',
-
-    // Dashboard
     toGrade: 'گریڈ کرنے کو',
     allCaughtUp: 'سب مکمل',
     gradeNow: 'ابھی گریڈ کریں ←',
@@ -128,17 +108,11 @@ export const t = {
     viewAllStudents: 'سب طلباء دیکھیں ←',
     recentAnnouncements: 'حالیہ اعلانات',
     springTerm: 'بہار سمسٹر ۲۰۲۶',
-
-    // Assignments
     postAssignment: '+ تفویض پوسٹ کریں',
     viewSubmissions: 'جمع شدہ دیکھیں',
     submitted: 'جمع کرائے',
     graded: 'گریڈ ہوئے',
     allClasses: 'تمام کلاسیں',
-    allFilter: 'سب',
-    pendingFilter: 'زیر التواء',
-    gradedFilter: 'گریڈ شدہ',
-    dueLabel: 'آخری تاریخ',
     overdue: 'وقت گزر گیا',
     dueToday2: 'آج جمع کرانا ہے',
     dueTomorrow: 'کل جمع کرانا ہے',
@@ -151,20 +125,14 @@ export const t = {
     yourResponse: 'آپ کا جواب',
     orUploadFile: 'یا فائل اپلوڈ کریں',
     typeAnswerHere: 'یہاں جواب لکھیں…',
-
-    // Gradebook
     clickToEdit: 'ترمیم کے لیے سیل پر کلک کریں',
     autoFromSub: 'خودکار',
     manualEntry: 'دستی',
     student: 'طالب علم',
     avg: 'اوسط',
-
-    // Attendance
     present: 'حاضر',
     absent: 'غائب',
     saveAttendance: 'حاضری محفوظ کریں',
-
-    // Auth
     welcomeBack: 'خوش آمدید',
     signIn: 'اپنے اسکول کے ڈیش بورڈ میں داخل ہوں',
     email: 'ای میل',
@@ -172,14 +140,12 @@ export const t = {
     signInBtn: 'اتھان میں داخل ہوں',
     noAccount: 'اکاؤنٹ نہیں ہے؟',
     createAccount: 'اکاؤنٹ بنائیں',
-
-    // Onboarding
     getStarted: 'اتھان پر اپنا اسکول رجسٹر کریں',
     getStartedSub: 'یہ فارم بھریں اور ہم ۲۴ گھنٹوں میں آپ کا اسکول ترتیب دیں گے۔ مفت شروع کریں۔',
     schoolName: 'اسکول کا نام',
     city: 'شہر',
     principalName: 'پرنسپل / ہیڈ ٹیچر کا نام',
-    totalStudents: 'طلباء کی کل تعداد',
+    studentCount: 'طلباء کی کل تعداد',
     adminEmail: 'ایڈمن ای میل',
     phone: 'واٹس ایپ / فون نمبر',
     submitRequest: 'درخواست جمع کریں',

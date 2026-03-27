@@ -308,7 +308,7 @@ export default function Sidebar({
             isUrdu={isUrdu}
           />
 
-          {(isStaff || role === 'student' || isParent) && (
+          {(role === 'admin' || role === 'student' || isParent) && (
             <NavItem
               label={t.fees}
               href="/fees"

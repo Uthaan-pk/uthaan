@@ -7,13 +7,17 @@ import CopyLinkButton from '@/components/CopyLinkButton'
 import SignupsActions from './SignupsActions'
 
 type Lang = 'en' | 'ur'
+type SignupFilter = 'pending' | 'approved' | 'rejected' | 'all'
 
 const pageText = {
   en: {
     admin: 'Admin',
     schoolSignups: 'School Signups',
     pending: 'pending',
-    noSchoolSignupsYet: 'No school signups yet',
+    approved: 'approved',
+    rejected: 'rejected',
+    all: 'all',
+    noSchoolSignupsYet: 'No school signups found',
     shareToOnboard: 'Share this link to get schools onboarded:',
     email: 'Email',
     phone: 'Phone',
@@ -33,7 +37,10 @@ const pageText = {
     admin: 'ایڈمن',
     schoolSignups: 'اسکول سائن اپس',
     pending: 'زیر التوا',
-    noSchoolSignupsYet: 'ابھی تک کوئی اسکول سائن اپ نہیں ہوا',
+    approved: 'منظور شدہ',
+    rejected: 'مسترد',
+    all: 'تمام',
+    noSchoolSignupsYet: 'کوئی اسکول سائن اپ نہیں ملا',
     shareToOnboard: 'اسکولز کو شامل کرنے کے لیے یہ لنک شیئر کریں:',
     email: 'ای میل',
     phone: 'فون',
@@ -51,7 +58,20 @@ const pageText = {
   },
 } as const
 
-export default async function SignupsPage() {
+export default async function SignupsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string }>
+}) {
+  const params = (await searchParams) ?? {}
+  const rawStatus = params.status
+  const filter: SignupFilter =
+    rawStatus === 'approved' ||
+    rawStatus === 'rejected' ||
+    rawStatus === 'all'
+      ? rawStatus
+      : 'pending'
+
   const cookieStore = await cookies()
   const cookieLang = cookieStore.get('uthaan_lang')?.value
   const lang: Lang = cookieLang === 'ur' ? 'ur' : 'en'
@@ -72,14 +92,36 @@ export default async function SignupsPage() {
 
   if (roleData?.role !== 'admin') redirect('/dashboard')
 
-  const { data: signups } = await supabase
+  let query = supabase
     .from('school_signups')
     .select('*')
-    .eq('status', 'pending')
     .order('created_at', { ascending: false })
 
-  const pending = signups?.length ?? 0
+  if (filter !== 'all') {
+    query = query.eq('status', filter)
+  }
+
+  const { data: signups } = await query
+
+  const { count: pendingCount } = await supabase
+    .from('school_signups')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'pending')
+
   const onboardingLink = 'https://uthaan-one.vercel.app/onboarding'
+
+  const filterLinkClass = (value: SignupFilter) =>
+    `px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+      filter === value
+        ? value === 'pending'
+          ? 'bg-amber-50 text-amber-700 border-amber-100'
+          : value === 'approved'
+          ? 'bg-green-50 text-green-700 border-green-100'
+          : value === 'rejected'
+          ? 'bg-red-50 text-red-700 border-red-100'
+          : 'bg-gray-100 text-gray-800 border-gray-200'
+        : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+    }`
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -102,15 +144,42 @@ export default async function SignupsPage() {
             </h1>
           </div>
 
-          {pending > 0 && (
+          {(pendingCount ?? 0) > 0 && (
             <span className="text-xs bg-amber-50 text-amber-700 border border-amber-100 px-3 py-1 rounded-full font-medium">
-              {pending} {t.pending}
+              {pendingCount} {t.pending}
             </span>
           )}
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl">
+            <div className="mb-4 flex flex-wrap gap-2">
+              <Link
+                href="/admin/signups?status=pending"
+                className={filterLinkClass('pending')}
+              >
+                {t.pending}
+              </Link>
+              <Link
+                href="/admin/signups?status=approved"
+                className={filterLinkClass('approved')}
+              >
+                {t.approved}
+              </Link>
+              <Link
+                href="/admin/signups?status=rejected"
+                className={filterLinkClass('rejected')}
+              >
+                {t.rejected}
+              </Link>
+              <Link
+                href="/admin/signups?status=all"
+                className={filterLinkClass('all')}
+              >
+                {t.all}
+              </Link>
+            </div>
+
             {!signups || signups.length === 0 ? (
               <div className="bg-white rounded-xl border border-gray-100 px-5 py-16 text-center">
                 <div className="text-sm text-gray-400 mb-2">
@@ -236,7 +305,20 @@ export default async function SignupsPage() {
                           })}
                         </div>
 
-                        <SignupsActions id={s.id} phone={s.phone} />
+                        {s.status === 'pending' ? (
+                          <SignupsActions id={s.id} phone={s.phone} />
+                        ) : s.phone ? (
+                          <div className="mt-2">
+                            <a
+                              href={`https://wa.me/${s.phone.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block text-xs font-medium text-green-700 bg-green-50 border border-green-100 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors"
+                            >
+                              {t.whatsapp} →
+                            </a>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>

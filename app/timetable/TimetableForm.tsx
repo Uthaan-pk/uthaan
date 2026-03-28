@@ -11,6 +11,7 @@ export type TimetableRow = {
   period: number
   subject: string
   teacher_id: string | null
+  instructor_name: string | null
   start_time: string
   end_time: string
 }
@@ -49,6 +50,9 @@ export default function TimetableForm({
   )
   const [subject, setSubject] = useState(existing?.subject ?? '')
   const [teacherId, setTeacherId] = useState(existing?.teacher_id ?? '')
+  const [instructorName, setInstructorName] = useState(
+    existing?.instructor_name ?? ''
+  )
   const [startTime, setStartTime] = useState(existing?.start_time ?? '')
   const [endTime, setEndTime] = useState(existing?.end_time ?? '')
   const [saving, setSaving] = useState(false)
@@ -77,8 +81,9 @@ export default function TimetableForm({
       stage: existing?.stage ?? '',
       day: selectedDay,
       period: Number(selectedPeriod),
-      subject: subject.trim().toLowerCase(),
+      subject: subject.trim(),
       teacher_id: teacherId || null,
+      instructor_name: instructorName.trim() || null,
       start_time: startTime,
       end_time: endTime,
     }
@@ -194,13 +199,19 @@ export default function TimetableForm({
 
   return (
     <div
-      className="bg-white rounded-xl border border-gray-100 shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+      className="bg-white rounded-2xl border border-gray-100 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
       onClick={e => e.stopPropagation()}
     >
       <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">
-          {existing ? 'Edit period' : 'Add period'}
-        </h3>
+        <div>
+          <h3 className="text-base font-semibold text-gray-900">
+            {existing ? 'Edit period' : 'Add period'}
+          </h3>
+          <p className="text-xs text-gray-400 mt-1">
+            Simple and clean timetable entry for pilot use
+          </p>
+        </div>
+
         <button
           onClick={onClose}
           className="text-gray-300 hover:text-gray-500 text-xl leading-none"
@@ -295,7 +306,7 @@ export default function TimetableForm({
 
         <div>
           <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">
-            Instructor
+            Assigned Staff
           </label>
           <select
             value={teacherId}
@@ -311,7 +322,22 @@ export default function TimetableForm({
             ))}
           </select>
           <div className="text-[10px] text-gray-400 mt-1">
-            You can assign either a teacher or an admin as the instructor.
+            Teacher or admin can be linked here for internal assignment.
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">
+            Instructor Name Shown on Timetable
+          </label>
+          <input
+            value={instructorName}
+            onChange={e => setInstructorName(e.target.value)}
+            placeholder="e.g. Sir Ahmed, Miss Sana"
+            className={inputCls}
+          />
+          <div className="text-[10px] text-gray-400 mt-1">
+            This is the display name students will see on the timetable and print view.
           </div>
         </div>
 

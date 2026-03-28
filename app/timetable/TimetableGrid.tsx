@@ -44,6 +44,18 @@ function subjectStyle(s: string) {
   return FALLBACK[sum % FALLBACK.length]
 }
 
+function formatTime(time: string) {
+  if (!time) return ''
+
+  const [h, m] = time.split(':').map(Number)
+  if (Number.isNaN(h) || Number.isNaN(m)) return time
+
+  const suffix = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 === 0 ? 12 : h % 12
+
+  return `${hour}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
 type EditCell = {
   day: string
   period: number
@@ -104,6 +116,13 @@ export default function TimetableGrid({
     router.refresh()
   }
 
+  function getInstructorLabel(row: TimetableRow | null | undefined) {
+    if (!row) return null
+    if (row.instructor_name?.trim()) return row.instructor_name.trim()
+    if (row.teacher_id) return teacherMap[row.teacher_id] ?? 'Assigned Staff'
+    return 'Unassigned'
+  }
+
   function buildPrintHtml() {
     const safeClassLabel = selectedClass ? `Class ${selectedClass}` : 'Timetable'
     const today = new Date().toLocaleDateString('en-GB', {
@@ -126,15 +145,13 @@ export default function TimetableGrid({
           `
         }
 
-        const instructor = row.teacher_id
-          ? (teacherMap[row.teacher_id] ?? 'Instructor')
-          : 'Unassigned'
+        const instructor = getInstructorLabel(row)
 
         return `
           <td>
             <div class="entry">
               <div class="subject">${row.subject}</div>
-              <div class="time">${row.start_time} – ${row.end_time}</div>
+              <div class="time">${formatTime(row.start_time)} – ${formatTime(row.end_time)}</div>
               <div class="teacher">${instructor}</div>
             </div>
           </td>
@@ -157,7 +174,7 @@ export default function TimetableGrid({
           <style>
             @page {
               size: A4 landscape;
-              margin: 14mm;
+              margin: 12mm;
             }
 
             * {
@@ -177,26 +194,26 @@ export default function TimetableGrid({
             }
 
             .topbar {
-              background: #1a2e1a;
+              background: linear-gradient(135deg, #17301a 0%, #234828 100%);
               color: #ffffff;
               padding: 18px 20px 16px;
               text-align: center;
-              border-radius: 8px 8px 0 0;
+              border-radius: 10px 10px 0 0;
             }
 
             .school {
-              font-size: 22px;
-              font-weight: 700;
-              letter-spacing: 0.5px;
-              color: #6fcf6f;
+              font-size: 24px;
+              font-weight: 800;
+              letter-spacing: 0.6px;
+              color: #7ee081;
               margin-bottom: 6px;
             }
 
             .title {
               font-size: 11px;
-              letter-spacing: 1.4px;
+              letter-spacing: 1.8px;
               text-transform: uppercase;
-              color: #ffffff;
+              color: #f3f4f6;
             }
 
             .meta-box {
@@ -213,7 +230,7 @@ export default function TimetableGrid({
             }
 
             .meta-grid td {
-              padding: 2px 0;
+              padding: 4px 0;
               border: 0;
               font-size: 11px;
               vertical-align: top;
@@ -231,7 +248,7 @@ export default function TimetableGrid({
 
             .table-wrap {
               border: 1px solid #d1d5db;
-              border-radius: 8px;
+              border-radius: 10px;
               overflow: hidden;
             }
 
@@ -242,13 +259,13 @@ export default function TimetableGrid({
             }
 
             thead th {
-              background: #1a2e1a;
-              color: #6fcf6f;
+              background: #17301a;
+              color: #7ee081;
               font-size: 11px;
               font-weight: 700;
               text-transform: uppercase;
               letter-spacing: 0.8px;
-              padding: 10px 8px;
+              padding: 11px 8px;
               border-right: 1px solid #2f4630;
               text-align: center;
             }
@@ -261,7 +278,7 @@ export default function TimetableGrid({
               border-right: 1px solid #d1d5db;
               border-top: 1px solid #d1d5db;
               padding: 8px 6px;
-              height: 84px;
+              height: 88px;
               text-align: center;
               vertical-align: middle;
               background: #ffffff;
@@ -276,11 +293,11 @@ export default function TimetableGrid({
               font-weight: 700;
               font-size: 12px;
               color: #1f2937;
-              background: #f8f7f4;
+              background: #f3f4f6;
             }
 
             .entry {
-              min-height: 64px;
+              min-height: 66px;
               display: flex;
               flex-direction: column;
               align-items: center;
@@ -292,7 +309,7 @@ export default function TimetableGrid({
             .subject {
               font-size: 13px;
               font-weight: 700;
-              color: #1a2e1a;
+              color: #17301a;
               text-transform: capitalize;
               line-height: 1.2;
             }
@@ -307,7 +324,6 @@ export default function TimetableGrid({
               font-size: 10px;
               color: #6b7280;
               line-height: 1.2;
-              text-transform: capitalize;
             }
 
             .empty-cell {
@@ -320,22 +336,27 @@ export default function TimetableGrid({
               font-weight: 500;
             }
 
+            .footer-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 10px;
+            }
+
+            .note {
+              font-size: 9px;
+              color: #6b7280;
+            }
+
             .footer {
-              margin-top: 14px;
-              background: #1a2e1a;
-              color: #6fcf6f;
+              background: #17301a;
+              color: #7ee081;
               text-align: center;
               padding: 8px 10px;
               font-size: 9px;
               font-style: italic;
-              border-radius: 0 0 8px 8px;
-            }
-
-            .note {
+              border-radius: 0 0 10px 10px;
               margin-top: 8px;
-              text-align: right;
-              font-size: 9px;
-              color: #6b7280;
             }
           </style>
         </head>
@@ -377,8 +398,9 @@ export default function TimetableGrid({
               </table>
             </div>
 
-            <div class="note">
-              For official school use
+            <div class="footer-row">
+              <div class="note">For official school use</div>
+              <div class="note">Instructor names shown as saved in timetable</div>
             </div>
 
             <div class="footer">
@@ -456,21 +478,19 @@ export default function TimetableGrid({
             >
               Print timetable
             </button>
-            {isStaff && (
-              <button
-                onClick={() =>
-                  setEditCell({
-                    day: 'Monday',
-                    period: 1,
-                    existing: null,
-                    defaultClassNum: null,
-                  })
-                }
-                className="text-xs font-medium px-4 py-2 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243d24] transition-colors"
-              >
-                + Add first period
-              </button>
-            )}
+            <button
+              onClick={() =>
+                setEditCell({
+                  day: 'Monday',
+                  period: 1,
+                  existing: null,
+                  defaultClassNum: null,
+                })
+              }
+              className="text-xs font-medium px-4 py-2 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243d24] transition-colors"
+            >
+              + Add first period
+            </button>
           </div>
         </div>
       )}
@@ -482,17 +502,20 @@ export default function TimetableGrid({
       )}
 
       {(isStaff ? selectedClass !== null && classNums.length > 0 : rows.length > 0) && (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-50">
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-gray-50 bg-gradient-to-r from-white to-[#f8fbf8]">
             <div className="text-sm font-semibold text-gray-900">
               {selectedClass ? `Class ${selectedClass} Timetable` : 'Timetable'}
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              Weekly class schedule with subject, time, and instructor
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table
               className="border-collapse w-full"
-              style={{ minWidth: 640 }}
+              style={{ minWidth: 700 }}
             >
               <thead>
                 <tr className="border-b border-gray-100">
@@ -526,19 +549,17 @@ export default function TimetableGrid({
                     {DAYS.map(day => {
                       const row = lookup[day]?.[period]
                       const sty = row ? subjectStyle(row.subject) : null
-                      const tLabel = row?.teacher_id
-                        ? (teacherMap[row.teacher_id] ?? 'staff')
-                        : null
+                      const instructorLabel = getInstructorLabel(row)
 
                       return (
                         <td
                           key={day}
                           className="px-2 py-2 align-top"
-                          style={{ minWidth: 120 }}
+                          style={{ minWidth: 128 }}
                         >
                           {row ? (
                             <div
-                              className="rounded-lg p-2.5"
+                              className="rounded-xl p-3 shadow-sm"
                               style={{
                                 background: sty!.bg,
                                 border: `1px solid ${sty!.border}`,
@@ -550,18 +571,21 @@ export default function TimetableGrid({
                               >
                                 {row.subject}
                               </div>
-                              <div className="text-[10px] text-gray-400 mt-0.5">
-                                {row.start_time}–{row.end_time}
+
+                              <div className="text-[10px] text-gray-500 mt-1">
+                                {formatTime(row.start_time)} – {formatTime(row.end_time)}
                               </div>
-                              {tLabel && (
-                                <div className="text-[10px] text-gray-400 capitalize mt-0.5">
-                                  {tLabel}
+
+                              {instructorLabel && (
+                                <div className="text-[10px] text-gray-500 mt-1">
+                                  {instructorLabel}
                                 </div>
                               )}
+
                               {isStaff && (
                                 <button
                                   onClick={() => openCell(day, period)}
-                                  className="mt-1.5 text-[10px] text-gray-400 hover:text-gray-700 underline transition-colors"
+                                  className="mt-2 text-[10px] text-gray-400 hover:text-gray-700 underline transition-colors"
                                 >
                                   Edit
                                 </button>
@@ -570,15 +594,15 @@ export default function TimetableGrid({
                           ) : isStaff ? (
                             <button
                               onClick={() => openCell(day, period)}
-                              className="w-full rounded-lg flex items-center justify-center text-gray-300 hover:text-[#6fcf6f] hover:bg-[#6fcf6f]/5 transition-colors text-base font-light"
-                              style={{ minHeight: 52 }}
+                              className="w-full rounded-xl flex items-center justify-center text-gray-300 hover:text-[#6fcf6f] hover:bg-[#6fcf6f]/5 transition-colors text-base font-light border border-dashed border-gray-200"
+                              style={{ minHeight: 66 }}
                             >
                               +
                             </button>
                           ) : (
                             <div
-                              className="flex items-center justify-center"
-                              style={{ minHeight: 52 }}
+                              className="flex items-center justify-center rounded-xl bg-[#fafafa]"
+                              style={{ minHeight: 66 }}
                             >
                               <span className="text-gray-200 text-xs">—</span>
                             </div>

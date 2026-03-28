@@ -6,6 +6,7 @@ import { type TimetableRow } from './TimetableForm'
 
 export default async function TimetablePage() {
   const supabase = await createClient()
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -64,7 +65,12 @@ export default async function TimetablePage() {
       .in('user_id', teacherIds)
 
     teacherRoles?.forEach(r => {
-      teacherMap[r.user_id] = r.role
+      teacherMap[r.user_id] =
+        r.role === 'admin'
+          ? 'Admin'
+          : r.role === 'teacher'
+            ? 'Teacher'
+            : 'Staff'
     })
   }
 
@@ -95,6 +101,7 @@ export default async function TimetablePage() {
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
       <Sidebar email={user.email!} role={role ?? ''} />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">Timetable</h1>

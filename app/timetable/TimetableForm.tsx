@@ -52,6 +52,7 @@ export default function TimetableForm({
   const [startTime, setStartTime] = useState(existing?.start_time ?? '')
   const [endTime, setEndTime] = useState(existing?.end_time ?? '')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
@@ -82,10 +83,7 @@ export default function TimetableForm({
       end_time: endTime,
     }
 
-    // Editing existing cell:
-    // update the same row directly instead of deleting first
     if (existing) {
-      // Check if another row already exists for the target slot
       const movingToNewSlot =
         existing.class_num !== Number(classNum) ||
         existing.day !== selectedDay ||
@@ -133,8 +131,6 @@ export default function TimetableForm({
       return
     }
 
-    // Adding new row:
-    // ensure we do not overwrite an existing row silently
     const { data: clash, error: clashErr } = await supabase
       .from('timetable')
       .select('id')
@@ -168,6 +164,32 @@ export default function TimetableForm({
 
     setSaved(true)
     setTimeout(() => onSaved(), 500)
+  }
+
+  async function handleDelete() {
+    if (!existing) return
+
+    const confirmed = window.confirm(
+      'Delete this timetable period? This cannot be undone.'
+    )
+    if (!confirmed) return
+
+    setDeleting(true)
+    setError('')
+
+    const { error: deleteErr } = await supabase
+      .from('timetable')
+      .delete()
+      .eq('id', existing.id)
+
+    setDeleting(false)
+
+    if (deleteErr) {
+      setError(deleteErr.message)
+      return
+    }
+
+    onSaved()
   }
 
   return (
@@ -273,7 +295,7 @@ export default function TimetableForm({
 
         <div>
           <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">
-            Teacher
+            Instructor
           </label>
           <select
             value={teacherId}
@@ -288,6 +310,9 @@ export default function TimetableForm({
               </option>
             ))}
           </select>
+          <div className="text-[10px] text-gray-400 mt-1">
+            You can assign either a teacher or an admin as the instructor.
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -317,26 +342,40 @@ export default function TimetableForm({
         </div>
       </div>
 
-      <div className="px-6 py-4 border-t border-gray-50 flex justify-end gap-2">
-        <button
-          onClick={onClose}
-          className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={saving || saved}
-          className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
-        >
-          {saved
-            ? 'Saved ✓'
-            : saving
-              ? 'Saving...'
-              : existing
-                ? 'Save changes'
-                : 'Add period'}
-        </button>
+      <div className="px-6 py-4 border-t border-gray-50 flex justify-between items-center">
+        <div>
+          {existing && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting || saving}
+              className="text-xs font-medium px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition-colors"
+            >
+              {deleting ? 'Deleting...' : 'Delete period'}
+            </button>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="text-xs text-gray-400 hover:text-gray-600 px-3 py-2"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || deleting || saved}
+            className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
+          >
+            {saved
+              ? 'Saved ✓'
+              : saving
+                ? 'Saving...'
+                : existing
+                  ? 'Save changes'
+                  : 'Add period'}
+          </button>
+        </div>
       </div>
     </div>
   )

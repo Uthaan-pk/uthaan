@@ -116,6 +116,7 @@ export default function Sidebar({
 
   const isStaff = role === 'teacher' || role === 'admin'
   const isParent = role === 'parent'
+  const canSeeResults = isStaff || role === 'student' || isParent
 
   return (
     <>
@@ -275,6 +276,16 @@ export default function Sidebar({
             onClose={close}
             isUrdu={isUrdu}
           />
+
+          {canSeeResults && (
+            <NavItem
+              label={isStaff ? 'Results & Report Cards' : 'Results'}
+              href="/results"
+              active={pathname === '/results'}
+              onClose={close}
+              isUrdu={isUrdu}
+            />
+          )}
 
           <NavItem
             label={t.attendance}

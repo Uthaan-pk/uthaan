@@ -8,7 +8,6 @@ const CURRENT_YEAR = '2025-2026'
 
 async function isReleasedForClass(supabase: any, classNum: number | null | undefined) {
   if (!classNum) return false
-
   const { data } = await supabase
     .from('result_releases')
     .select('id, released')
@@ -16,15 +15,12 @@ async function isReleasedForClass(supabase: any, classNum: number | null | undef
     .eq('term', CURRENT_TERM)
     .eq('class_num', classNum)
     .maybeSingle()
-
   return data?.released === true
 }
 
 export default async function Page() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
 
@@ -36,6 +32,7 @@ export default async function Page() {
 
   const role = roleData?.role
 
+  // ── PARENT ────────────────────────────────────────────────────────────────
   if (role === 'parent') {
     const { data: link } = await supabase
       .from('parent_student')
@@ -49,12 +46,8 @@ export default async function Page() {
           <Sidebar email={user.email!} role="parent" />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-sm font-medium text-gray-900 mb-1">
-                No child linked to your account
-              </div>
-              <div className="text-xs text-gray-400">
-                Contact the school administrator to link your child.
-              </div>
+              <div className="text-sm font-medium text-gray-900 mb-1">No child linked to your account</div>
+              <div className="text-xs text-gray-400">Contact the school administrator to link your child.</div>
             </div>
           </div>
         </div>
@@ -73,12 +66,8 @@ export default async function Page() {
           <Sidebar email={user.email!} role="parent" />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-sm font-medium text-gray-900 mb-1">
-                Student record not found
-              </div>
-              <div className="text-xs text-gray-400">
-                Contact the school administrator.
-              </div>
+              <div className="text-sm font-medium text-gray-900 mb-1">Student record not found</div>
+              <div className="text-xs text-gray-400">Contact the school administrator.</div>
             </div>
           </div>
         </div>
@@ -94,18 +83,12 @@ export default async function Page() {
           <div className="flex-1 flex flex-col overflow-hidden">
             <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
               <h1 className="text-sm font-semibold text-gray-900">Results</h1>
-              <span className="text-xs bg-gray-50 text-gray-600 border border-gray-100 px-3 py-1 rounded-full font-medium">
-                Not released
-              </span>
+              <span className="text-xs bg-gray-50 text-gray-600 border border-gray-100 px-3 py-1 rounded-full font-medium">Not released</span>
             </header>
             <main className="flex-1 flex items-center justify-center p-6">
               <div className="text-center max-w-sm">
-                <div className="text-sm font-medium text-gray-900 mb-1">
-                  Report card not released yet
-                </div>
-                <div className="text-xs text-gray-400">
-                  The school has not released results for Class {child.class_num} yet.
-                </div>
+                <div className="text-sm font-medium text-gray-900 mb-1">Report card not released yet</div>
+                <div className="text-xs text-gray-400">The school has not released results for Class {child.class_num} yet.</div>
               </div>
             </main>
           </div>
@@ -124,13 +107,14 @@ export default async function Page() {
             </span>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <ResultsPage students={[child]} releases={[]} />
+            <ResultsPage students={[child]} releases={[]} role="parent" />
           </main>
         </div>
       </div>
     )
   }
 
+  // ── STUDENT ───────────────────────────────────────────────────────────────
   if (role === 'student') {
     const studentId = roleData?.student_id
 
@@ -140,12 +124,8 @@ export default async function Page() {
           <Sidebar email={user.email!} role="student" />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-sm font-medium text-gray-900 mb-1">
-                No student record linked
-              </div>
-              <div className="text-xs text-gray-400">
-                Contact your school administrator.
-              </div>
+              <div className="text-sm font-medium text-gray-900 mb-1">No student record linked</div>
+              <div className="text-xs text-gray-400">Contact your school administrator.</div>
             </div>
           </div>
         </div>
@@ -178,18 +158,12 @@ export default async function Page() {
           <div className="flex-1 flex flex-col overflow-hidden">
             <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
               <h1 className="text-sm font-semibold text-gray-900">Results</h1>
-              <span className="text-xs bg-gray-50 text-gray-600 border border-gray-100 px-3 py-1 rounded-full font-medium">
-                Not released
-              </span>
+              <span className="text-xs bg-gray-50 text-gray-600 border border-gray-100 px-3 py-1 rounded-full font-medium">Not released</span>
             </header>
             <main className="flex-1 flex items-center justify-center p-6">
               <div className="text-center max-w-sm">
-                <div className="text-sm font-medium text-gray-900 mb-1">
-                  Report card not released yet
-                </div>
-                <div className="text-xs text-gray-400">
-                  Your school has not released results for Class {student.class_num} yet.
-                </div>
+                <div className="text-sm font-medium text-gray-900 mb-1">Report card not released yet</div>
+                <div className="text-xs text-gray-400">Your school has not released results for Class {student.class_num} yet.</div>
               </div>
             </main>
           </div>
@@ -203,18 +177,17 @@ export default async function Page() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">My Report Card</h1>
-            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Released
-            </span>
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">Released</span>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <ResultsPage students={[student]} releases={[]} />
+            <ResultsPage students={[student]} releases={[]} role="student" />
           </main>
         </div>
       </div>
     )
   }
 
+  // ── TEACHER / ADMIN ───────────────────────────────────────────────────────
   const [studentsRes, releasesRes] = await Promise.all([
     supabase
       .from('students')
@@ -233,18 +206,16 @@ export default async function Page() {
       <Sidebar email={user.email!} role={role ?? ''} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
-          <h1 className="text-sm font-semibold text-gray-900">
-            Results &amp; Report Cards
-          </h1>
+          <h1 className="text-sm font-semibold text-gray-900">Results &amp; Report Cards</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
             Academic Year 2025–26
           </span>
         </header>
-
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <ResultsPage
             students={studentsRes.data ?? []}
             releases={releasesRes.data ?? []}
+            role={role ?? 'teacher'}
           />
         </main>
       </div>

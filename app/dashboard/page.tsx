@@ -71,16 +71,23 @@ export default async function DashboardPage() {
 
     const today = new Date().toISOString().split('T')[0]
     const [attRes, marksRes, assignmentsRes] = await Promise.all([
-      supabase.from('attendance_logs').select('status').eq('student_id', child.id),
+      supabase
+        .from('attendance_logs')
+        .select('status')
+        .eq('student_id', child.id),
       supabase.from('marks').select('percent').eq('student_id', child.id),
-      supabase.from('assignments').select('id, due_date').eq('class_num', child.class_num),
+      supabase
+        .from('assignments')
+        .select('id, due_date')
+        .eq('class_num', child.class_num),
     ])
 
     const att = attRes.data ?? []
     const attRate =
       att.length > 0
         ? Math.round(
-            (att.filter((l) => l.status === 'present').length / att.length) * 100
+            (att.filter((l) => l.status === 'present').length / att.length) *
+              100
           )
         : null
 
@@ -177,7 +184,10 @@ export default async function DashboardPage() {
 
       if (student?.class_num) {
         const [assignRes, marksRes] = await Promise.all([
-          supabase.from('assignments').select('id, due_date').eq('class_num', student.class_num),
+          supabase
+            .from('assignments')
+            .select('id, due_date')
+            .eq('class_num', student.class_num),
           supabase.from('marks').select('percent').eq('student_id', studentId),
         ])
 
@@ -287,11 +297,18 @@ export default async function DashboardPage() {
     announcementsRes,
     attendanceRes,
   ] = await Promise.all([
-    supabase.from('students').select('id'),
+    supabase.from('students').select('id').eq('is_active', true),
     supabase.from('assignments').select('id, due_date'),
-    supabase.from('assignment_submissions').select('id, reviewed').eq('reviewed', false),
+    supabase
+      .from('assignment_submissions')
+      .select('id, reviewed')
+      .eq('reviewed', false),
     supabase.from('quizzes').select('id').eq('status', 'active'),
-    supabase.from('announcements').select('id, title, created_at').order('created_at', { ascending: false }).limit(3),
+    supabase
+      .from('announcements')
+      .select('id, title, created_at')
+      .order('created_at', { ascending: false })
+      .limit(3),
     supabase.from('attendance_logs').select('id').eq('day', today),
   ])
 

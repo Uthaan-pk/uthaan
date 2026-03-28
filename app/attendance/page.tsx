@@ -11,18 +11,20 @@ const statusStyles: Record<string, string> = {
 
 export default async function AttendancePage() {
   const supabase = await createClient()
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, student_id')
     .eq('user_id', user.id)
     .single()
 
-  const role = roleData?.role
+  const role = roleData?.role ?? ''
   const isStaff = role === 'teacher' || role === 'admin'
   const today = new Date().toISOString().split('T')[0]
 
@@ -45,7 +47,7 @@ export default async function AttendancePage() {
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
+        <Sidebar email={user.email!} role={role} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Attendance</h1>
@@ -57,6 +59,7 @@ export default async function AttendancePage() {
               })}
             </span>
           </header>
+
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-2xl">
               <AttendanceMarker
@@ -100,6 +103,7 @@ export default async function AttendancePage() {
       .from('students')
       .select('id, name, roll_no')
       .eq('id', link.student_id)
+      .eq('is_active', true)
       .single()
 
     if (!child) {
@@ -128,7 +132,9 @@ export default async function AttendancePage() {
 
     const presentDays = logs?.filter(l => l.status === 'present').length ?? 0
     const totalDays = logs?.length ?? 0
-    const rate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0
+    const rate = totalDays > 0
+      ? Math.round((presentDays / totalDays) * 100)
+      : 0
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -140,17 +146,37 @@ export default async function AttendancePage() {
               Viewing as: {child.name}
             </span>
           </header>
+
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-2xl">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <StatCard label="Days present" value={presentDays} icon="✅" color="green" />
-                <StatCard label="Days absent" value={totalDays - presentDays} icon="❌" color="red" />
-                <StatCard label="Attendance rate" value={`${rate}%`} icon="📊" color="blue" />
+                <StatCard
+                  label="Days present"
+                  value={presentDays}
+                  icon="✅"
+                  color="green"
+                />
+                <StatCard
+                  label="Days absent"
+                  value={totalDays - presentDays}
+                  icon="❌"
+                  color="red"
+                />
+                <StatCard
+                  label="Attendance rate"
+                  value={`${rate}%`}
+                  icon="📊"
+                  color="blue"
+                />
               </div>
+
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
-                  <h2 className="text-sm font-semibold text-gray-900">Attendance history</h2>
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Attendance history
+                  </h2>
                 </div>
+
                 {logs && logs.length > 0 ? (
                   logs.map((log, i) => (
                     <div
@@ -188,95 +214,156 @@ export default async function AttendancePage() {
     )
   }
 
-  const { data: student } = await supabase
-    .from('students')
-    .select('id, name, roll_no')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .single()
-
-  if (!student) {
-    return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-900 mb-1">
-              No student record found
-            </div>
-            <div className="text-xs text-gray-400">
-              Your account is not linked to an active student. Contact your administrator.
+  if (role === 'student') {
+    if (!roleData?.student_id) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role={role} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">
+                No student record found
+              </div>
+              <div className="text-xs text-gray-400">
+                Your account is not linked to a student. Contact your
+                administrator.
+              </div>
             </div>
           </div>
+        </div>
+      )
+    }
+
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, name, roll_no')
+      .eq('id', roleData.student_id)
+      .eq('is_active', true)
+      .single()
+
+    if (!student) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role={role} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">
+                No student record found
+              </div>
+              <div className="text-xs text-gray-400">
+                Your account is not linked to an active student. Contact your
+                administrator.
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    const { data: logs } = await supabase
+      .from('attendance_logs')
+      .select('day, status')
+      .eq('student_id', student.id)
+      .order('day', { ascending: false })
+
+    const presentDays = logs?.filter(l => l.status === 'present').length ?? 0
+    const totalDays = logs?.length ?? 0
+    const rate = totalDays > 0
+      ? Math.round((presentDays / totalDays) * 100)
+      : 0
+
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role={role} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+            <h1 className="text-sm font-semibold text-gray-900">
+              My Attendance
+            </h1>
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              Spring Term 2026
+            </span>
+          </header>
+
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <StatCard
+                  label="Days present"
+                  value={presentDays}
+                  icon="✅"
+                  color="green"
+                />
+                <StatCard
+                  label="Days absent"
+                  value={totalDays - presentDays}
+                  icon="❌"
+                  color="red"
+                />
+                <StatCard
+                  label="Attendance rate"
+                  value={`${rate}%`}
+                  icon="📊"
+                  color="blue"
+                />
+              </div>
+
+              <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-50">
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Attendance history
+                  </h2>
+                </div>
+
+                {logs && logs.length > 0 ? (
+                  logs.map((log, i) => (
+                    <div
+                      key={log.day}
+                      className={`px-5 py-3.5 flex items-center justify-between ${
+                        i < logs.length - 1 ? 'border-b border-gray-50' : ''
+                      }`}
+                    >
+                      <span className="text-sm text-gray-700">
+                        {new Date(log.day).toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'long',
+                        })}
+                      </span>
+                      <span
+                        className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full capitalize ${
+                          statusStyles[log.status] ?? 'bg-gray-50 text-gray-600'
+                        }`}
+                      >
+                        {log.status}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-5 py-10 text-center text-sm text-gray-400">
+                    No attendance records yet
+                  </div>
+                )}
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     )
   }
 
-  const { data: logs } = await supabase
-    .from('attendance_logs')
-    .select('day, status')
-    .eq('student_id', student.id)
-    .order('day', { ascending: false })
-
-  const presentDays = logs?.filter(l => l.status === 'present').length ?? 0
-  const totalDays = logs?.length ?? 0
-  const rate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0
-
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
-          <h1 className="text-sm font-semibold text-gray-900">My Attendance</h1>
-          <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Spring Term 2026
-          </span>
-        </header>
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <StatCard label="Days present" value={presentDays} icon="✅" color="green" />
-              <StatCard label="Days absent" value={totalDays - presentDays} icon="❌" color="red" />
-              <StatCard label="Attendance rate" value={`${rate}%`} icon="📊" color="blue" />
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50">
-                <h2 className="text-sm font-semibold text-gray-900">Attendance history</h2>
-              </div>
-              {logs && logs.length > 0 ? (
-                logs.map((log, i) => (
-                  <div
-                    key={log.day}
-                    className={`px-5 py-3.5 flex items-center justify-between ${
-                      i < logs.length - 1 ? 'border-b border-gray-50' : ''
-                    }`}
-                  >
-                    <span className="text-sm text-gray-700">
-                      {new Date(log.day).toLocaleDateString('en-GB', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'long',
-                      })}
-                    </span>
-                    <span
-                      className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full capitalize ${
-                        statusStyles[log.status] ?? 'bg-gray-50 text-gray-600'
-                      }`}
-                    >
-                      {log.status}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div className="px-5 py-10 text-center text-sm text-gray-400">
-                  No attendance records yet
-                </div>
-              )}
-            </div>
+      <Sidebar email={user.email!} role={role} />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-sm font-medium text-gray-900 mb-1">
+            Unsupported account role
           </div>
-        </main>
+          <div className="text-xs text-gray-400">
+            Contact the school administrator.
+          </div>
+        </div>
       </div>
     </div>
   )

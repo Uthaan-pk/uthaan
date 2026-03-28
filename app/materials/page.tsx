@@ -5,16 +5,20 @@ import MaterialsClient, { type Material } from './MaterialsClient'
 
 export default async function MaterialsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, student_id')
     .eq('user_id', user.id)
     .single()
 
-  const role = roleData?.role
+  const role = roleData?.role ?? ''
   const isStaff = role === 'teacher' || role === 'admin'
 
   if (isStaff) {
@@ -25,7 +29,7 @@ export default async function MaterialsPage() {
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
+        <Sidebar email={user.email!} role={role} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Materials</h1>
@@ -33,6 +37,7 @@ export default async function MaterialsPage() {
               Spring Term 2026
             </span>
           </header>
+
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <MaterialsClient
               initialMaterials={(materials as unknown as Material[]) ?? []}
@@ -45,50 +50,93 @@ export default async function MaterialsPage() {
     )
   }
 
-  // Student view — look up student record by email
-  const { data: student } = await supabase
-    .from('students')
-    .select('id, class_num')
-    .eq('email', user.email!)
-    .single()
+  if (role === 'student') {
+    if (!roleData?.student_id) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role={role} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">
+                No student record found
+              </div>
+              <div className="text-xs text-gray-400">
+                Your account is not linked to a student. Contact your
+                administrator.
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
 
-  if (!student) {
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, class_num')
+      .eq('id', roleData.student_id)
+      .eq('is_active', true)
+      .single()
+
+    if (!student) {
+      return (
+        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+          <Sidebar email={user.email!} role={role} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-900 mb-1">
+                No student record found
+              </div>
+              <div className="text-xs text-gray-400">
+                Your account is not linked to an active student. Contact your
+                administrator.
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    const { data: materials } = await supabase
+      .from('materials')
+      .select('*')
+      .or(`class_num.eq.${student.class_num},class_num.is.null`)
+      .order('created_at', { ascending: false })
+
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-sm font-medium text-gray-900 mb-1">No student record found</div>
-            <div className="text-xs text-gray-400">Your account is not linked to a student. Contact your administrator.</div>
-          </div>
+        <Sidebar email={user.email!} role={role} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+            <h1 className="text-sm font-semibold text-gray-900">Materials</h1>
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              Class {student.class_num}
+            </span>
+          </header>
+
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+            <MaterialsClient
+              initialMaterials={(materials as unknown as Material[]) ?? []}
+              isStaff={false}
+              userId={user.id}
+            />
+          </main>
         </div>
       </div>
     )
   }
 
-  const { data: materials } = await supabase
-    .from('materials')
-    .select('*')
-    .or(`class_num.eq.${student.class_num},class_num.is.null`)
-    .order('created_at', { ascending: false })
-
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
-          <h1 className="text-sm font-semibold text-gray-900">Materials</h1>
-          <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Class {student.class_num}
-          </span>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <MaterialsClient
-            initialMaterials={(materials as unknown as Material[]) ?? []}
-            isStaff={false}
-            userId={user.id}
-          />
-        </main>
+      <Sidebar email={user.email!} role={role} />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-sm font-medium text-gray-900 mb-1">
+            Unsupported account role
+          </div>
+          <div className="text-xs text-gray-400">
+            Contact the school administrator.
+          </div>
+        </div>
       </div>
     </div>
   )

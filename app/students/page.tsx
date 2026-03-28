@@ -1,13 +1,20 @@
 import { redirect } from 'next/navigation'
+import { unstable_noStore as noStore } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import StudentsTable from './StudentsTable'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function StudentsPage() {
+  noStore()
+
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
@@ -16,18 +23,21 @@ export default async function StudentsPage() {
     .eq('user_id', user.id)
     .single()
 
-  const role = roleData?.role
+  const role = roleData?.role ?? ''
+
   if (role === 'student') redirect('/dashboard')
 
   const { data: students } = await supabase
     .from('students')
-    .select('id, name, roll_no, email, stage, class_num, created_at, is_active')
+    .select(
+      'id, name, roll_no, email, stage, class_num, created_at, is_active'
+    )
     .eq('is_active', true)
     .order('name')
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
+      <Sidebar email={user.email!} role={role} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">

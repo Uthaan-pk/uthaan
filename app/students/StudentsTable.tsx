@@ -12,6 +12,7 @@ type Student = {
   stage: string
   class_num: number | null
   created_at: string
+  is_active?: boolean
 }
 
 type MarkRow = {
@@ -47,7 +48,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
   const router = useRouter()
 
   useEffect(() => {
-    setStudentList(students)
+    setStudentList(students.filter(student => student.is_active !== false))
   }, [students])
 
   const filtered = search.trim()
@@ -91,9 +92,8 @@ export default function StudentsTable({ students }: { students: Student[] }) {
 
     const total = logs?.length ?? 0
     const present = logs?.filter(l => l.status === 'present').length ?? 0
-    const attendanceRate = total > 0
-      ? Math.round((present / total) * 100)
-      : null
+    const attendanceRate =
+      total > 0 ? Math.round((present / total) * 100) : null
 
     setDrawerData({ attendanceRate, marks: marks ?? [] })
     setDrawerLoading(false)
@@ -141,7 +141,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
 
   return (
     <>
-      {/* Search */}
       <div className="mb-4">
         <input
           value={search}
@@ -151,7 +150,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
         />
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -210,7 +208,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                   >
                     {search
                       ? `No students match "${search}"`
-                      : 'No students found'}
+                      : 'No active students found'}
                   </td>
                 </tr>
               )}
@@ -219,7 +217,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
         </div>
       </div>
 
-      {/* Overlay */}
       {selectedStudent && (
         <div
           className="fixed inset-0 bg-black/25 z-40"
@@ -227,7 +224,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
         />
       )}
 
-      {/* Drawer */}
       <div
         className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white z-50 shadow-2xl flex flex-col transition-transform duration-200 ease-out ${
           selectedStudent ? 'translate-x-0' : 'translate-x-full'
@@ -235,7 +231,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
       >
         {selectedStudent && (
           <>
-            {/* Header */}
             <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between flex-shrink-0">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-full bg-[#6fcf6f] flex items-center justify-center text-[#1a2e1a] text-sm font-bold flex-shrink-0">
@@ -258,9 +253,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
               </button>
             </div>
 
-            {/* Body */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-              {/* Info grid */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="bg-[#f8f7f4] rounded-lg p-3">
                   <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
@@ -313,7 +306,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                 </div>
               ) : drawerData ? (
                 <>
-                  {/* Attendance */}
                   <div>
                     <div className="text-xs font-semibold text-gray-700 mb-2.5">
                       Attendance — last 30 days
@@ -356,7 +348,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                     )}
                   </div>
 
-                  {/* Marks */}
                   <div>
                     <div className="text-xs font-semibold text-gray-700 mb-2.5">
                       Marks
@@ -404,7 +395,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
               ) : null}
             </div>
 
-            {/* Footer actions */}
             <div className="border-t border-gray-100 px-6 py-4 flex-shrink-0">
               <button
                 onClick={archiveStudent}

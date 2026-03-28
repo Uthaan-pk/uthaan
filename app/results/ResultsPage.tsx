@@ -9,6 +9,7 @@ type Student = {
   roll_no: string
   class_num: string | number
   stage: string
+  is_active?: boolean | null
 }
 
 type ReleaseRow = {
@@ -65,7 +66,9 @@ async function generatePDF(student: Student) {
   doc.setTextColor(111, 207, 111)
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
-  doc.text('UTHAAN SCHOOL MANAGEMENT SYSTEM', pageW / 2, 13, { align: 'center' })
+  doc.text('UTHAAN SCHOOL MANAGEMENT SYSTEM', pageW / 2, 13, {
+    align: 'center',
+  })
 
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(9)
@@ -131,7 +134,10 @@ async function generatePDF(student: Student) {
   autoTable(doc, {
     startY: marksY + 4,
     head: [['Subject', 'Exam', 'Marks Obtained', 'Grade', 'Pass / Fail']],
-    body: marksRows.length > 0 ? marksRows : [['No marks recorded', '', '', '', '']],
+    body:
+      marksRows.length > 0
+        ? marksRows
+        : [['No marks recorded', '', '', '', '']],
     margin: { left: margin, right: margin },
     styles: { fontSize: 8.5, cellPadding: 3, textColor: [40, 40, 40] },
     headStyles: {
@@ -150,7 +156,8 @@ async function generatePDF(student: Student) {
     didParseCell(data) {
       if (data.section === 'body' && data.column.index === 4) {
         const val = String(data.cell.raw)
-        data.cell.styles.textColor = val === 'Pass' ? [0, 120, 60] : [180, 0, 0]
+        data.cell.styles.textColor =
+          val === 'Pass' ? [0, 120, 60] : [180, 0, 0]
         data.cell.styles.fontStyle = 'bold'
       }
     },
@@ -174,7 +181,12 @@ async function generatePDF(student: Student) {
       `${attendancePct}%`,
     ]],
     margin: { left: margin, right: margin },
-    styles: { fontSize: 8.5, cellPadding: 3, halign: 'center', textColor: [40, 40, 40] },
+    styles: {
+      fontSize: 8.5,
+      cellPadding: 3,
+      halign: 'center',
+      textColor: [40, 40, 40],
+    },
     headStyles: {
       fillColor: [26, 46, 26],
       textColor: [111, 207, 111],
@@ -222,7 +234,6 @@ async function generatePDF(student: Student) {
   doc.save(`ReportCard_${safeName}_${student.roll_no}.pdf`)
 }
 
-// ─── Student / Parent view (released report card) ────────────────────────────
 function StudentReportCardView({ student }: { student: Student }) {
   const [loading, setLoading] = useState(false)
 
@@ -239,16 +250,22 @@ function StudentReportCardView({ student }: { student: Student }) {
     <div className="max-w-2xl space-y-4">
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50">
-          <h2 className="text-sm font-semibold text-gray-900">Your Report Card</h2>
+          <h2 className="text-sm font-semibold text-gray-900">
+            Your Report Card
+          </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Your results have been released by the school. You can download your report card below.
+            Your results have been released by the school. You can download your
+            report card below.
           </p>
         </div>
         <div className="px-5 py-4 flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm font-medium text-gray-900">{student.name}</div>
+            <div className="text-sm font-medium text-gray-900">
+              {student.name}
+            </div>
             <div className="text-xs text-gray-400 mt-0.5">
-              Roll {student.roll_no} · Class {student.class_num} · {student.stage ?? '—'}
+              Roll {student.roll_no} · Class {student.class_num} ·{' '}
+              {student.stage ?? '—'}
             </div>
           </div>
           <button
@@ -264,7 +281,6 @@ function StudentReportCardView({ student }: { student: Student }) {
   )
 }
 
-// ─── Teacher / Admin view ─────────────────────────────────────────────────────
 export default function ResultsPage({
   students,
   releases: initialReleases,
@@ -279,31 +295,36 @@ export default function ResultsPage({
   const [releaseLoading, setReleaseLoading] = useState<number | null>(null)
   const [releases, setReleases] = useState(initialReleases)
 
-  // Student or parent: show their own simple view
+  const activeStudents = useMemo(
+    () => students.filter(student => student.is_active !== false),
+    [students]
+  )
+
   if (role === 'student' || role === 'parent') {
-    if (students.length === 0) {
+    if (activeStudents.length === 0) {
       return (
         <div className="text-center py-12 text-sm text-gray-400">
           No student record found.
         </div>
       )
     }
-    return <StudentReportCardView student={students[0]} />
+    return <StudentReportCardView student={activeStudents[0]} />
   }
 
-  // Teacher / Admin view below
   const classNums = useMemo(() => {
     const set = new Set<number>()
-    students.forEach(s => {
+    activeStudents.forEach(s => {
       const num = Number(s.class_num)
       if (!Number.isNaN(num)) set.add(num)
     })
     return Array.from(set).sort((a, b) => a - b)
-  }, [students])
+  }, [activeStudents])
 
   const releaseMap = useMemo(() => {
     const map: Record<number, ReleaseRow> = {}
-    releases.forEach(r => { map[r.class_num] = r })
+    releases.forEach(r => {
+      map[r.class_num] = r
+    })
     return map
   }, [releases])
 
@@ -331,9 +352,16 @@ export default function ResultsPage({
         .select()
         .single()
 
-      setReleaseLoading(null)
-      if (error) { alert(error.message); return }
-      if (data) setReleases(prev => prev.map(r => (r.id === data.id ? data : r)))
+      setReleaseLoading(classNum === classNum ? null : null)
+
+      if (error) {
+        alert(error.message)
+        return
+      }
+
+      if (data) {
+        setReleases(prev => prev.map(r => (r.id === data.id ? data : r)))
+      }
       return
     }
 
@@ -349,40 +377,60 @@ export default function ResultsPage({
       .single()
 
     setReleaseLoading(null)
-    if (error) { alert(error.message); return }
+
+    if (error) {
+      alert(error.message)
+      return
+    }
+
     if (data) setReleases(prev => [...prev, data])
   }
 
   return (
     <div className="max-w-4xl space-y-5">
-      {/* Release controls */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50">
-          <h2 className="text-sm font-semibold text-gray-900">Release Report Cards</h2>
+          <h2 className="text-sm font-semibold text-gray-900">
+            Release Report Cards
+          </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Release results by class so students and parents can view and print their report cards.
+            Release results by class so students and parents can view and print
+            their report cards.
           </p>
         </div>
 
         {classNums.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-gray-400">No classes found</div>
+          <div className="px-5 py-10 text-center text-sm text-gray-400">
+            No classes found
+          </div>
         ) : (
           <div className="divide-y divide-gray-50">
             {classNums.map(classNum => {
               const release = releaseMap[classNum]
               const isReleased = release?.released === true
+
               return (
-                <div key={classNum} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                <div
+                  key={classNum}
+                  className="px-5 py-3.5 flex items-center justify-between gap-4"
+                >
                   <div>
-                    <div className="text-sm font-medium text-gray-900">Class {classNum}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{CURRENT_TERM} · {CURRENT_YEAR}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      Class {classNum}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {CURRENT_TERM} · {CURRENT_YEAR}
+                    </div>
                   </div>
+
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full border ${
-                      isReleased
-                        ? 'bg-green-50 text-green-700 border-green-100'
-                        : 'bg-gray-50 text-gray-500 border-gray-100'
-                    }`}>
+                    <span
+                      className={`text-xs font-medium px-3 py-1 rounded-full border ${
+                        isReleased
+                          ? 'bg-green-50 text-green-700 border-green-100'
+                          : 'bg-gray-50 text-gray-500 border-gray-100'
+                      }`}
+                    >
                       {isReleased ? 'Released' : 'Not released'}
                     </span>
                     <button
@@ -390,7 +438,11 @@ export default function ResultsPage({
                       disabled={releaseLoading === classNum}
                       className="text-xs font-medium px-3.5 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243824] disabled:opacity-50 transition-colors"
                     >
-                      {releaseLoading === classNum ? 'Saving…' : isReleased ? 'Unrelease' : 'Release'}
+                      {releaseLoading === classNum
+                        ? 'Saving…'
+                        : isReleased
+                          ? 'Unrelease'
+                          : 'Release'}
                     </button>
                   </div>
                 </div>
@@ -400,7 +452,6 @@ export default function ResultsPage({
         )}
       </div>
 
-      {/* All students */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50">
           <h2 className="text-sm font-semibold text-gray-900">All Students</h2>
@@ -409,26 +460,38 @@ export default function ResultsPage({
           </p>
         </div>
 
-        {students.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-gray-400">No students found</div>
+        {activeStudents.length === 0 ? (
+          <div className="px-5 py-10 text-center text-sm text-gray-400">
+            No students found
+          </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {students.map(s => {
-              const isReleased = releaseMap[Number(s.class_num)]?.released === true
+            {activeStudents.map(s => {
+              const isReleased =
+                releaseMap[Number(s.class_num)]?.released === true
+
               return (
-                <div key={s.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                <div
+                  key={s.id}
+                  className="px-5 py-3.5 flex items-center justify-between gap-4"
+                >
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{s.name}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {s.name}
+                    </div>
                     <div className="text-xs text-gray-400 mt-0.5">
                       Roll {s.roll_no} · Class {s.class_num} · {s.stage ?? '—'}
                     </div>
                   </div>
+
                   <div className="flex items-center gap-3">
-                    <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
-                      isReleased
-                        ? 'bg-green-50 text-green-700 border-green-100'
-                        : 'bg-gray-50 text-gray-500 border-gray-100'
-                    }`}>
+                    <span
+                      className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
+                        isReleased
+                          ? 'bg-green-50 text-green-700 border-green-100'
+                          : 'bg-gray-50 text-gray-500 border-gray-100'
+                      }`}
+                    >
                       {isReleased ? 'Visible to family' : 'Hidden from family'}
                     </span>
                     <button
@@ -436,7 +499,9 @@ export default function ResultsPage({
                       disabled={loading === s.id}
                       className="shrink-0 text-xs font-medium px-3.5 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243824] disabled:opacity-50 transition-colors"
                     >
-                      {loading === s.id ? 'Generating…' : 'Generate Report Card'}
+                      {loading === s.id
+                        ? 'Generating…'
+                        : 'Generate Report Card'}
                     </button>
                   </div>
                 </div>

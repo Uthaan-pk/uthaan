@@ -171,57 +171,144 @@ export default function TimetableGrid({
       <html>
         <head>
           <title>${safeClassLabel} Timetable</title>
+          <meta charset="utf-8" />
           <style>
             @page {
               size: A4 landscape;
-              margin: 12mm;
+              margin: 10mm;
             }
 
             * {
               box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
 
-            body {
+            html, body {
               margin: 0;
               padding: 0;
               font-family: Arial, Helvetica, sans-serif;
+              background: #eef7ef;
               color: #1f2937;
-              background: #ffffff;
+            }
+
+            body {
+              position: relative;
+              overflow: hidden;
+            }
+
+            .page-bg {
+              position: fixed;
+              inset: 0;
+              z-index: 0;
+              background:
+                radial-gradient(circle at top left, rgba(111, 207, 111, 0.18), transparent 28%),
+                radial-gradient(circle at top right, rgba(26, 46, 26, 0.10), transparent 24%),
+                radial-gradient(circle at bottom left, rgba(111, 207, 111, 0.14), transparent 24%),
+                linear-gradient(135deg, #f6fbf6 0%, #edf7ee 45%, #f9fcf9 100%);
+            }
+
+            .bg-shape-1,
+            .bg-shape-2,
+            .bg-shape-3 {
+              position: fixed;
+              border-radius: 9999px;
+              z-index: 0;
+              pointer-events: none;
+            }
+
+            .bg-shape-1 {
+              width: 260px;
+              height: 260px;
+              top: -80px;
+              right: -70px;
+              background: rgba(111, 207, 111, 0.12);
+            }
+
+            .bg-shape-2 {
+              width: 220px;
+              height: 220px;
+              bottom: -80px;
+              left: -60px;
+              background: rgba(26, 46, 26, 0.08);
+            }
+
+            .bg-shape-3 {
+              width: 140px;
+              height: 140px;
+              bottom: 40px;
+              right: 80px;
+              background: rgba(111, 207, 111, 0.10);
             }
 
             .page {
-              width: 100%;
+              position: relative;
+              z-index: 1;
+              padding: 8px;
+            }
+
+            .shell {
+              background: rgba(255, 255, 255, 0.96);
+              border: 1px solid rgba(209, 213, 219, 0.9);
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 12px 30px rgba(23, 48, 26, 0.08);
             }
 
             .topbar {
+              position: relative;
               background: linear-gradient(135deg, #17301a 0%, #234828 100%);
               color: #ffffff;
-              padding: 18px 20px 16px;
+              padding: 20px 24px 18px;
               text-align: center;
-              border-radius: 10px 10px 0 0;
+              overflow: hidden;
+            }
+
+            .topbar::before {
+              content: '';
+              position: absolute;
+              width: 220px;
+              height: 220px;
+              top: -120px;
+              left: -70px;
+              border-radius: 9999px;
+              background: rgba(126, 224, 129, 0.10);
+            }
+
+            .topbar::after {
+              content: '';
+              position: absolute;
+              width: 260px;
+              height: 260px;
+              bottom: -160px;
+              right: -90px;
+              border-radius: 9999px;
+              background: rgba(255, 255, 255, 0.06);
             }
 
             .school {
+              position: relative;
+              z-index: 1;
               font-size: 24px;
               font-weight: 800;
-              letter-spacing: 0.6px;
+              letter-spacing: 0.8px;
               color: #7ee081;
               margin-bottom: 6px;
             }
 
             .title {
+              position: relative;
+              z-index: 1;
               font-size: 11px;
-              letter-spacing: 1.8px;
+              letter-spacing: 2px;
               text-transform: uppercase;
               color: #f3f4f6;
             }
 
             .meta-box {
-              border: 1px solid #d6d3d1;
-              border-top: 0;
-              background: #f8f7f4;
+              background: linear-gradient(180deg, #f8faf8 0%, #f4f7f4 100%);
+              border-bottom: 1px solid #e5e7eb;
               padding: 14px 18px;
-              margin-bottom: 16px;
             }
 
             .meta-grid {
@@ -247,19 +334,22 @@ export default function TimetableGrid({
             }
 
             .table-wrap {
-              border: 1px solid #d1d5db;
-              border-radius: 10px;
-              overflow: hidden;
+              padding: 14px 14px 10px;
             }
 
             table {
               width: 100%;
-              border-collapse: collapse;
+              border-collapse: separate;
+              border-spacing: 0;
               table-layout: fixed;
+              overflow: hidden;
+              border: 1px solid #d1d5db;
+              border-radius: 12px;
+              background: #ffffff;
             }
 
             thead th {
-              background: #17301a;
+              background: linear-gradient(180deg, #17301a 0%, #214525 100%);
               color: #7ee081;
               font-size: 11px;
               font-weight: 700;
@@ -281,7 +371,7 @@ export default function TimetableGrid({
               height: 88px;
               text-align: center;
               vertical-align: middle;
-              background: #ffffff;
+              background: rgba(255, 255, 255, 0.94);
             }
 
             tbody tr td:last-child {
@@ -293,7 +383,7 @@ export default function TimetableGrid({
               font-weight: 700;
               font-size: 12px;
               color: #1f2937;
-              background: #f3f4f6;
+              background: linear-gradient(180deg, #f3f4f6 0%, #eceff1 100%);
             }
 
             .entry {
@@ -303,7 +393,14 @@ export default function TimetableGrid({
               align-items: center;
               justify-content: center;
               gap: 4px;
-              padding: 4px 3px;
+              padding: 8px 6px;
+              border-radius: 10px;
+              background: linear-gradient(
+                180deg,
+                rgba(111, 207, 111, 0.08) 0%,
+                rgba(111, 207, 111, 0.03) 100%
+              );
+              border: 1px solid rgba(111, 207, 111, 0.20);
             }
 
             .subject {
@@ -327,7 +424,7 @@ export default function TimetableGrid({
             }
 
             .empty-cell {
-              background: #fcfcfb;
+              background: rgba(250, 250, 250, 0.85);
             }
 
             .empty {
@@ -340,7 +437,7 @@ export default function TimetableGrid({
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-top: 10px;
+              padding: 0 16px 12px;
             }
 
             .note {
@@ -349,96 +446,110 @@ export default function TimetableGrid({
             }
 
             .footer {
-              background: #17301a;
+              background: linear-gradient(135deg, #17301a 0%, #234828 100%);
               color: #7ee081;
               text-align: center;
-              padding: 8px 10px;
+              padding: 9px 10px;
               font-size: 9px;
               font-style: italic;
-              border-radius: 0 0 10px 10px;
-              margin-top: 8px;
             }
           </style>
         </head>
+
         <body>
+          <div class="page-bg"></div>
+          <div class="bg-shape-1"></div>
+          <div class="bg-shape-2"></div>
+          <div class="bg-shape-3"></div>
+
           <div class="page">
-            <div class="topbar">
-              <div class="school">UTHAAN SCHOOL MANAGEMENT SYSTEM</div>
-              <div class="title">Official Weekly Timetable</div>
-            </div>
+            <div class="shell">
+              <div class="topbar">
+                <div class="school">UTHAAN SCHOOL MANAGEMENT SYSTEM</div>
+                <div class="title">Official Weekly Timetable</div>
+              </div>
 
-            <div class="meta-box">
-              <table class="meta-grid">
-                <tr>
-                  <td class="meta-label">Class:</td>
-                  <td class="meta-value">${safeClassLabel}</td>
-                  <td class="meta-label">Generated:</td>
-                  <td class="meta-value">${today}</td>
-                </tr>
-                <tr>
-                  <td class="meta-label">Document Type:</td>
-                  <td class="meta-value">Weekly Academic Timetable</td>
-                  <td class="meta-label">System:</td>
-                  <td class="meta-value">Uthaan</td>
-                </tr>
-              </table>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
+              <div class="meta-box">
+                <table class="meta-grid">
                   <tr>
-                    <th style="width:52px">#</th>
-                    ${headerCells}
+                    <td class="meta-label">Class:</td>
+                    <td class="meta-value">${safeClassLabel}</td>
+                    <td class="meta-label">Generated:</td>
+                    <td class="meta-value">${today}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  ${bodyRows}
-                </tbody>
-              </table>
-            </div>
+                  <tr>
+                    <td class="meta-label">Document Type:</td>
+                    <td class="meta-value">Weekly Academic Timetable</td>
+                    <td class="meta-label">System:</td>
+                    <td class="meta-value">Uthaan</td>
+                  </tr>
+                </table>
+              </div>
 
-            <div class="footer-row">
-              <div class="note">For official school use</div>
-              <div class="note">Instructor names shown as saved in timetable</div>
-            </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:52px">#</th>
+                      ${headerCells}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${bodyRows}
+                  </tbody>
+                </table>
+              </div>
 
-            <div class="footer">
-              Generated by Uthaan — The future of Pakistani education
+              <div class="footer-row">
+                <div class="note">For official school use</div>
+                <div class="note">Printed from Uthaan timetable module</div>
+              </div>
+
+              <div class="footer">
+                Generated by Uthaan — The future of Pakistani education
+              </div>
             </div>
           </div>
+
+          <script>
+            window.onload = function () {
+              setTimeout(function () {
+                window.focus()
+                window.print()
+              }, 250)
+            }
+
+            window.onafterprint = function () {
+              window.close()
+            }
+          </script>
         </body>
       </html>
     `
   }
 
   function handlePrint() {
-    const printWindow = window.open('', '_blank', 'width=1200,height=800')
+    const printWindow = window.open('', '_blank', 'width=1280,height=900')
     if (!printWindow) return
 
     const html = buildPrintHtml()
     printWindow.document.open()
     printWindow.document.write(html)
     printWindow.document.close()
-    printWindow.focus()
-
-    setTimeout(() => {
-      printWindow.print()
-    }, 300)
   }
 
   return (
     <div>
       {isStaff && classNums.length > 0 && (
-        <div className="flex items-center gap-2 mb-5 flex-wrap">
+        <div className="mb-5 flex flex-wrap items-center gap-2">
           {classNums.map(cn => (
             <button
               key={cn}
               onClick={() => setSelectedClass(cn)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 selectedClass === cn
                   ? 'bg-[#1a2e1a] text-[#6fcf6f]'
-                  : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  : 'border border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
               Class {cn}
@@ -447,7 +558,7 @@ export default function TimetableGrid({
 
           <button
             onClick={handlePrint}
-            className="ml-auto text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800 transition-colors"
+            className="ml-auto rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800"
           >
             Print timetable
           </button>
@@ -461,7 +572,7 @@ export default function TimetableGrid({
                 defaultClassNum: selectedClass,
               })
             }
-            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243d24] transition-colors"
+            className="rounded-lg bg-[#1a2e1a] px-3 py-1.5 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
           >
             + Add period
           </button>
@@ -469,12 +580,12 @@ export default function TimetableGrid({
       )}
 
       {isStaff && classNums.length === 0 && (
-        <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center space-y-3">
+        <div className="space-y-3 rounded-xl border border-gray-100 bg-white px-5 py-12 text-center">
           <p className="text-sm text-gray-400">No timetable entries yet.</p>
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={handlePrint}
-              className="text-xs font-medium px-4 py-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:border-gray-300 transition-colors"
+              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300"
             >
               Print timetable
             </button>
@@ -487,7 +598,7 @@ export default function TimetableGrid({
                   defaultClassNum: null,
                 })
               }
-              className="text-xs font-medium px-4 py-2 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243d24] transition-colors"
+              className="rounded-lg bg-[#1a2e1a] px-4 py-2 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
             >
               + Add first period
             </button>
@@ -496,31 +607,33 @@ export default function TimetableGrid({
       )}
 
       {!isStaff && rows.length === 0 && (
-        <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-gray-100 bg-white px-5 py-12 text-center text-sm text-gray-400">
           No timetable has been set for your class yet.
         </div>
       )}
 
-      {(isStaff ? selectedClass !== null && classNums.length > 0 : rows.length > 0) && (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-gray-50 bg-gradient-to-r from-white to-[#f8fbf8]">
+      {(isStaff
+        ? selectedClass !== null && classNums.length > 0
+        : rows.length > 0) && (
+        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="border-b border-gray-50 bg-gradient-to-r from-white to-[#f8fbf8] px-5 py-4">
             <div className="text-sm font-semibold text-gray-900">
               {selectedClass ? `Class ${selectedClass} Timetable` : 'Timetable'}
             </div>
-            <div className="text-xs text-gray-400 mt-1">
+            <div className="mt-1 text-xs text-gray-400">
               Weekly class schedule with subject, time, and instructor
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table
-              className="border-collapse w-full"
+              className="w-full border-collapse"
               style={{ minWidth: 700 }}
             >
               <thead>
                 <tr className="border-b border-gray-100">
                   <th
-                    className="text-center px-3 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide border-r border-gray-50"
+                    className="border-r border-gray-50 px-3 py-3 text-center text-[11px] font-medium uppercase tracking-wide text-gray-400"
                     style={{ width: 56 }}
                   >
                     #
@@ -528,7 +641,7 @@ export default function TimetableGrid({
                   {DAYS.map(d => (
                     <th
                       key={d}
-                      className="px-3 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide text-center"
+                      className="px-3 py-3 text-center text-[11px] font-medium uppercase tracking-wide text-gray-400"
                     >
                       {DAY_SHORT[d]}
                     </th>
@@ -540,9 +653,11 @@ export default function TimetableGrid({
                 {PERIODS.map((period, pi) => (
                   <tr
                     key={period}
-                    className={pi < PERIODS.length - 1 ? 'border-b border-gray-50' : ''}
+                    className={
+                      pi < PERIODS.length - 1 ? 'border-b border-gray-50' : ''
+                    }
                   >
-                    <td className="px-3 py-2 text-xs font-medium text-gray-300 text-center border-r border-gray-50 align-middle">
+                    <td className="border-r border-gray-50 px-3 py-2 text-center text-xs font-medium text-gray-300 align-middle">
                       {period}
                     </td>
 
@@ -572,12 +687,13 @@ export default function TimetableGrid({
                                 {row.subject}
                               </div>
 
-                              <div className="text-[10px] text-gray-500 mt-1">
-                                {formatTime(row.start_time)} – {formatTime(row.end_time)}
+                              <div className="mt-1 text-[10px] text-gray-500">
+                                {formatTime(row.start_time)} –{' '}
+                                {formatTime(row.end_time)}
                               </div>
 
                               {instructorLabel && (
-                                <div className="text-[10px] text-gray-500 mt-1">
+                                <div className="mt-1 text-[10px] text-gray-500">
                                   {instructorLabel}
                                 </div>
                               )}
@@ -585,7 +701,7 @@ export default function TimetableGrid({
                               {isStaff && (
                                 <button
                                   onClick={() => openCell(day, period)}
-                                  className="mt-2 text-[10px] text-gray-400 hover:text-gray-700 underline transition-colors"
+                                  className="mt-2 text-[10px] text-gray-400 underline transition-colors hover:text-gray-700"
                                 >
                                   Edit
                                 </button>
@@ -594,7 +710,7 @@ export default function TimetableGrid({
                           ) : isStaff ? (
                             <button
                               onClick={() => openCell(day, period)}
-                              className="w-full rounded-xl flex items-center justify-center text-gray-300 hover:text-[#6fcf6f] hover:bg-[#6fcf6f]/5 transition-colors text-base font-light border border-dashed border-gray-200"
+                              className="flex w-full items-center justify-center rounded-xl border border-dashed border-gray-200 text-base font-light text-gray-300 transition-colors hover:bg-[#6fcf6f]/5 hover:text-[#6fcf6f]"
                               style={{ minHeight: 66 }}
                             >
                               +
@@ -604,7 +720,7 @@ export default function TimetableGrid({
                               className="flex items-center justify-center rounded-xl bg-[#fafafa]"
                               style={{ minHeight: 66 }}
                             >
-                              <span className="text-gray-200 text-xs">—</span>
+                              <span className="text-xs text-gray-200">—</span>
                             </div>
                           )}
                         </td>
@@ -621,7 +737,7 @@ export default function TimetableGrid({
       {editCell && (
         <>
           <div
-            className="fixed inset-0 bg-black/25 z-40"
+            className="fixed inset-0 z-40 bg-black/25"
             onClick={() => setEditCell(null)}
           />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

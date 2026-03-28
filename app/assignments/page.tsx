@@ -39,6 +39,7 @@ export default async function AssignmentsPage() {
       supabase
         .from('students')
         .select('id, name, class_num, roll_no')
+        .eq('is_active', true)
         .order('name')
         .limit(500),
     ])
@@ -48,7 +49,9 @@ export default async function AssignmentsPage() {
         <Sidebar email={user.email!} role={role ?? ''} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
-            <h1 className="text-sm font-semibold text-gray-900">Assignments</h1>
+            <h1 className="text-sm font-semibold text-gray-900">
+              Assignments
+            </h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
               Spring Term 2026
             </span>
@@ -94,6 +97,7 @@ export default async function AssignmentsPage() {
       .from('students')
       .select('id, name, class_num')
       .eq('id', link.student_id)
+      .eq('is_active', true)
       .single()
 
     if (!child) {
@@ -128,7 +132,9 @@ export default async function AssignmentsPage() {
         <Sidebar email={user.email!} role="parent" />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
-            <h1 className="text-sm font-semibold text-gray-900">Assignments</h1>
+            <h1 className="text-sm font-semibold text-gray-900">
+              Assignments
+            </h1>
             <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/20 px-3 py-1 rounded-full font-medium">
               {child.name}
             </span>
@@ -171,7 +177,26 @@ export default async function AssignmentsPage() {
     .from('students')
     .select('id, class_num')
     .eq('id', studentId)
+    .eq('is_active', true)
     .single()
+
+  if (!student) {
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role={role ?? ''} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-sm font-medium text-gray-900 mb-1">
+              Student not found
+            </div>
+            <div className="text-xs text-gray-400">
+              Contact your administrator.
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const [assignmentsRes, submissionsRes] = await Promise.all([
     supabase
@@ -179,12 +204,14 @@ export default async function AssignmentsPage() {
       .select(
         'id, title, description, subject, class_num, due_date, attachment_url, attachment_name'
       )
-      .eq('class_num', student?.class_num ?? 0)
+      .eq('class_num', student.class_num)
       .order('due_date', { ascending: true })
       .limit(200),
     supabase
       .from('assignment_submissions')
-      .select('id, assignment_id, submitted_at, reviewed, grade, text_response, file_url')
+      .select(
+        'id, assignment_id, submitted_at, reviewed, grade, text_response, file_url'
+      )
       .eq('student_id', studentId)
       .limit(200),
   ])
@@ -196,7 +223,7 @@ export default async function AssignmentsPage() {
         <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">Assignments</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Class {student?.class_num}
+            Class {student.class_num}
           </span>
         </header>
 

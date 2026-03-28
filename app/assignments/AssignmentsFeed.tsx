@@ -40,39 +40,14 @@ function subjectColor(s: string) {
 function dueInfo(dateStr: string) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
   const [year, month, day] = dateStr.split('-').map(Number)
   const due = new Date(year, month - 1, day)
   due.setHours(0, 0, 0, 0)
-
   const diff = Math.round((due.getTime() - today.getTime()) / 86400000)
-
-  if (diff < 0) {
-    return {
-      label: 'Overdue',
-      cls: 'bg-red-50 text-red-600 border-red-100',
-      border: 'border-l-red-400',
-    }
-  }
-  if (diff === 0) {
-    return {
-      label: 'Due Today',
-      cls: 'bg-amber-50 text-amber-700 border-amber-100',
-      border: 'border-l-amber-400',
-    }
-  }
-  if (diff === 1) {
-    return {
-      label: 'Due Tomorrow',
-      cls: 'bg-amber-50 text-amber-600 border-amber-100',
-      border: 'border-l-amber-300',
-    }
-  }
-  return {
-    label: `Due in ${diff} days`,
-    cls: 'bg-green-50 text-green-700 border-green-100',
-    border: 'border-l-[#6fcf6f]',
-  }
+  if (diff < 0) return { label: 'Overdue', cls: 'bg-red-50 text-red-600 border-red-100', border: 'border-l-red-400' }
+  if (diff === 0) return { label: 'Due Today', cls: 'bg-amber-50 text-amber-700 border-amber-100', border: 'border-l-amber-400' }
+  if (diff === 1) return { label: 'Due Tomorrow', cls: 'bg-amber-50 text-amber-600 border-amber-100', border: 'border-l-amber-300' }
+  return { label: `Due in ${diff} days`, cls: 'bg-green-50 text-green-700 border-green-100', border: 'border-l-[#6fcf6f]' }
 }
 
 function canEditSubmission(dueDate: string) {
@@ -80,6 +55,13 @@ function canEditSubmission(dueDate: string) {
   const [year, month, day] = dueDate.split('-').map(Number)
   const dueEnd = new Date(year, month - 1, day, 23, 59, 59, 999)
   return now.getTime() <= dueEnd.getTime()
+}
+
+// Extract raw storage path from either a plain path or an old signed URL
+function extractStoragePath(url: string, bucket: string): string | null {
+  if (!url.startsWith('http')) return url
+  const match = url.match(new RegExp(`/object/sign/${bucket}/([^?]+)`))
+  return match ? match[1] : null
 }
 
 export default function AssignmentsFeed({
@@ -100,21 +82,17 @@ export default function AssignmentsFeed({
   const [textResponse, setTextResponse] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all')
-  const [downloadingAttachment, setDownloadingAttachment] = useState<string | null>(null)
+  const [openingFile, setOpeningFile] = useState<string | null>(null)
 
   const subMap = useMemo(() => {
     const m: Record<string, Submission> = {}
-    submissions.forEach(s => {
-      m[s.assignment_id] = s
-    })
+    submissions.forEach(s => { m[s.assignment_id] = s })
     return m
   }, [submissions])
 
   const filtered = useMemo(() => {
     if (filter === 'pending') return assignments.filter(a => !subMap[a.id])
-    if (filter === 'submitted') {
-      return assignments.filter(a => subMap[a.id] && !subMap[a.id].reviewed)
-    }
+    if (filter === 'submitted') return assignments.filter(a => subMap[a.id] && !subMap[a.id].reviewed)
     if (filter === 'graded') return assignments.filter(a => subMap[a.id]?.reviewed)
     return assignments
   }, [assignments, subMap, filter])
@@ -126,31 +104,55 @@ export default function AssignmentsFeed({
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  // Generate a signed URL for teacher attachments and open in new tab
+  // Open teacher attachment — generate a fresh signed URL on demand
   async function openAttachment(assignment: Assignment) {
     if (!assignment.attachment_url) return
+    const key = `attachment-${assignment.id}`
+    const raw = assignment.attachment_url
 
-    const url = assignment.attachment_url
-
-    // If it's already a full HTTP URL (e.g. already a signed URL), open directly
-    if (url.startsWith('http')) {
-      window.open(url, '_blank')
+    // If it's already a full signed URL, just open it
+    if (raw.startsWith('http')) {
+      window.open(raw, '_blank')
       return
     }
 
-    // Otherwise treat it as a storage path and generate a signed URL
-    setDownloadingAttachment(assignment.id)
+    setOpeningFile(key)
     const { data, error } = await supabase.storage
       .from('assignment-files')
-      .createSignedUrl(url, 60 * 60) // 1 hour
-
-    setDownloadingAttachment(null)
+      .createSignedUrl(raw, 60 * 60)
+    setOpeningFile(null)
 
     if (error || !data?.signedUrl) {
       toast.error('Could not open attachment. Please try again.')
       return
     }
+    window.open(data.signedUrl, '_blank')
+  }
 
+  // Open student's submitted file — regenerate signed URL on demand
+  // Handles both old stored signed URLs and new plain storage paths
+  async function openSubmissionFile(fileUrl: string, submissionId: string) {
+    if (!fileUrl) return
+    const key = `submission-${submissionId}`
+    setOpeningFile(key)
+
+    const path = extractStoragePath(fileUrl, 'submissions')
+
+    if (!path) {
+      setOpeningFile(null)
+      window.open(fileUrl, '_blank')
+      return
+    }
+
+    const { data, error } = await supabase.storage
+      .from('submissions')
+      .createSignedUrl(path, 60 * 60)
+    setOpeningFile(null)
+
+    if (error || !data?.signedUrl) {
+      toast.error('Could not open file. Try re-uploading your submission.')
+      return
+    }
     window.open(data.signedUrl, '_blank')
   }
 
@@ -179,11 +181,9 @@ export default function AssignmentsFeed({
         return
       }
 
-      const { data: urlData } = await supabase.storage
-        .from('submissions')
-        .createSignedUrl(path, 60 * 60 * 24 * 365)
-
-      fileUrl = urlData?.signedUrl ?? null
+      // Store the raw storage PATH — not a signed URL
+      // Fresh signed URLs are generated on demand when opening
+      fileUrl = path
     }
 
     const { data, error } = await supabase
@@ -241,9 +241,7 @@ export default function AssignmentsFeed({
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize ${
-              filter === f
-                ? 'bg-[#1a2e1a] text-[#6fcf6f]'
-                : 'text-gray-500 hover:text-gray-700'
+              filter === f ? 'bg-[#1a2e1a] text-[#6fcf6f]' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {f}
@@ -257,7 +255,8 @@ export default function AssignmentsFeed({
           const due = dueInfo(a.due_date)
           const isActive = activeSubmit === a.id
           const editable = !readOnly && canEditSubmission(a.due_date)
-          const isDownloading = downloadingAttachment === a.id
+          const isOpeningAttachment = openingFile === `attachment-${a.id}`
+          const isOpeningSubFile = sub ? openingFile === `submission-${sub.id}` : false
 
           return (
             <div
@@ -267,14 +266,10 @@ export default function AssignmentsFeed({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span
-                      className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${subjectColor(a.subject)}`}
-                    >
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${subjectColor(a.subject)}`}>
                       {a.subject.charAt(0).toUpperCase() + a.subject.slice(1)}
                     </span>
-                    <span
-                      className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${due.cls}`}
-                    >
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${due.cls}`}>
                       {due.label}
                     </span>
                     {sub?.reviewed && sub.grade && (
@@ -294,32 +289,22 @@ export default function AssignmentsFeed({
                     <div className="mt-2">
                       <button
                         onClick={() => openAttachment(a)}
-                        disabled={isDownloading}
+                        disabled={isOpeningAttachment}
                         className="text-xs text-blue-600 hover:underline disabled:opacity-50 text-left"
                       >
-                        {isDownloading
-                          ? 'Opening…'
-                          : `Download attachment: ${a.attachment_name ?? 'Open file'} →`}
+                        {isOpeningAttachment ? 'Opening…' : `Download attachment: ${a.attachment_name ?? 'Open file'} →`}
                       </button>
                     </div>
                   )}
 
                   {sub?.reviewed && (
-                    <div className="text-[11px] text-green-600 mt-2 font-medium">
-                      ✓ Graded by teacher
-                    </div>
+                    <div className="text-[11px] text-green-600 mt-2 font-medium">✓ Graded by teacher</div>
                   )}
-
                   {sub && !sub.reviewed && (
-                    <div className="text-[11px] text-amber-600 mt-2 font-medium">
-                      ✓ Submitted · Awaiting review
-                    </div>
+                    <div className="text-[11px] text-amber-600 mt-2 font-medium">✓ Submitted · Awaiting review</div>
                   )}
-
                   {sub && editable && (
-                    <div className="text-[11px] text-gray-400 mt-2">
-                      You can edit this submission until the due date.
-                    </div>
+                    <div className="text-[11px] text-gray-400 mt-2">You can edit this submission until the due date.</div>
                   )}
                 </div>
 
@@ -366,14 +351,13 @@ export default function AssignmentsFeed({
                   {sub?.file_url && (
                     <div className="text-xs text-gray-500">
                       Current uploaded file:{' '}
-                      <a
-                        href={sub.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                      <button
+                        onClick={() => openSubmissionFile(sub.file_url!, sub.id)}
+                        disabled={isOpeningSubFile}
+                        className="text-blue-600 hover:underline disabled:opacity-50"
                       >
-                        Open current file
-                      </a>
+                        {isOpeningSubFile ? 'Opening…' : 'Open current file'}
+                      </button>
                     </div>
                   )}
 
@@ -389,11 +373,7 @@ export default function AssignmentsFeed({
                     disabled={submitting === a.id}
                     className="w-full bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium py-2.5 rounded-lg disabled:opacity-50"
                   >
-                    {submitting === a.id
-                      ? 'Saving…'
-                      : sub
-                      ? 'Update submission'
-                      : 'Submit assignment'}
+                    {submitting === a.id ? 'Saving…' : sub ? 'Update submission' : 'Submit assignment'}
                   </button>
                 </div>
               )}

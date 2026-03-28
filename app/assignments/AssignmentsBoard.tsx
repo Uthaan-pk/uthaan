@@ -955,7 +955,7 @@ function StudentSubmissionRow({
                 <select
                   value={grade}
                   onChange={e => setGrade(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
                 >
                   <option value="">Select…</option>
                   {GRADE_OPTIONS.map(g => (
@@ -977,7 +977,7 @@ function StudentSubmissionRow({
                   value={score}
                   onChange={e => setScore(e.target.value)}
                   placeholder={grade === 'Excused' ? 'Optional' : 'e.g. 85'}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
                 />
               </div>
 
@@ -988,7 +988,7 @@ function StudentSubmissionRow({
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
                 >
                   {CATEGORY_OPTIONS.map(c => (
                     <option key={c} value={c}>
@@ -1006,7 +1006,7 @@ function StudentSubmissionRow({
                   value={note}
                   onChange={e => setNote(e.target.value)}
                   placeholder="Optional feedback…"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
                 />
               </div>
             </div>
@@ -1122,7 +1122,7 @@ function StudentSubmissionRow({
               <select
                 value={grade}
                 onChange={e => setGrade(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
               >
                 <option value="">Select…</option>
                 {GRADE_OPTIONS.map(g => (
@@ -1144,7 +1144,7 @@ function StudentSubmissionRow({
                 value={score}
                 onChange={e => setScore(e.target.value)}
                 placeholder={grade === 'Excused' ? 'Optional' : 'e.g. 85'}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
               />
             </div>
 
@@ -1155,7 +1155,7 @@ function StudentSubmissionRow({
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
               >
                 {CATEGORY_OPTIONS.map(c => (
                   <option key={c} value={c}>
@@ -1173,7 +1173,7 @@ function StudentSubmissionRow({
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 placeholder="Optional feedback…"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
               />
             </div>
           </div>

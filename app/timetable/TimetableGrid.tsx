@@ -112,26 +112,31 @@ export default function TimetableGrid({
       year: 'numeric',
     })
 
-    const headerCells = DAYS.map(
-      day => `<th>${DAY_SHORT[day]}</th>`
-    ).join('')
+    const headerCells = DAYS.map(day => `<th>${DAY_SHORT[day]}</th>`).join('')
 
     const bodyRows = PERIODS.map(period => {
       const cells = DAYS.map(day => {
         const row = lookup[day]?.[period]
+
         if (!row) {
-          return `<td><div class="empty">—</div></td>`
+          return `
+            <td class="empty-cell">
+              <div class="empty">—</div>
+            </td>
+          `
         }
 
         const instructor = row.teacher_id
-          ? (teacherMap[row.teacher_id] ?? 'Staff')
+          ? (teacherMap[row.teacher_id] ?? 'Instructor')
           : 'Unassigned'
 
         return `
           <td>
-            <div class="subject">${row.subject}</div>
-            <div class="time">${row.start_time} - ${row.end_time}</div>
-            <div class="teacher">${instructor}</div>
+            <div class="entry">
+              <div class="subject">${row.subject}</div>
+              <div class="time">${row.start_time} – ${row.end_time}</div>
+              <div class="teacher">${instructor}</div>
+            </div>
           </td>
         `
       }).join('')
@@ -152,44 +157,82 @@ export default function TimetableGrid({
           <style>
             @page {
               size: A4 landscape;
-              margin: 16mm;
+              margin: 14mm;
+            }
+
+            * {
+              box-sizing: border-box;
             }
 
             body {
-              font-family: Arial, Helvetica, sans-serif;
-              color: #1f2937;
               margin: 0;
               padding: 0;
+              font-family: Arial, Helvetica, sans-serif;
+              color: #1f2937;
+              background: #ffffff;
             }
 
-            .wrap {
+            .page {
               width: 100%;
             }
 
-            .header {
+            .topbar {
+              background: #1a2e1a;
+              color: #ffffff;
+              padding: 18px 20px 16px;
               text-align: center;
-              margin-bottom: 18px;
+              border-radius: 8px 8px 0 0;
             }
 
             .school {
-              font-size: 20px;
+              font-size: 22px;
               font-weight: 700;
-              letter-spacing: 0.6px;
-              color: #1a2e1a;
+              letter-spacing: 0.5px;
+              color: #6fcf6f;
               margin-bottom: 6px;
             }
 
-            .sub {
-              font-size: 12px;
-              color: #4b5563;
-              margin-bottom: 3px;
+            .title {
+              font-size: 11px;
+              letter-spacing: 1.4px;
+              text-transform: uppercase;
+              color: #ffffff;
             }
 
-            .class {
-              font-size: 15px;
+            .meta-box {
+              border: 1px solid #d6d3d1;
+              border-top: 0;
+              background: #f8f7f4;
+              padding: 14px 18px;
+              margin-bottom: 16px;
+            }
+
+            .meta-grid {
+              width: 100%;
+              border-collapse: collapse;
+            }
+
+            .meta-grid td {
+              padding: 2px 0;
+              border: 0;
+              font-size: 11px;
+              vertical-align: top;
+            }
+
+            .meta-label {
               font-weight: 700;
+              color: #374151;
+              width: 110px;
+            }
+
+            .meta-value {
               color: #111827;
-              margin-top: 8px;
+            }
+
+            .table-wrap {
+              border: 1px solid #d1d5db;
+              border-radius: 8px;
+              overflow: hidden;
             }
 
             table {
@@ -198,89 +241,148 @@ export default function TimetableGrid({
               table-layout: fixed;
             }
 
-            th, td {
-              border: 1px solid #d1d5db;
+            thead th {
+              background: #1a2e1a;
+              color: #6fcf6f;
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.8px;
               padding: 10px 8px;
-              vertical-align: top;
+              border-right: 1px solid #2f4630;
               text-align: center;
             }
 
-            th {
-              background: #f3f4f6;
-              font-size: 12px;
-              text-transform: uppercase;
-              letter-spacing: 0.4px;
-              color: #374151;
+            thead th:last-child {
+              border-right: 0;
             }
 
-            td {
-              height: 74px;
-              font-size: 11px;
+            tbody td {
+              border-right: 1px solid #d1d5db;
+              border-top: 1px solid #d1d5db;
+              padding: 8px 6px;
+              height: 84px;
+              text-align: center;
+              vertical-align: middle;
+              background: #ffffff;
+            }
+
+            tbody tr td:last-child {
+              border-right: 0;
             }
 
             .period {
-              width: 48px;
+              width: 52px;
               font-weight: 700;
-              background: #f9fafb;
+              font-size: 12px;
+              color: #1f2937;
+              background: #f8f7f4;
+            }
+
+            .entry {
+              min-height: 64px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              gap: 4px;
+              padding: 4px 3px;
             }
 
             .subject {
+              font-size: 13px;
               font-weight: 700;
-              font-size: 12px;
+              color: #1a2e1a;
               text-transform: capitalize;
-              color: #111827;
-              margin-bottom: 6px;
+              line-height: 1.2;
             }
 
             .time {
               font-size: 10px;
               color: #4b5563;
-              margin-bottom: 4px;
+              line-height: 1.2;
             }
 
             .teacher {
               font-size: 10px;
               color: #6b7280;
+              line-height: 1.2;
               text-transform: capitalize;
             }
 
+            .empty-cell {
+              background: #fcfcfb;
+            }
+
             .empty {
-              color: #9ca3af;
-              font-size: 12px;
-              padding-top: 18px;
+              color: #c0c4cc;
+              font-size: 14px;
+              font-weight: 500;
             }
 
             .footer {
               margin-top: 14px;
+              background: #1a2e1a;
+              color: #6fcf6f;
+              text-align: center;
+              padding: 8px 10px;
+              font-size: 9px;
+              font-style: italic;
+              border-radius: 0 0 8px 8px;
+            }
+
+            .note {
+              margin-top: 8px;
               text-align: right;
-              font-size: 10px;
+              font-size: 9px;
               color: #6b7280;
             }
           </style>
         </head>
         <body>
-          <div class="wrap">
-            <div class="header">
+          <div class="page">
+            <div class="topbar">
               <div class="school">UTHAAN SCHOOL MANAGEMENT SYSTEM</div>
-              <div class="sub">Official Weekly Timetable</div>
-              <div class="sub">Generated on ${today}</div>
-              <div class="class">${safeClassLabel}</div>
+              <div class="title">Official Weekly Timetable</div>
             </div>
 
-            <table>
-              <thead>
+            <div class="meta-box">
+              <table class="meta-grid">
                 <tr>
-                  <th style="width:48px">#</th>
-                  ${headerCells}
+                  <td class="meta-label">Class:</td>
+                  <td class="meta-value">${safeClassLabel}</td>
+                  <td class="meta-label">Generated:</td>
+                  <td class="meta-value">${today}</td>
                 </tr>
-              </thead>
-              <tbody>
-                ${bodyRows}
-              </tbody>
-            </table>
+                <tr>
+                  <td class="meta-label">Document Type:</td>
+                  <td class="meta-value">Weekly Academic Timetable</td>
+                  <td class="meta-label">System:</td>
+                  <td class="meta-value">Uthaan</td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:52px">#</th>
+                    ${headerCells}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${bodyRows}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="note">
+              For official school use
+            </div>
 
             <div class="footer">
-              Generated by Uthaan
+              Generated by Uthaan — The future of Pakistani education
             </div>
           </div>
         </body>

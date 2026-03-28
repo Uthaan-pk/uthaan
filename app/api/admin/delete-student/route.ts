@@ -9,16 +9,42 @@ const adminSupabase = createAdminClient(
 
 export async function POST(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single()
-  if (roleData?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (roleData?.role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { student_id } = await request.json()
-  if (!student_id) return NextResponse.json({ error: 'student_id required' }, { status: 400 })
 
-  const { error } = await adminSupabase.from('students').delete().eq('id', student_id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!student_id) {
+    return NextResponse.json(
+      { error: 'student_id required' },
+      { status: 400 }
+    )
+  }
 
-  return NextResponse.json({ success: true })
+  const { error } = await adminSupabase
+    .from('students')
+    .update({ is_active: false })
+    .eq('id', student_id)
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true, archived: true })
 }

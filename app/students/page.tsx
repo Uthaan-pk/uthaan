@@ -5,7 +5,9 @@ import StudentsTable from './StudentsTable'
 
 export default async function StudentsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
@@ -19,7 +21,8 @@ export default async function StudentsPage() {
 
   const { data: students } = await supabase
     .from('students')
-    .select('id, name, roll_no, email, stage, class_num, created_at')
+    .select('id, name, roll_no, email, stage, class_num, created_at, is_active')
+    .eq('is_active', true)
     .order('name')
 
   return (

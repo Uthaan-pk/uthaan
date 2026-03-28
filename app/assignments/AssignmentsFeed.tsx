@@ -99,9 +99,8 @@ export default function AssignmentsFeed({
   const [activeSubmit, setActiveSubmit] = useState<string | null>(null)
   const [textResponse, setTextResponse] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>(
-    'all'
-  )
+  const [filter, setFilter] = useState<'all' | 'pending' | 'submitted' | 'graded'>('all')
+  const [downloadingAttachment, setDownloadingAttachment] = useState<string | null>(null)
 
   const subMap = useMemo(() => {
     const m: Record<string, Submission> = {}
@@ -125,6 +124,34 @@ export default function AssignmentsFeed({
     setActiveSubmit(curr => (curr === assignId ? null : assignId))
     setTextResponse(existing?.text_response ?? '')
     if (fileRef.current) fileRef.current.value = ''
+  }
+
+  // Generate a signed URL for teacher attachments and open in new tab
+  async function openAttachment(assignment: Assignment) {
+    if (!assignment.attachment_url) return
+
+    const url = assignment.attachment_url
+
+    // If it's already a full HTTP URL (e.g. already a signed URL), open directly
+    if (url.startsWith('http')) {
+      window.open(url, '_blank')
+      return
+    }
+
+    // Otherwise treat it as a storage path and generate a signed URL
+    setDownloadingAttachment(assignment.id)
+    const { data, error } = await supabase.storage
+      .from('assignment-files')
+      .createSignedUrl(url, 60 * 60) // 1 hour
+
+    setDownloadingAttachment(null)
+
+    if (error || !data?.signedUrl) {
+      toast.error('Could not open attachment. Please try again.')
+      return
+    }
+
+    window.open(data.signedUrl, '_blank')
   }
 
   async function submitAssignment(assignId: string) {
@@ -230,6 +257,7 @@ export default function AssignmentsFeed({
           const due = dueInfo(a.due_date)
           const isActive = activeSubmit === a.id
           const editable = !readOnly && canEditSubmission(a.due_date)
+          const isDownloading = downloadingAttachment === a.id
 
           return (
             <div
@@ -264,14 +292,15 @@ export default function AssignmentsFeed({
 
                   {a.attachment_url && (
                     <div className="mt-2">
-                      <a
-                        href={a.attachment_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline"
+                      <button
+                        onClick={() => openAttachment(a)}
+                        disabled={isDownloading}
+                        className="text-xs text-blue-600 hover:underline disabled:opacity-50 text-left"
                       >
-                        Download attachment: {a.attachment_name ?? 'Open file'} →
-                      </a>
+                        {isDownloading
+                          ? 'Opening…'
+                          : `Download attachment: ${a.attachment_name ?? 'Open file'} →`}
+                      </button>
                     </div>
                   )}
 

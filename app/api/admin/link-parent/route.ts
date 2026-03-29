@@ -39,7 +39,10 @@ export async function POST(request: Request) {
   const auth = await requireAdmin()
   if ('error' in auth) return auth.error
 
-  const { parent_email, student_id } = await request.json()
+  const body = await request.json()
+  const parent_email = String(body.parent_email ?? '').trim().toLowerCase()
+  const parent_name = String(body.parent_name ?? '').trim()
+  const student_id = String(body.student_id ?? '').trim()
 
   if (!parent_email || !student_id) {
     return NextResponse.json(
@@ -55,11 +58,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: usersError.message }, { status: 500 })
   }
 
-  const normalizedEmail = String(parent_email).trim().toLowerCase()
-
   const parentUser = authUsers?.users?.find(
     (u: { email?: string | null }) =>
-      (u.email ?? '').trim().toLowerCase() === normalizedEmail
+      (u.email ?? '').trim().toLowerCase() === parent_email
   )
 
   if (!parentUser) {
@@ -114,12 +115,25 @@ export async function POST(request: Request) {
   }
 
   const exactExisting = (existingLinks ?? []).find(
-    link => link.student_id === student_id
+    (link) => link.student_id === student_id
   )
 
   if (exactExisting) {
+    const { data: updatedLink, error: updateError } = await adminSupabase
+      .from('parent_student')
+      .update({
+        parent_name: parent_name || null,
+      })
+      .eq('id', exactExisting.id)
+      .select()
+      .single()
+
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    }
+
     return NextResponse.json({
-      link: exactExisting,
+      link: updatedLink,
       message: 'Parent is already linked to this student.',
     })
   }
@@ -143,6 +157,8 @@ export async function POST(request: Request) {
     .insert({
       parent_id: parentUser.id,
       student_id,
+      parent_email,
+      parent_name: parent_name || null,
     })
     .select()
     .single()

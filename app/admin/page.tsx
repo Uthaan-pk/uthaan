@@ -5,59 +5,107 @@ import AdminClient from './AdminClient'
 
 export default async function AdminPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
-    .from('user_roles').select('role').eq('user_id', user.id).single()
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
   if (roleData?.role !== 'admin') redirect('/dashboard')
 
-  const [studentsRes, parentLinksRes] = await Promise.all([
-    supabase.from('students').select('id, name, roll_no, email, class_num, stage').order('name').limit(500),
-    supabase.from('parent_student').select('id, parent_id, student_id').limit(500),
+  const [studentsRes, parentLinkStudentsRes] = await Promise.all([
+    supabase
+      .from('students')
+      .select('id, name, roll_no, email, class_num, stage, is_active')
+      .eq('is_active', true)
+      .order('name', { ascending: true })
+      .limit(500),
+
+    supabase
+      .from('students')
+      .select('id, name, roll_no, email, class_num, stage, is_active')
+      .eq('is_active', true)
+      .order('name', { ascending: true })
+      .limit(500),
   ])
 
-  // Enrich parent links with emails and student names
-  const parentIds = (parentLinksRes.data ?? []).map(l => l.parent_id)
-  const studentIds = (parentLinksRes.data ?? []).map(l => l.student_id)
+  if (studentsRes.error) throw studentsRes.error
+  if (parentLinkStudentsRes.error) throw parentLinkStudentsRes.error
 
-  const [parentEmailsRes, linkedStudentsRes] = await Promise.all([
-    parentIds.length > 0
-      ? supabase.from('user_roles').select('user_id').in('user_id', parentIds)
-      : Promise.resolve({ data: [] }),
-    studentIds.length > 0
-      ? supabase.from('students').select('id, name').in('id', studentIds)
-      : Promise.resolve({ data: [] }),
-  ])
+  const allStudents = studentsRes.data ?? []
+  const activeParentLinkStudents = parentLinkStudentsRes.data ?? []
 
-  // Build enriched links using auth admin to get emails
-  const { data: { users: authUsers } } = await supabase.auth.admin.listUsers()
-  const emailMap: Record<string, string> = {}
-  authUsers?.forEach(u => { if (u.email) emailMap[u.id] = u.email })
+  let enrichedLinks: any[] = []
 
-  const studentNameMap: Record<string, string> = {}
-  ;(linkedStudentsRes.data ?? []).forEach((s: any) => { studentNameMap[s.id] = s.name })
+  if (activeParentLinkStudents.length > 0) {
+    const activeStudentIds = activeParentLinkStudents.map(
+      (student) => student.id
+    )
 
-  const enrichedLinks = (parentLinksRes.data ?? []).map(l => ({
-    ...l,
-    parent_email: emailMap[l.parent_id] ?? null,
-    student_name: studentNameMap[l.student_id] ?? null,
-  }))
+    const { data: parentLinksData, error: parentLinksError } = await supabase
+      .from('parent_student')
+      .select(`
+        id,
+        parent_id,
+        parent_email,
+        parent_name,
+        student_id,
+        created_at,
+        students!inner (
+          id,
+          name,
+          roll_no,
+          class_num,
+          stage,
+          is_active
+        )
+      `)
+      .in('student_id', activeStudentIds)
+      .order('created_at', { ascending: false })
+      .limit(500)
+
+    if (parentLinksError) throw parentLinksError
+
+    enrichedLinks = (parentLinksData ?? [])
+      .filter((link: any) => link.students && link.students.is_active === true)
+      .map((link: any) => ({
+        id: link.id,
+        parent_id: link.parent_id,
+        parent_email: link.parent_email ?? 'Unknown parent',
+        parent_name: link.parent_name ?? null,
+        student_id: link.student_id,
+        student_name: link.students.name,
+        student_roll: link.students.roll_no,
+      }))
+  }
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
       <Sidebar email={user.email!} role="admin" />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
-          <h1 className="text-sm font-semibold text-gray-900">Admin Panel</h1>
+          <h1 className="text-sm font-semibold text-gray-900">
+            Admin Panel
+          </h1>
+
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            {studentsRes.data?.length ?? 0} students
+            {allStudents.length} students
           </span>
         </header>
+
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <AdminClient
-            students={studentsRes.data ?? []}
+            students={allStudents}
             parentLinks={enrichedLinks}
+            parentLinkStudents={activeParentLinkStudents}
           />
         </main>
       </div>

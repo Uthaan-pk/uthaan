@@ -11,7 +11,8 @@
       "Bash(npx playwright:*)"
     ],
     "additionalDirectories": [
-      "/Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]"
+      "/Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]",
+      "/Users/asadchaudhry/Desktop/uthaan/components"
     ]
   }
 }

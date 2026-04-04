@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import AdminClient from './AdminClient'
+import SetupChecklist from '@/components/onboarding/SetupChecklist'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -102,6 +103,8 @@ export default async function AdminPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <SetupChecklist />
+
           <AdminClient
             students={allStudents}
             parentLinks={enrichedLinks}

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import AttendanceMarker, { type Student as AttendanceStudent } from './AttendanceMarker'
+import { CURRENT_TERM } from '@/lib/constants'
 
 const statusStyles: Record<string, string> = {
   present: 'bg-green-50 text-green-800',
@@ -276,12 +277,12 @@ export default async function AttendancePage() {
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role={role} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">
               My Attendance
             </h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
 

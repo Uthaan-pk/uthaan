@@ -33,6 +33,11 @@ const labelCls =
   'block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5'
 
 const STAGES = ['pre_1', 'matric', 'o_levels']
+const STAGE_LABEL: Record<string, string> = {
+  pre_1: 'Pre-1',
+  matric: 'Matric',
+  o_levels: 'O-Levels',
+}
 
 export default function AdminClient({
   students: initialStudents,
@@ -48,6 +53,8 @@ export default function AdminClient({
 
   const [tab, setTab] = useState<'students' | 'import' | 'parents'>('students')
   const [students, setStudents] = useState(initialStudents)
+  const [search, setSearch] = useState('')
+  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     name: '',
@@ -109,14 +116,7 @@ export default function AdminClient({
   }
 
   async function archiveStudent(id: string) {
-    if (
-      !confirm(
-        'Archive this student? They will disappear from active lists, but historical records will remain.'
-      )
-    ) {
-      return
-    }
-
+    setConfirmArchiveId(null)
     setDeleting(id)
 
     try {
@@ -247,7 +247,7 @@ export default function AdminClient({
         {(
           [
             ['students', 'Students'],
-            ['import', 'Bulk Import ✦'],
+            ['import', 'Bulk Import'],
             ['parents', 'Parent Links'],
           ] as const
         ).map(([key, label]) => (
@@ -321,7 +321,7 @@ export default function AdminClient({
                 >
                   {STAGES.map(s => (
                     <option key={s} value={s}>
-                      {s}
+                      {STAGE_LABEL[s]}
                     </option>
                   ))}
                 </select>
@@ -346,68 +346,132 @@ export default function AdminClient({
             <button
               onClick={addStudent}
               disabled={saving}
-              className="mt-4 bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium px-4 py-2.5 rounded-lg disabled:opacity-50"
+              className="mt-4 bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium px-4 py-3 min-h-[44px] rounded-lg disabled:opacity-50"
             >
               {saving ? 'Adding…' : 'Add student'}
             </button>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between">
+            <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between gap-3">
               <span className="text-sm font-semibold text-gray-900">
                 All students
               </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 flex-shrink-0">
                 {students.length} total
               </span>
             </div>
 
-            {students.length === 0 ? (
-              <div className="px-5 py-10 text-center text-sm text-gray-400">
-                No students yet. Use Bulk Import to add many at once.
-              </div>
-            ) : (
-              students.map((s, i) => (
-                <div
-                  key={s.id}
-                  className={`flex items-center gap-3 px-5 py-3 ${
-                    i < students.length - 1 ? 'border-b border-gray-50' : ''
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-full bg-[#6fcf6f]/20 flex items-center justify-center text-[#1a2e1a] text-[10px] font-bold flex-shrink-0">
-                    {s.name
-                      .split(' ')
-                      .map(n => n[0])
-                      .join('')
-                      .toUpperCase()
-                      .slice(0, 2)}
+            <div className="px-5 py-3 border-b border-gray-50">
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search by name or roll number…"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+              />
+            </div>
+
+            {(() => {
+              const q = search.trim().toLowerCase()
+              const filtered = q
+                ? students.filter(
+                    s =>
+                      s.name.toLowerCase().includes(q) ||
+                      s.roll_no.toLowerCase().includes(q)
+                  )
+                : students
+
+              if (students.length === 0) {
+                return (
+                  <div className="px-5 py-10 text-center text-sm text-gray-400">
+                    No students yet. Use Bulk Import to add many at once.
+                  </div>
+                )
+              }
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="px-5 py-10 text-center text-sm text-gray-400">
+                    No students match &ldquo;{search}&rdquo;
+                  </div>
+                )
+              }
+
+              return filtered.map((s, i) => (
+                <div key={s.id}>
+                  <div
+                    className={`flex items-center gap-3 px-5 py-3 ${
+                      confirmArchiveId !== s.id && i < filtered.length - 1
+                        ? 'border-b border-gray-50'
+                        : ''
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#6fcf6f]/20 flex items-center justify-center text-[#1a2e1a] text-[10px] font-bold flex-shrink-0">
+                      {s.name
+                        .split(' ')
+                        .map(n => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900">
+                        {s.name}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {s.roll_no} · Class {s.class_num} ·{' '}
+                        {STAGE_LABEL[s.stage] ?? s.stage}
+                      </div>
+                    </div>
+
+                    {s.email && (
+                      <div className="text-xs text-gray-400 hidden sm:block truncate max-w-[160px]">
+                        {s.email}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() =>
+                        setConfirmArchiveId(
+                          confirmArchiveId === s.id ? null : s.id
+                        )
+                      }
+                      disabled={deleting === s.id}
+                      className="text-xs text-gray-400 hover:text-amber-500 transition-colors px-2 py-1 flex-shrink-0"
+                    >
+                      {deleting === s.id ? '…' : 'Archive'}
+                    </button>
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900">
-                      {s.name}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {s.roll_no} · Class {s.class_num} · {s.stage}
-                    </div>
-                  </div>
-
-                  {s.email && (
-                    <div className="text-xs text-gray-400 hidden sm:block truncate max-w-[160px]">
-                      {s.email}
+                  {confirmArchiveId === s.id && (
+                    <div
+                      className={`px-5 py-3 bg-amber-50 border-t border-amber-100 flex items-center justify-between gap-3 ${
+                        i < filtered.length - 1 ? 'border-b border-amber-100' : ''
+                      }`}
+                    >
+                      <span className="text-xs text-amber-800">
+                        Archive {s.name}? Historical records are kept.
+                      </span>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => setConfirmArchiveId(null)}
+                          className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => archiveStudent(s.id)}
+                          className="text-xs font-medium text-amber-700 hover:text-red-600 px-2 py-1"
+                        >
+                          Confirm
+                        </button>
+                      </div>
                     </div>
                   )}
-
-                  <button
-                    onClick={() => archiveStudent(s.id)}
-                    disabled={deleting === s.id}
-                    className="text-xs text-gray-300 hover:text-amber-500 transition-colors px-2 py-1 flex-shrink-0"
-                  >
-                    {deleting === s.id ? '…' : 'Archive'}
-                  </button>
                 </div>
               ))
-            )}
+            })()}
           </div>
         </div>
       )}

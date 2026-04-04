@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import QuizCreateForm from './QuizCreateForm'
+import { CURRENT_TERM } from '@/lib/constants'
 
 export default async function CreateQuizPage() {
   const supabase = await createClient()
@@ -27,7 +28,7 @@ export default async function CreateQuizPage() {
         <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">Create quiz</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Spring Term 2026
+            {CURRENT_TERM}
           </span>
         </header>
 

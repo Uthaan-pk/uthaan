@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import AssignmentsBoard from './AssignmentsBoard'
+import { CURRENT_TERM } from '@/lib/constants'
 import AssignmentsFeed from './AssignmentsFeed'
 
 export default async function AssignmentsPage() {
@@ -53,7 +54,7 @@ export default async function AssignmentsPage() {
               Assignments
             </h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
 

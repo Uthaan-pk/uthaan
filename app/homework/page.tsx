@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import HomeworkBoard, { type Assignment } from './HomeworkBoard'
+import { CURRENT_TERM } from '@/lib/constants'
 import HomeworkFeed, { type Assignment as FeedAssignment } from './HomeworkFeed'
 
 export default async function HomeworkPage() {
@@ -44,7 +45,7 @@ export default async function HomeworkPage() {
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Homework</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">

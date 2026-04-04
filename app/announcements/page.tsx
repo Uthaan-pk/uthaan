@@ -2,17 +2,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import ComposeAnnouncement from './ComposeAnnouncement'
+import { CURRENT_TERM } from '@/lib/constants'
 import AnnouncementList from './AnnouncementList'
 
-const priorityBadge: Record<string, string> = {
-  important: 'bg-amber-50 text-amber-800',
-  urgent: 'bg-red-50 text-red-700',
-}
-
-const priorityLabel: Record<string, string> = {
-  important: 'Important',
-  urgent: 'Urgent',
-}
 
 export default async function AnnouncementsPage() {
   const supabase = await createClient()
@@ -66,7 +58,7 @@ export default async function AnnouncementsPage() {
               Announcements
             </h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
 
@@ -84,8 +76,6 @@ export default async function AnnouncementsPage() {
                   creatorRoleMap={creatorRoleMap}
                   currentUserId={user.id}
                   isStaff={true}
-                  priorityBadge={priorityBadge}
-                  priorityLabel={priorityLabel}
                 />
               </div>
             </div>
@@ -197,8 +187,6 @@ export default async function AnnouncementsPage() {
                   creatorRoleMap={creatorRoleMap}
                   currentUserId={user.id}
                   isStaff={false}
-                  priorityBadge={priorityBadge}
-                  priorityLabel={priorityLabel}
                 />
               </div>
             </div>
@@ -306,8 +294,6 @@ export default async function AnnouncementsPage() {
                   creatorRoleMap={creatorRoleMap}
                   currentUserId={user.id}
                   isStaff={false}
-                  priorityBadge={priorityBadge}
-                  priorityLabel={priorityLabel}
                 />
               </div>
             </div>

@@ -33,18 +33,28 @@ function statusOf(fee: Fee): Status {
 const STATUS_BADGE: Record<Status, string> = {
   paid:    'bg-green-50 text-green-700 border-green-100',
   overdue: 'bg-red-50 text-red-600 border-red-100',
-  pending: 'bg-yellow-50 text-yellow-700 border-yellow-100',
+  pending: 'bg-amber-50 text-amber-700 border-amber-100',
+}
+
+const STATUS_LABEL: Record<Status, string> = {
+  paid:    'Paid',
+  overdue: 'Overdue',
+  pending: 'Pending',
 }
 
 const inputCls =
-  'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]'
+  'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-base text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]'
 
 const selectCls =
-  'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white'
+  'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white'
 
 const labelCls = 'block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5'
 
 const emptyForm = { student_id: '', amount: '', due_date: '', term: '' }
+
+function pkr(n: number) {
+  return n.toLocaleString('en-PK', { maximumFractionDigits: 0 })
+}
 
 export default function FeesClient({
   initialFees,
@@ -54,25 +64,25 @@ export default function FeesClient({
   students: Student[]
 }) {
   const supabase = useMemo(() => createClient(), [])
-  const [fees, setFees] = useState(initialFees)
+  const [fees, setFees]     = useState(initialFees)
   const [acting, setActing] = useState<string | null>(null)
+  const [confirmUnpaidId, setConfirmUnpaidId] = useState<string | null>(null)
 
   // Filters
-  const [filterClass, setFilterClass]   = useState('all')
-  const [filterTerm, setFilterTerm]     = useState('all')
+  const [filterClass,  setFilterClass]  = useState('all')
+  const [filterTerm,   setFilterTerm]   = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
 
   // Modal
-  const [showModal, setShowModal]   = useState(false)
-  const [form, setForm]             = useState(emptyForm)
-  const [submitting, setSubmitting] = useState(false)
+  const [showModal,   setShowModal]   = useState(false)
+  const [form,        setForm]        = useState(emptyForm)
+  const [submitting,  setSubmitting]  = useState(false)
 
-  // ── Stats ────────────────────────────────────────────────────────────────
-  const totalAssigned    = fees.length
-  const totalCollected   = fees.filter(f => f.paid).reduce((s, f) => s + Number(f.amount), 0)
+  // ── Stats ────────────────────────────────────────────────────────────────────
+  const totalCollected   = fees.filter(f =>  f.paid).reduce((s, f) => s + Number(f.amount), 0)
   const totalOutstanding = fees.filter(f => !f.paid).reduce((s, f) => s + Number(f.amount), 0)
 
-  // ── Filter options derived from data ─────────────────────────────────────
+  // ── Filter options ────────────────────────────────────────────────────────────
   const classes = useMemo(() => {
     const set = new Set<number>()
     fees.forEach(f => { if (f.student?.class_num != null) set.add(f.student.class_num) })
@@ -85,10 +95,10 @@ export default function FeesClient({
     return Array.from(set).sort()
   }, [fees])
 
-  // ── Filtered rows ─────────────────────────────────────────────────────────
+  // ── Filtered rows ─────────────────────────────────────────────────────────────
   const filtered = useMemo(() => fees.filter(f => {
-    if (filterClass !== 'all' && String(f.student?.class_num) !== filterClass) return false
-    if (filterTerm  !== 'all' && f.term !== filterTerm) return false
+    if (filterClass  !== 'all' && String(f.student?.class_num) !== filterClass) return false
+    if (filterTerm   !== 'all' && f.term !== filterTerm)                         return false
     if (filterStatus !== 'all') {
       const s = statusOf(f)
       if (filterStatus === 'paid'    && s !== 'paid')    return false
@@ -98,7 +108,7 @@ export default function FeesClient({
     return true
   }), [fees, filterClass, filterTerm, filterStatus])
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────────
   async function handleMarkPaid(fee: Fee) {
     setActing(fee.id)
     const paidAt = new Date().toISOString()
@@ -121,23 +131,24 @@ export default function FeesClient({
     setActing(null)
     if (error) { toast.error(error.message); return }
     setFees(prev => prev.map(f => f.id === fee.id ? { ...f, paid: false, paid_at: null } : f))
+    setConfirmUnpaidId(null)
     toast.success('Marked as unpaid.')
   }
 
   async function handleAssignFee() {
-    if (!form.student_id)                       { toast.error('Select a student.'); return }
-    if (!form.amount || isNaN(Number(form.amount))) { toast.error('Enter a valid amount.'); return }
-    if (!form.due_date)                          { toast.error('Due date is required.'); return }
-    if (!form.term.trim())                       { toast.error('Term is required.'); return }
+    if (!form.student_id)                          { toast.error('Select a student.');      return }
+    if (!form.amount || isNaN(Number(form.amount))) { toast.error('Enter a valid amount.');  return }
+    if (!form.due_date)                            { toast.error('Due date is required.');   return }
+    if (!form.term.trim())                         { toast.error('Term is required.');       return }
 
     setSubmitting(true)
     const { data, error } = await supabase
       .from('fees')
       .insert({
         student_id: form.student_id,
-        amount: parseFloat(form.amount),
-        due_date: form.due_date,
-        term: form.term.trim(),
+        amount:     parseFloat(form.amount),
+        due_date:   form.due_date,
+        term:       form.term.trim(),
       })
       .select('*, student:students(name, class_num)')
       .single()
@@ -150,152 +161,263 @@ export default function FeesClient({
     toast.success('Fee assigned.')
   }
 
-  function closeModal() {
-    setShowModal(false)
-    setForm(emptyForm)
-  }
-
-  const pkr = (n: number) =>
-    n.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 overflow-auto bg-[#f8f7f4] p-6 md:p-8">
+    <div className="flex-1 flex flex-col overflow-hidden">
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Fees</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Manage student fee assignments and payments</p>
-        </div>
+      {/* Standard page header */}
+      <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <h1 className="text-sm font-semibold text-gray-900">Fees</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors min-h-[36px]"
         >
           + Assign Fee
         </button>
-      </div>
+      </header>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Assigned"      value={String(totalAssigned)} />
-        <StatCard label="Total Collected"     value={`PKR ${pkr(totalCollected)}`} />
-        <StatCard label="Total Outstanding"   value={`PKR ${pkr(totalOutstanding)}`} />
-      </div>
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-100 px-5 py-4 mb-4 flex flex-wrap gap-3">
-        <select
-          value={filterClass}
-          onChange={e => setFilterClass(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
-        >
-          <option value="all">All classes</option>
-          {classes.map(c => <option key={c} value={String(c)}>Class {c}</option>)}
-        </select>
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <StatCard label="Total records"   value={String(fees.length)} />
+          <StatCard label="Collected"       value={`PKR ${pkr(totalCollected)}`} accent="green" />
+          <StatCard label="Outstanding"     value={`PKR ${pkr(totalOutstanding)}`} accent={totalOutstanding > 0 ? 'red' : undefined} />
+        </div>
 
-        <select
-          value={filterTerm}
-          onChange={e => setFilterTerm(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
-        >
-          <option value="all">All terms</option>
-          {terms.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
+        {/* Filters */}
+        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex flex-wrap gap-2">
+          <select
+            value={filterClass}
+            onChange={e => setFilterClass(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 min-h-[44px]"
+          >
+            <option value="all">All classes</option>
+            {classes.map(c => <option key={c} value={String(c)}>Class {c}</option>)}
+          </select>
 
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
-        >
-          <option value="all">All statuses</option>
-          <option value="paid">Paid</option>
-          <option value="unpaid">Unpaid</option>
-          <option value="overdue">Overdue</option>
-        </select>
-      </div>
+          <select
+            value={filterTerm}
+            onChange={e => setFilterTerm(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 min-h-[44px]"
+          >
+            <option value="all">All terms</option>
+            {terms.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        {filtered.length === 0 ? (
-          <div className="px-5 py-16 text-center">
-            <div className="text-sm text-gray-400">No fees found</div>
-            <div className="text-xs text-gray-300 mt-1">Try adjusting the filters or assign a new fee.</div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-50">
-                  {['Student', 'Class', 'Term', 'Amount (PKR)', 'Due Date', 'Status', 'Actions'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 min-h-[44px]"
+          >
+            <option value="all">All statuses</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="overdue">Overdue</option>
+          </select>
+
+          {filtered.length !== fees.length && (
+            <span className="self-center text-xs text-gray-400 ml-1">
+              {filtered.length} of {fees.length}
+            </span>
+          )}
+        </div>
+
+        {/* Results */}
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          {filtered.length === 0 ? (
+            <div className="px-5 py-16 text-center">
+              {fees.length === 0 ? (
+                <>
+                  <div className="text-sm font-medium text-gray-900 mb-1">No fees recorded yet</div>
+                  <div className="text-xs text-gray-400 mb-4">Assign a fee to a student to get started.</div>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="inline-flex items-center gap-1.5 bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium px-4 py-2.5 rounded-lg hover:bg-[#243d24] transition-colors"
+                  >
+                    + Assign first fee
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-sm font-medium text-gray-900 mb-1">No fees match these filters</div>
+                  <div className="text-xs text-gray-400">Try adjusting the filters above.</div>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Desktop table — hidden on small screens */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-50">
+                      {['Student', 'Class', 'Term', 'Amount (PKR)', 'Due Date', 'Status', 'Action'].map(h => (
+                        <th key={h} className="px-5 py-3 text-left text-[11px] font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(fee => {
+                      const status = statusOf(fee)
+                      const isConfirming = confirmUnpaidId === fee.id
+                      return (
+                        <tr key={fee.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                          <td className="px-5 py-3.5 font-medium text-gray-900 whitespace-nowrap">
+                            {fee.student?.name ?? '—'}
+                          </td>
+                          <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
+                            {fee.student?.class_num != null ? `Class ${fee.student.class_num}` : '—'}
+                          </td>
+                          <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">{fee.term}</td>
+                          <td className="px-5 py-3.5 font-medium text-gray-900 whitespace-nowrap">
+                            {pkr(Number(fee.amount))}
+                          </td>
+                          <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
+                            {new Date(fee.due_date).toLocaleDateString('en-GB', {
+                              day: 'numeric', month: 'short', year: 'numeric',
+                            })}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${STATUS_BADGE[status]}`}>
+                              {STATUS_LABEL[status]}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            {fee.paid ? (
+                              isConfirming ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => handleMarkUnpaid(fee)}
+                                    disabled={acting === fee.id}
+                                    className="text-[11px] text-white bg-red-500 hover:bg-red-600 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                  >
+                                    {acting === fee.id ? '…' : 'Confirm'}
+                                  </button>
+                                  <button
+                                    onClick={() => setConfirmUnpaidId(null)}
+                                    className="text-[11px] text-gray-400 hover:text-gray-600 px-1"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setConfirmUnpaidId(fee.id)}
+                                  className="text-[11px] text-gray-400 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded px-2 py-1 transition-colors whitespace-nowrap"
+                                >
+                                  Mark Unpaid
+                                </button>
+                              )
+                            ) : (
+                              <button
+                                onClick={() => handleMarkPaid(fee)}
+                                disabled={acting === fee.id}
+                                className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
+                              >
+                                {acting === fee.id ? '…' : 'Mark Paid'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card list — visible only on small screens */}
+              <div className="sm:hidden divide-y divide-gray-50">
                 {filtered.map(fee => {
-                  const status = statusOf(fee)
+                  const status      = statusOf(fee)
+                  const isConfirming = confirmUnpaidId === fee.id
                   return (
-                    <tr key={fee.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-3.5 font-medium text-gray-900 whitespace-nowrap">
-                        {fee.student?.name ?? '—'}
-                      </td>
-                      <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
-                        {fee.student?.class_num != null ? `Class ${fee.student.class_num}` : '—'}
-                      </td>
-                      <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">{fee.term}</td>
-                      <td className="px-5 py-3.5 text-gray-900 font-medium whitespace-nowrap">
-                        {pkr(Number(fee.amount))}
-                      </td>
-                      <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
-                        {new Date(fee.due_date).toLocaleDateString('en-GB', {
-                          day: 'numeric', month: 'short', year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border capitalize ${STATUS_BADGE[status]}`}>
-                          {status}
+                    <div key={fee.id} className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-gray-900">
+                            {fee.student?.name ?? '—'}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {fee.student?.class_num != null ? `Class ${fee.student.class_num}` : ''}{' '}
+                            · {fee.term}
+                          </div>
+                        </div>
+                        <span className={`flex-shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full border ${STATUS_BADGE[status]}`}>
+                          {STATUS_LABEL[status]}
                         </span>
-                      </td>
-                      <td className="px-5 py-3.5">
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-base font-semibold text-gray-900">
+                            PKR {pkr(Number(fee.amount))}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            Due {new Date(fee.due_date).toLocaleDateString('en-GB', {
+                              day: 'numeric', month: 'short', year: 'numeric',
+                            })}
+                            {fee.paid && fee.paid_at && (
+                              <> · Paid {new Date(fee.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</>
+                            )}
+                          </div>
+                        </div>
+
                         {fee.paid ? (
-                          <button
-                            onClick={() => handleMarkUnpaid(fee)}
-                            disabled={acting === fee.id}
-                            className="text-[11px] text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
-                          >
-                            {acting === fee.id ? '…' : 'Mark Unpaid'}
-                          </button>
+                          isConfirming ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleMarkUnpaid(fee)}
+                                disabled={acting === fee.id}
+                                className="text-xs text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-2 min-h-[40px] disabled:opacity-50"
+                              >
+                                {acting === fee.id ? '…' : 'Confirm unpaid'}
+                              </button>
+                              <button
+                                onClick={() => setConfirmUnpaidId(null)}
+                                className="text-xs text-gray-400 px-2 py-2"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmUnpaidId(fee.id)}
+                              className="text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-2 min-h-[40px] hover:border-red-200 hover:text-red-600 transition-colors"
+                            >
+                              Mark Unpaid
+                            </button>
+                          )
                         ) : (
                           <button
                             onClick={() => handleMarkPaid(fee)}
                             disabled={acting === fee.id}
-                            className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
+                            className="text-xs font-medium bg-[#1a2e1a] text-[#6fcf6f] rounded-lg px-3 py-2 min-h-[40px] hover:bg-[#243d24] disabled:opacity-50 transition-colors"
                           >
                             {acting === fee.id ? '…' : 'Mark Paid'}
                           </button>
                         )}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   )
                 })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </div>
+            </>
+          )}
+        </div>
+      </main>
 
       {/* Assign Fee Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-xl">
             <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-900">Assign Fee</h2>
               <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => { setShowModal(false); setForm(emptyForm) }}
+                className="text-gray-400 hover:text-gray-600 p-1 transition-colors"
                 aria-label="Close"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
@@ -327,11 +449,11 @@ export default function FeesClient({
                   <label className={labelCls}>Amount (PKR)</label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min="0"
-                    step="0.01"
                     value={form.amount}
                     onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-                    placeholder="e.g. 5000"
+                    placeholder="5000"
                     className={inputCls}
                   />
                 </div>
@@ -352,7 +474,7 @@ export default function FeesClient({
                   type="text"
                   value={form.term}
                   onChange={e => setForm(f => ({ ...f, term: e.target.value }))}
-                  placeholder="e.g. Term 1 2025"
+                  placeholder="e.g. Spring Term 2026"
                   className={inputCls}
                 />
               </div>
@@ -360,15 +482,15 @@ export default function FeesClient({
 
             <div className="px-6 py-4 border-t border-gray-50 flex justify-end gap-2">
               <button
-                onClick={closeModal}
-                className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                onClick={() => { setShowModal(false); setForm(emptyForm) }}
+                className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2.5 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAssignFee}
                 disabled={submitting}
-                className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50 transition-colors"
+                className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors min-h-[44px]"
               >
                 {submitting ? 'Assigning…' : 'Assign Fee'}
               </button>
@@ -380,11 +502,15 @@ export default function FeesClient({
   )
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, accent }: { label: string; value: string; accent?: 'green' | 'red' }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 px-5 py-4">
+    <div className="bg-white rounded-xl border border-gray-100 px-4 py-4">
       <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">{label}</div>
-      <div className="text-xl font-bold text-gray-900 truncate">{value}</div>
+      <div className={`text-lg font-bold truncate ${
+        accent === 'green' ? 'text-green-700' : accent === 'red' ? 'text-red-600' : 'text-gray-900'
+      }`}>
+        {value}
+      </div>
     </div>
   )
 }

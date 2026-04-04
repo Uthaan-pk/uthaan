@@ -318,7 +318,8 @@ export default async function DashboardPage() {
     (a) => a.due_date === today
   ).length
   const activeQuizzes = (quizzesRes.data ?? []).length
-  const attendanceMarked = (attendanceRes.data ?? []).length > 0
+  const todayLogCount = (attendanceRes.data ?? []).length
+  const attendanceMarked = totalStudents > 0 && todayLogCount >= totalStudents
   const recentAnnouncements = announcementsRes.data ?? []
 
   return (
@@ -417,7 +418,7 @@ export default async function DashboardPage() {
               </Link>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 px-5 py-4 flex items-center gap-8 flex-wrap">
+            <div className="bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap items-center gap-x-8 gap-y-3">
               <div>
                 <div className="text-[11px] text-gray-400 uppercase tracking-wide">
                   {t.totalStudents}
@@ -429,19 +430,26 @@ export default async function DashboardPage() {
 
               <div className="w-px h-8 bg-gray-100 hidden sm:block" />
 
-              <Link
-                href="/announcements"
-                className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
-              >
-                {t.postAnnouncement} →
-              </Link>
-
-              <Link
-                href="/students"
-                className="text-[11px] font-medium text-[#1a2e1a] hover:underline sm:ml-auto"
-              >
-                {t.viewAllStudents} →
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/announcements"
+                  className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
+                >
+                  {t.postAnnouncement} →
+                </Link>
+                <Link
+                  href="/fees"
+                  className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
+                >
+                  Assign fee →
+                </Link>
+                <Link
+                  href="/students"
+                  className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
+                >
+                  {t.viewAllStudents} →
+                </Link>
+              </div>
             </div>
 
             {recentAnnouncements.length > 0 && (

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import QuizCreateForm from '../../create/QuizCreateForm'
+import { CURRENT_TERM } from '@/lib/constants'
 
 type DBQuestion = {
   text: string
@@ -77,7 +78,7 @@ export default async function EditQuizPage({
             <h1 className="text-sm font-semibold text-gray-900">Edit quiz</h1>
           </div>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Spring Term 2026
+            {CURRENT_TERM}
           </span>
         </header>
 

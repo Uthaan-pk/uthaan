@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import FeesClient, { type Fee } from './FeesClient'
+import { CURRENT_TERM } from '@/lib/constants'
 
 export default async function FeesPage() {
   const supabase = await createClient()
@@ -41,7 +42,7 @@ export default async function FeesPage() {
     ])
 
     return (
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role="admin" />
         <FeesClient
           initialFees={(feesRes.data as unknown as Fee[]) ?? []}
@@ -330,7 +331,7 @@ export default async function FeesPage() {
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Fees</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
 

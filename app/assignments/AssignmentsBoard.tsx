@@ -4,8 +4,7 @@ import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-
-const CURRENT_TERM = 'Spring Term 2026'
+import { CURRENT_TERM } from '@/lib/constants'
 const CATEGORY_OPTIONS = ['assignment', 'quiz', 'exam', 'final'] as const
 
 type Assignment = {

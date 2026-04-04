@@ -4,8 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { parseGradeText } from '@/lib/calculateGrade'
 import toast from 'react-hot-toast'
-
-const CURRENT_TERM = 'Spring Term 2026'
+import { CURRENT_TERM } from '@/lib/constants'
 
 export type Assignment = {
   id: string

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import TimetableGrid from './TimetableGrid'
+import { CURRENT_TERM } from '@/lib/constants'
 import { type TimetableRow } from './TimetableForm'
 
 export default async function TimetablePage() {
@@ -106,7 +107,7 @@ export default async function TimetablePage() {
         <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">Timetable</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            {filterClassNum ? `Class ${filterClassNum}` : 'Spring Term 2026'}
+            {filterClassNum ? `Class ${filterClassNum}` : '{CURRENT_TERM}'}
           </span>
         </header>
 

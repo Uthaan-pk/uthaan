@@ -41,6 +41,7 @@ export default function ParentLinker({
   const [studentId, setStudentId] = useState('')
   const [saving, setSaving] = useState(false)
   const [unlinking, setUnlinking] = useState<string | null>(null)
+  const [confirmUnlinkId, setConfirmUnlinkId] = useState<string | null>(null)
   const [links, setLinks] = useState<Link[]>([])
 
   const activeStudentIds = useMemo(
@@ -104,9 +105,7 @@ export default function ParentLinker({
   }
 
   async function handleUnlink(linkId: string) {
-    const confirmed = window.confirm('Remove this parent-student link?')
-    if (!confirmed) return
-
+    setConfirmUnlinkId(null)
     setUnlinking(linkId)
 
     const res = await fetch('/api/admin/link-parent', {
@@ -216,36 +215,70 @@ export default function ParentLinker({
           </div>
         ) : (
           links.map((link, i) => (
-            <div
-              key={link.id}
-              className={`flex items-center justify-between gap-4 px-5 py-3.5 ${
-                i < links.length - 1 ? 'border-b border-gray-50' : ''
-              }`}
-            >
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-gray-900">
-                  {link.parent_name?.trim()
-                    ? link.parent_name
-                    : link.parent_email ?? 'Unknown parent'}
+            <div key={link.id}>
+              <div
+                className={`flex items-center justify-between gap-4 px-5 py-3.5 ${
+                  confirmUnlinkId !== link.id && i < links.length - 1
+                    ? 'border-b border-gray-50'
+                    : ''
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-gray-900">
+                    {link.parent_name?.trim()
+                      ? link.parent_name
+                      : link.parent_email ?? 'Unknown parent'}
+                  </div>
+                  <div className="mt-0.5 text-xs text-gray-400">
+                    {link.parent_name?.trim() && (
+                      <span className="mr-1">{link.parent_email ?? '—'} · </span>
+                    )}
+                    → {link.student_name ?? 'Unknown student'}{' '}
+                    <span className="text-gray-300">
+                      ({link.student_roll ?? 'No roll number'})
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-0.5 text-xs text-gray-400">
-                  {link.parent_name?.trim() && (
-                    <span className="mr-1">{link.parent_email ?? '—'} · </span>
-                  )}
-                  → {link.student_name ?? 'Unknown student'}{' '}
-                  <span className="text-gray-300">
-                    ({link.student_roll ?? 'No roll number'})
-                  </span>
-                </div>
+
+                <button
+                  onClick={() =>
+                    setConfirmUnlinkId(
+                      confirmUnlinkId === link.id ? null : link.id
+                    )
+                  }
+                  disabled={unlinking === link.id}
+                  className="flex-shrink-0 rounded border border-gray-200 px-2 py-1 text-[10px] text-gray-400 transition-colors hover:border-red-200 hover:text-red-600 disabled:opacity-50"
+                >
+                  {unlinking === link.id ? 'Removing…' : 'Unlink'}
+                </button>
               </div>
 
-              <button
-                onClick={() => handleUnlink(link.id)}
-                disabled={unlinking === link.id}
-                className="flex-shrink-0 rounded border border-gray-200 px-2 py-1 text-[10px] text-gray-400 transition-colors hover:border-red-200 hover:text-red-600 disabled:opacity-50"
-              >
-                {unlinking === link.id ? 'Removing…' : 'Unlink'}
-              </button>
+              {confirmUnlinkId === link.id && (
+                <div
+                  className={`px-5 py-3 bg-red-50 border-t border-red-100 flex items-center justify-between gap-3 ${
+                    i < links.length - 1 ? 'border-b border-red-100' : ''
+                  }`}
+                >
+                  <span className="text-xs text-red-800">
+                    Remove link between {link.parent_name ?? link.parent_email} and{' '}
+                    {link.student_name}?
+                  </span>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => setConfirmUnlinkId(null)}
+                      className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleUnlink(link.id)}
+                      className="text-xs font-medium text-red-600 hover:text-red-700 px-2 py-1"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}

@@ -3,8 +3,7 @@
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
-
-const CURRENT_TERM = 'Spring Term 2026'
+import { CURRENT_TERM } from '@/lib/constants'
 const SUBJECTS = ['Urdu', 'English', 'Math', 'Science', 'Islamiat']
 
 type Student = { id: string; name: string; roll_no: string }

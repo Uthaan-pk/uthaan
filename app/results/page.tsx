@@ -2,9 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import ResultsPage from './ResultsPage'
-
-const CURRENT_TERM = 'Spring Term 2026'
-const CURRENT_YEAR = '2025-2026'
+import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
 
 async function isReleasedForClass(
   supabase: any,

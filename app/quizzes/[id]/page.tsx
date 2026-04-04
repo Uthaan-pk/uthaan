@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import QuizAttemptManager from './QuizAttemptManager'
 import QuizStaffView from './QuizStaffView'
+import { CURRENT_TERM } from '@/lib/constants'
 
 type Question = {
   text: string
@@ -62,7 +63,7 @@ export default async function QuizPage({
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Quiz not found</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
           <main className="flex-1 flex items-center justify-center">
@@ -103,7 +104,7 @@ export default async function QuizPage({
               <h1 className="text-sm font-semibold text-gray-900 truncate">{quiz.title}</h1>
             </div>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
 
@@ -124,7 +125,7 @@ export default async function QuizPage({
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">{quiz.title}</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
           <main className="flex-1 flex items-center justify-center">
@@ -171,7 +172,7 @@ export default async function QuizPage({
               <h1 className="text-sm font-semibold text-gray-900 truncate">{quiz.title}</h1>
             </div>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
           <main className="flex-1 flex items-center justify-center">
@@ -202,7 +203,7 @@ export default async function QuizPage({
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">{quiz.title}</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Spring Term 2026
+              {CURRENT_TERM}
             </span>
           </header>
           <main className="flex-1 flex items-center justify-center">
@@ -227,7 +228,7 @@ export default async function QuizPage({
         <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900 truncate">{quiz.title}</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Spring Term 2026
+            {CURRENT_TERM}
           </span>
         </header>
 

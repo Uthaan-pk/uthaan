@@ -76,6 +76,7 @@ export default async function AnnouncementsPage() {
                   creatorRoleMap={creatorRoleMap}
                   currentUserId={user.id}
                   isStaff={true}
+                  currentUserRole={role ?? ''}
                 />
               </div>
             </div>

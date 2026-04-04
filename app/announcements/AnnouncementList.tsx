@@ -31,11 +31,13 @@ export default function AnnouncementList({
   creatorRoleMap,
   currentUserId,
   isStaff,
+  currentUserRole,
 }: {
   announcements: Announcement[]
   creatorRoleMap: Record<string, string>
   currentUserId: string
   isStaff: boolean
+  currentUserRole?: string
   // priorityBadge and priorityLabel are no longer needed as props
   priorityBadge?: Record<string, string>
   priorityLabel?: Record<string, string>
@@ -115,7 +117,10 @@ export default function AnnouncementList({
   return (
     <>
       {announcements.map(a => {
-        const canManage    = isStaff && a.created_by === currentUserId
+        const isOwner      = a.created_by === currentUserId
+        const isAdmin      = currentUserRole === 'admin'
+        const canEdit      = isStaff && isOwner
+        const canDelete    = isStaff && (isOwner || isAdmin)
         const isEditing    = editingId === a.id
         const isConfirming = confirmDeleteId === a.id
 
@@ -205,27 +210,31 @@ export default function AnnouncementList({
                       })}
                     </span>
 
-                    {canManage && !isConfirming && (
+                    {(canEdit || canDelete) && !isConfirming && (
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => startEdit(a)}
-                          className="text-xs text-gray-400 hover:text-[#1a2e1a] transition-colors py-1 px-1"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => setConfirmDeleteId(a.id)}
-                          className="text-xs text-gray-400 hover:text-red-500 transition-colors py-1 px-1"
-                        >
-                          Delete
-                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => startEdit(a)}
+                            className="text-xs text-gray-400 hover:text-[#1a2e1a] transition-colors py-1 px-1"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => setConfirmDeleteId(a.id)}
+                            className="text-xs text-gray-400 hover:text-red-500 transition-colors py-1 px-1"
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Inline delete confirmation */}
-                {isConfirming && canManage && (
+                {isConfirming && canDelete && (
                   <div className="mb-3 flex items-center gap-3 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
                     <span className="text-xs text-red-700 flex-1">Delete this announcement?</span>
                     <button

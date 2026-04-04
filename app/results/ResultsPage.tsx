@@ -3,8 +3,11 @@
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { computeSubjectFinalGrades, fmtSubject, type FlatMarkRow, type WeightRow } from '@/lib/gradeUtils'
 import { letterGrade } from '@/lib/calculateGrade'
 import { CURRENT_TERM, CURRENT_YEAR, TERM_START_DATE, TERM_END_DATE } from '@/lib/constants'
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type Student = {
   id: string
@@ -25,41 +28,7 @@ type ReleaseRow = {
   released_by?: string | null
 }
 
-// Friendly display names for subject/exam codes stored in the DB
-const SUBJECT_DISPLAY: Record<string, string> = {
-  urdu: 'Urdu',
-  english: 'English',
-  math: 'Mathematics',
-  mathematics: 'Mathematics',
-  science: 'Science',
-  islamiat: 'Islamiat',
-  pakistan_studies: 'Pakistan Studies',
-  computer: 'Computer Science',
-  biology: 'Biology',
-  chemistry: 'Chemistry',
-  physics: 'Physics',
-}
-
-const EXAM_DISPLAY: Record<string, string> = {
-  mid_term: 'Mid Term',
-  midterm: 'Mid Term',
-  final_term: 'Final Term',
-  finalterm: 'Final Term',
-  unit_test: 'Unit Test',
-  'Mid Term': 'Mid Term',
-  'Final Term': 'Final Term',
-  'Unit Test': 'Unit Test',
-}
-
-function fmtSubject(s: string): string {
-  return SUBJECT_DISPLAY[s?.toLowerCase?.()] ??
-    (s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : '—')
-}
-
-function fmtExam(e: string): string {
-  return EXAM_DISPLAY[e] ?? EXAM_DISPLAY[e?.toLowerCase?.()] ??
-    (e ? e.charAt(0).toUpperCase() + e.slice(1).replace(/_/g, ' ') : '—')
-}
+// ── PDF generation ────────────────────────────────────────────────────────────
 
 async function generatePDF(student: Student) {
   const { jsPDF } = await import('jspdf')
@@ -67,13 +36,18 @@ async function generatePDF(student: Student) {
 
   const supabase = createClient()
 
-  const [{ data: marks, error: marksErr }, { data: logs, error: logsErr }] =
+  // Fetch all marks for the student (all exams) and grade weights for their class
+  const [{ data: rawMarks, error: marksErr }, { data: weightRows, error: weightsErr }, { data: logs, error: logsErr }] =
     await Promise.all([
       supabase
         .from('marks')
-        .select('subject, exam, percent')
-        .eq('student_id', student.id)
-        .eq('term', CURRENT_TERM),
+        .select('student_id, subject, exam, percent')
+        .eq('student_id', student.id),
+      supabase
+        .from('grade_weights')
+        .select('id, class_num, subject, assignment_weight, exam_weight, final_weight, quiz_weight')
+        .eq('class_num', Number(student.class_num))
+        .eq('academic_year', CURRENT_YEAR),
       supabase
         .from('attendance_logs')
         .select('status')
@@ -82,24 +56,53 @@ async function generatePDF(student: Student) {
         .lte('day', TERM_END_DATE),
     ])
 
-  if (marksErr) throw new Error(`Could not load marks: ${marksErr.message}`)
-  if (logsErr) throw new Error(`Could not load attendance: ${logsErr.message}`)
+  if (marksErr)  throw new Error(`Could not load marks: ${marksErr.message}`)
+  if (weightsErr) throw new Error(`Could not load grade weights: ${weightsErr.message}`)
+  if (logsErr)   throw new Error(`Could not load attendance: ${logsErr.message}`)
 
-  const presentCount = (logs ?? []).filter(l => l.status === 'present').length
-  const absentCount  = (logs ?? []).filter(l => l.status === 'absent').length
-  const totalDays    = presentCount + absentCount
+  const marks: FlatMarkRow[] = (rawMarks ?? []).map(m => ({
+    student_id: student.id,
+    subject:    m.subject,
+    exam:       m.exam,
+    percent:    m.percent,
+  }))
+
+  const weights: WeightRow[] = (weightRows ?? []).map(w => ({
+    id:                 w.id,
+    class_num:          w.class_num,
+    subject:            w.subject,
+    assignment_weight:  w.assignment_weight,
+    exam_weight:        w.exam_weight,
+    final_weight:       w.final_weight,
+    quiz_weight:        w.quiz_weight,
+  }))
+
+  // Compute one final grade per subject
+  const subjectGrades = computeSubjectFinalGrades(student.id, marks, weights)
+
+  // Attendance
+  const presentCount  = (logs ?? []).filter(l => l.status === 'present').length
+  const absentCount   = (logs ?? []).filter(l => l.status === 'absent').length
+  const totalDays     = presentCount + absentCount
   const attendancePct = totalDays > 0
     ? Math.round((presentCount / totalDays) * 100)
     : 0
+
+  // Overall average across all subjects
+  const overallPct = subjectGrades.length > 0
+    ? Math.round(
+        subjectGrades.reduce((s, g) => s + g.overall, 0) / subjectGrades.length
+      )
+    : null
 
   const doc    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageW  = doc.internal.pageSize.getWidth()
   const pageH  = doc.internal.pageSize.getHeight()
   const margin = 20
 
-  // ── Header bar ──────────────────────────────────────────────────────────────
+  // ── Header bar ────────────────────────────────────────────────────────────
   doc.setFillColor(26, 46, 26)
-  doc.rect(0, 0, pageW, 36, 'F')
+  doc.rect(0, 0, pageW, 38, 'F')
 
   doc.setTextColor(111, 207, 111)
   doc.setFontSize(14)
@@ -121,21 +124,21 @@ async function generatePDF(student: Student) {
     pageW / 2, 30, { align: 'center' }
   )
 
-  // ── Student info box ─────────────────────────────────────────────────────────
-  const boxY = 42
+  // ── Student info box ──────────────────────────────────────────────────────
+  const boxY   = 44
   doc.setDrawColor(200, 200, 195)
   doc.setFillColor(248, 247, 244)
   doc.roundedRect(margin, boxY, pageW - margin * 2, 34, 2, 2, 'FD')
 
-  const col1x = margin + 6
-  const col2x = pageW / 2 + 6
-  const lineH  = 8
+  const col1x   = margin + 6
+  const col2x   = pageW / 2 + 6
+  const lineH   = 8
   const labelW1 = 34
   const labelW2 = 22
 
-  const leftFields:  [string, string][] = [
-    ['Student Name', student.name],
-    ['Class',        String(student.class_num)],
+  const leftFields: [string, string][] = [
+    ['Student Name',  student.name],
+    ['Class',         String(student.class_num)],
     ['Academic Year', CURRENT_YEAR],
   ]
   const rightFields: [string, string][] = [
@@ -161,65 +164,53 @@ async function generatePDF(student: Student) {
     doc.text(value, col2x + labelW2, boxY + 9 + i * lineH)
   })
 
-  // ── Academic Performance ─────────────────────────────────────────────────────
+  // ── Academic Performance ──────────────────────────────────────────────────
   const marksY = boxY + 40
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(26, 46, 26)
   doc.text('Academic Performance', margin, marksY)
 
-  const marksData = marks ?? []
-  const marksRows = marksData.map(m => {
-    const pct = Math.round(m.percent ?? 0)
-    return [
-      fmtSubject(m.subject ?? ''),
-      fmtExam(m.exam ?? ''),
-      `${pct}%`,
-      letterGrade(pct),
-      pct >= 50 ? 'Pass' : 'Fail',
-    ]
-  })
-
-  const overallPct = marksData.length > 0
-    ? Math.round(
-        marksData.reduce((sum, m) => sum + (m.percent ?? 0), 0) / marksData.length
-      )
-    : null
+  const tableRows = subjectGrades.map(g => [
+    fmtSubject(g.subject),
+    `${g.overall}%`,
+    g.letter,
+    g.overall >= 50 ? 'Pass' : 'Fail',
+  ])
 
   autoTable(doc, {
     startY: marksY + 4,
-    head: [['Subject', 'Exam', 'Marks Obtained', 'Grade', 'Pass / Fail']],
-    body: marksRows.length > 0
-      ? marksRows
-      : [['No marks recorded for this term', '', '', '', '']],
+    head: [['Subject', 'Final %', 'Grade', 'Pass / Fail']],
+    body: tableRows.length > 0
+      ? tableRows
+      : [['No marks recorded for this term', '', '', '']],
     foot: overallPct !== null
-      ? [['Overall Average', '', `${overallPct}%`, letterGrade(overallPct), '']]
+      ? [['Overall Average', `${overallPct}%`, letterGrade(overallPct), '']]
       : undefined,
     margin: { left: margin, right: margin },
-    styles: { fontSize: 8.5, cellPadding: 3.5, textColor: [40, 40, 40] },
+    styles: { fontSize: 9, cellPadding: 4, textColor: [40, 40, 40] },
     headStyles: {
-      fillColor:  [26, 46, 26],
-      textColor:  [111, 207, 111],
+      fillColor: [26, 46, 26],
+      textColor: [111, 207, 111],
       fontStyle:  'bold',
       halign:     'center',
     },
     footStyles: {
-      fillColor:  [235, 245, 235],
-      textColor:  [26, 46, 26],
+      fillColor: [235, 245, 235],
+      textColor: [26, 46, 26],
       fontStyle:  'bold',
     },
     columnStyles: {
-      0: { cellWidth: 50 },
-      1: { cellWidth: 36 },
+      0: { cellWidth: 60 },
+      1: { halign: 'center' },
       2: { halign: 'center' },
       3: { halign: 'center' },
-      4: { halign: 'center' },
     },
     didParseCell(data) {
-      if (data.section === 'body' && data.column.index === 4) {
+      if (data.section === 'body' && data.column.index === 3) {
         const val = String(data.cell.raw)
-        data.cell.styles.textColor  = val === 'Pass' ? [0, 120, 60] : [180, 0, 0]
-        data.cell.styles.fontStyle  = 'bold'
+        data.cell.styles.textColor = val === 'Pass' ? [0, 120, 60] : [180, 0, 0]
+        data.cell.styles.fontStyle = 'bold'
       }
     },
     alternateRowStyles: { fillColor: [245, 244, 241] },
@@ -227,7 +218,7 @@ async function generatePDF(student: Student) {
 
   const afterMarksY = (doc as any).lastAutoTable.finalY + 10
 
-  // ── Attendance Summary ───────────────────────────────────────────────────────
+  // ── Attendance Summary ────────────────────────────────────────────────────
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(26, 46, 26)
@@ -252,15 +243,15 @@ async function generatePDF(student: Student) {
     },
     columnStyles: {
       3: {
-        textColor:  attendancePct >= 75 ? [0, 120, 60] : [180, 0, 0],
-        fontStyle:  'bold',
+        textColor: attendancePct >= 75 ? [0, 120, 60] : [180, 0, 0],
+        fontStyle: 'bold',
       },
     },
   })
 
-  // ── Signatures ───────────────────────────────────────────────────────────────
-  const sigY      = (doc as any).lastAutoTable.finalY + 22
-  const sigLineW  = 55
+  // ── Signatures ────────────────────────────────────────────────────────────
+  const sigY     = (doc as any).lastAutoTable.finalY + 22
+  const sigLineW = 55
 
   if (sigY + 20 < pageH - 16) {
     doc.setDrawColor(160, 160, 155)
@@ -276,7 +267,7 @@ async function generatePDF(student: Student) {
     doc.text('Principal', prinX, sigY + 5)
   }
 
-  // ── Footer ───────────────────────────────────────────────────────────────────
+  // ── Footer ────────────────────────────────────────────────────────────────
   doc.setFillColor(26, 46, 26)
   doc.rect(0, pageH - 12, pageW, 12, 'F')
   doc.setTextColor(111, 207, 111)
@@ -293,7 +284,7 @@ async function generatePDF(student: Student) {
   doc.save(`ReportCard_${safeName}_${student.roll_no}.pdf`)
 }
 
-// ── StudentReportCardView ────────────────────────────────────────────────────
+// ── StudentReportCardView ─────────────────────────────────────────────────────
 
 function StudentReportCardView({ student }: { student: Student }) {
   const [loading, setLoading] = useState(false)
@@ -311,12 +302,12 @@ function StudentReportCardView({ student }: { student: Student }) {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="max-w-2xl">
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50">
           <h2 className="text-sm font-semibold text-gray-900">Your Report Card</h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Your results have been released by the school. Download your report card below.
+            Your results have been released by the school. Download your final report card below.
           </p>
         </div>
         <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -326,8 +317,8 @@ function StudentReportCardView({ student }: { student: Student }) {
               Roll {student.roll_no} · Class {student.class_num} · {student.stage ?? '—'}
             </div>
             <div className="text-xs text-gray-400 mt-0.5">{CURRENT_TERM}</div>
-            <div className="text-xs text-amber-600 mt-1.5">
-              If no marks have been entered yet, the PDF will show &ldquo;No marks recorded for this term&rdquo;.
+            <div className="text-xs text-gray-500 mt-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 inline-block">
+              Shows final subject grades computed across all exams
             </div>
           </div>
           <button
@@ -343,7 +334,7 @@ function StudentReportCardView({ student }: { student: Student }) {
   )
 }
 
-// ── Main ResultsPage ─────────────────────────────────────────────────────────
+// ── Main ResultsPage ──────────────────────────────────────────────────────────
 
 export default function ResultsPage({
   students,
@@ -365,7 +356,7 @@ export default function ResultsPage({
     [students]
   )
 
-  // ── Student / Parent view ────────────────────────────────────────────────────
+  // ── Student / Parent view ─────────────────────────────────────────────────
   if (role === 'student' || role === 'parent') {
     if (activeStudents.length === 0) {
       return (
@@ -377,12 +368,13 @@ export default function ResultsPage({
     return <StudentReportCardView student={activeStudents[0]} />
   }
 
-  // ── Admin / Teacher view ─────────────────────────────────────────────────────
+  // ── Admin / Teacher view ──────────────────────────────────────────────────
+
   const classNums = useMemo(() => {
     const set = new Set<number>()
     activeStudents.forEach(s => {
       const n = Number(s.class_num)
-      if (!Number.isNaN(n)) set.add(n)
+      if (!isNaN(n)) set.add(n)
     })
     return Array.from(set).sort((a, b) => a - b)
   }, [activeStudents])
@@ -430,7 +422,12 @@ export default function ResultsPage({
 
     const { data, error } = await supabase
       .from('result_releases')
-      .insert({ academic_year: CURRENT_YEAR, term: CURRENT_TERM, class_num: classNum, released: true })
+      .insert({
+        academic_year: CURRENT_YEAR,
+        term:          CURRENT_TERM,
+        class_num:     classNum,
+        released:      true,
+      })
       .select()
       .single()
 
@@ -447,7 +444,7 @@ export default function ResultsPage({
         <div className="px-5 py-4 border-b border-gray-50">
           <h2 className="text-sm font-semibold text-gray-900">Release Report Cards</h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Release results by class so students and parents can view and download their report card.
+            Release results by class so students and parents can download their final report card.
           </p>
         </div>
 
@@ -493,7 +490,7 @@ export default function ResultsPage({
           <div>
             <h2 className="text-sm font-semibold text-gray-900">Download Report Cards</h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Generate and download a PDF report card for any student.
+              Generate a PDF with each student&apos;s final subject grades.
             </p>
           </div>
           {/* Class filter */}

@@ -26,56 +26,165 @@ export default async function MarksPage() {
 
   // ── Admin / Teacher ────────────────────────────────────────────────────────
   if (isStaff) {
+    // Use the regular authenticated client — mirrors the working Results page pattern.
+    // The service-role admin client silently returns null data when
+    // SUPABASE_SERVICE_ROLE_KEY is missing/wrong, which is undetectable at this level.
+    // RLS is confirmed permissive for staff (Results page reads students the same way).
+
+    const timetableQuery =
+      role === 'teacher'
+        ? supabase
+            .from('timetable')
+            .select('class_num, subject, teacher_id, instructor_name')
+            .eq('teacher_id', user.id)
+            .limit(500)
+        : supabase
+            .from('timetable')
+            .select('class_num, subject, teacher_id, instructor_name')
+            .limit(2000)
+
     const [
       studentsRes,
       marksRes,
       assignmentsRes,
       submissionsRes,
       weightsRes,
+      timetableRes,
     ] = await Promise.all([
       supabase
         .from('students')
-        .select('id, name, roll_no, class_num, is_active, user_id')
-        .eq('is_active', true)
+        .select('id, name, roll_no, class_num, is_active')
         .order('name')
-        .limit(500),
+        .limit(2000),
+
       supabase
         .from('marks')
         .select('id, student_id, subject, exam, percent, source')
-        .limit(5000),
+        .limit(10000),
+
       supabase
         .from('assignments')
         .select('id, title, subject, class_num, due_date, created_at')
         .order('created_at', { ascending: false })
-        .limit(500),
+        .limit(2000),
+
       supabase
         .from('assignment_submissions')
         .select('id, assignment_id, student_id, grade, submitted_at, reviewed')
-        .limit(5000),
+        .limit(10000),
+
       supabase
         .from('grade_weights')
         .select(
           'id, class_num, subject, assignment_weight, exam_weight, final_weight, quiz_weight'
         )
         .eq('academic_year', CURRENT_YEAR)
-        .limit(500),
+        .limit(2000),
+
+      timetableQuery,
     ])
 
-    const flatMarks = marksRes.data ?? []
-    const allMarks  = buildAllMarksData(flatMarks)
+    // ── Debug logging (remove once confirmed working) ──────────────────────
+    console.log('[Gradebook] user.id:', user.id, '| role:', role)
+    console.log('[Gradebook] studentsRes:', {
+      err: studentsRes.error?.message ?? null,
+      count: studentsRes.data?.length ?? 0,
+      sample: studentsRes.data?.slice(0, 2),
+    })
+    console.log('[Gradebook] timetableRes:', {
+      err: timetableRes.error?.message ?? null,
+      count: timetableRes.data?.length ?? 0,
+      rows: timetableRes.data?.slice(0, 5),
+    })
+    console.log('[Gradebook] marksRes count:', marksRes.data?.length ?? 0, 'err:', marksRes.error?.message ?? null)
+    // ──────────────────────────────────────────────────────────────────────
 
-    // Compute assignment average per student from graded submissions
+    const allStudentsRaw = (studentsRes.data ?? []).filter(
+      (s: any) => s.is_active !== false
+    )
+    const allAssignmentsRaw = assignmentsRes.data ?? []
+    const allSubmissionsRaw = submissionsRes.data ?? []
+    const allWeightsRaw = weightsRes.data ?? []
+    // timetableRows is already scoped to this teacher (for teacher role)
+    const timetableRows = timetableRes.data ?? []
+
+    let visibleClassNums: number[] = []
+
+    if (role === 'admin') {
+      visibleClassNums = Array.from(
+        new Set(
+          allStudentsRaw
+            .map((s: any) => Number(s.class_num))
+            .filter((n: number) => !isNaN(n) && n > 0)
+        )
+      ).sort((a, b) => a - b)
+    } else {
+      // timetableRows is pre-filtered by teacher_id in the query above
+      visibleClassNums = Array.from(
+        new Set(
+          timetableRows
+            .map((row: any) => Number(row.class_num))
+            .filter((n: number) => !isNaN(n) && n > 0)
+        )
+      ).sort((a, b) => a - b)
+
+      // Fallback: if timetable returned nothing, derive classes from all active students
+      if (visibleClassNums.length === 0) {
+        console.log('[Gradebook] timetable fallback — deriving classes from students')
+        visibleClassNums = Array.from(
+          new Set(
+            allStudentsRaw
+              .map((s: any) => Number(s.class_num))
+              .filter((n: number) => !isNaN(n) && n > 0)
+          )
+        ).sort((a, b) => a - b)
+      }
+    }
+
+    console.log('[Gradebook] visibleClassNums:', visibleClassNums)
+    console.log('[Gradebook] allStudentsRaw:', allStudentsRaw.length)
+
+    const allStudents = allStudentsRaw.filter((s: any) =>
+      visibleClassNums.includes(Number(s.class_num))
+    )
+
+    console.log('[Gradebook] allStudents (after filter):', allStudents.length)
+
+    const allAssignments = allAssignmentsRaw.filter((a: any) =>
+      visibleClassNums.includes(Number(a.class_num))
+    )
+
+    const allWeights = allWeightsRaw.filter((w: any) =>
+      visibleClassNums.includes(Number(w.class_num))
+    )
+
+    const studentIdSet = new Set(allStudents.map((s: any) => s.id))
+    const assignmentIdSet = new Set(allAssignments.map((a: any) => a.id))
+
+    const flatMarks = (marksRes.data ?? []).filter((m: any) =>
+      studentIdSet.has(m.student_id)
+    )
+
+    const filteredSubmissions = allSubmissionsRaw.filter((s: any) =>
+      assignmentIdSet.has(s.assignment_id)
+    )
+
+    const allMarks = buildAllMarksData(flatMarks)
+
     const assignmentAvgByStudentId: Record<string, number> = {}
     const byStudent: Record<string, number[]> = {}
-    for (const sub of submissionsRes.data ?? []) {
+
+    for (const sub of filteredSubmissions) {
       if (!sub.grade) continue
       const g = parseFloat(sub.grade)
       if (isNaN(g)) continue
       if (!byStudent[sub.student_id]) byStudent[sub.student_id] = []
       byStudent[sub.student_id].push(g)
     }
+
     for (const [sid, grades] of Object.entries(byStudent)) {
-      assignmentAvgByStudentId[sid] = grades.reduce((a, b) => a + b, 0) / grades.length
+      assignmentAvgByStudentId[sid] =
+        grades.reduce((a, b) => a + b, 0) / grades.length
     }
 
     return (
@@ -91,12 +200,12 @@ export default async function MarksPage() {
 
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <ClassGradebookShell
-              allStudents={studentsRes.data ?? []}
+              allStudents={allStudents}
               allMarks={allMarks}
               flatMarks={flatMarks}
-              assignments={assignmentsRes.data ?? []}
-              submissions={submissionsRes.data ?? []}
-              weightRows={weightsRes.data ?? []}
+              assignments={allAssignments}
+              submissions={filteredSubmissions}
+              weightRows={allWeights}
               quizAvgByStudentId={{}}
               assignmentAvgByStudentId={assignmentAvgByStudentId}
             />
@@ -135,7 +244,7 @@ export default async function MarksPage() {
         .from('students')
         .select('id, name, roll_no, is_active')
         .eq('id', link.student_id)
-        .eq('is_active', true)
+        .neq('is_active', false)
         .single(),
     ])
 
@@ -146,7 +255,9 @@ export default async function MarksPage() {
         <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
           <Sidebar email={user.email!} role="parent" />
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-sm text-gray-400">Student record not found or inactive.</div>
+            <div className="text-sm text-gray-400">
+              Student record not found or inactive.
+            </div>
           </div>
         </div>
       )
@@ -195,7 +306,7 @@ export default async function MarksPage() {
         .from('students')
         .select('id, name, roll_no, is_active')
         .eq('id', studentId)
-        .eq('is_active', true)
+        .neq('is_active', false)
         .single(),
     ])
 

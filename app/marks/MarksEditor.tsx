@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { letterGrade } from '@/lib/calculateGrade'
+import { CURRENT_TERM } from '@/lib/constants'
 import {
   computeSubjectFinalGrades,
   buildExamCategoryMap,
@@ -136,6 +137,7 @@ export default function MarksEditor({
   assignmentAvgByStudentId,
   examTypes: examTypesProp = [],
   visibleSubjects = [],
+  schoolId = null,
   readOnlyGradesOnly = false,
 }: {
   students: Student[]
@@ -147,6 +149,7 @@ export default function MarksEditor({
   assignmentAvgByStudentId: Record<string, number>
   examTypes?: ExamType[]
   visibleSubjects?: string[]
+  schoolId?: string | null
   readOnlyGradesOnly?: boolean
 }) {
   const supabase = useMemo(() => createClient(), [])
@@ -193,6 +196,11 @@ export default function MarksEditor({
   }
 
   async function handleSave() {
+    if (!schoolId) {
+      toast.error('School context is missing for this account.')
+      return
+    }
+
     setSaving(true)
 
     const studentIds = students.map(s => s.id)
@@ -215,6 +223,8 @@ export default function MarksEditor({
             exam: selectedExam,
             percent,
             source: 'manual',
+            term: CURRENT_TERM,
+            school_id: schoolId,
           },
         ]
       })

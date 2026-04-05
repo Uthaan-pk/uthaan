@@ -21,7 +21,7 @@ export default async function AdminLeavesPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
 
@@ -71,6 +71,8 @@ export default async function AdminLeavesPage() {
             students={(studentsRes.data ?? []) as StudentOption[]}
             initialLeaves={leavesRes.data ?? []}
             initialEarlyLeaves={earlyLeavesRes.data ?? []}
+            schoolId={roleData?.school_id ?? null}
+            createdBy={user.id}
           />
         </main>
       </div>

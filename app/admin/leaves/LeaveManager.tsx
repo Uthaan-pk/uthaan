@@ -43,10 +43,14 @@ export default function LeaveManager({
   students,
   initialLeaves,
   initialEarlyLeaves,
+  schoolId,
+  createdBy,
 }: {
   students: StudentOption[]
   initialLeaves: LeaveRow[]
   initialEarlyLeaves: LeaveRow[]
+  schoolId: string | null
+  createdBy: string
 }) {
   const supabase = useMemo(() => createClient(), [])
   const [leaves, setLeaves] = useState<LeaveRow[]>(initialLeaves)
@@ -96,6 +100,11 @@ export default function LeaveManager({
   }
 
   async function addLeave() {
+    if (!schoolId) {
+      toast.error('School context is missing for this admin account.')
+      return
+    }
+
     if (!studentId || !startDate) {
       toast.error('Select a student and start date.')
       return
@@ -111,10 +120,12 @@ export default function LeaveManager({
     try {
       const data = await tryInsert('student_leaves', [
         {
+          school_id: schoolId,
           student_id: studentId,
           start_date: startDate,
           end_date: resolvedEnd,
           reason: reason || null,
+          created_by: createdBy,
         },
       ])
 
@@ -132,6 +143,11 @@ export default function LeaveManager({
   }
 
   async function addEarlyLeave() {
+    if (!schoolId) {
+      toast.error('School context is missing for this admin account.')
+      return
+    }
+
     if (!studentId || !day) {
       toast.error('Select a student and date.')
       return
@@ -141,9 +157,11 @@ export default function LeaveManager({
     try {
       const data = await tryInsert('student_early_leaves', [
         {
+          school_id: schoolId,
           student_id: studentId,
           leave_date: day,
           reason: earlyReason || null,
+          created_by: createdBy,
         },
       ])
 

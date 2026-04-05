@@ -43,6 +43,7 @@ export default function ClassGradebookShell({
   assignmentAvgByStudentId,
   examTypes = [],
   visibleSubjects = [],
+  schoolId = null,
   readOnlyGradesOnly = false,
 }: {
   allStudents: Student[]
@@ -54,6 +55,7 @@ export default function ClassGradebookShell({
   assignmentAvgByStudentId: Record<string, number>
   examTypes?: ExamType[]
   visibleSubjects?: string[]
+  schoolId?: string | null
   readOnlyGradesOnly?: boolean
 }) {
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
@@ -239,6 +241,7 @@ export default function ClassGradebookShell({
         assignmentAvgByStudentId={assignmentAvgByStudentId}
         examTypes={examTypes}
         visibleSubjects={visibleSubjects}
+        schoolId={schoolId}
         readOnlyGradesOnly={readOnlyGradesOnly}
       />
     </div>

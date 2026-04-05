@@ -43,6 +43,10 @@ type TimetableRow = {
   subject: string | null
 }
 
+function normalizeSubject(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? ''
+}
+
 export default async function MarksPage() {
   const supabase = await createClient()
 
@@ -54,7 +58,7 @@ export default async function MarksPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role, student_id')
+    .select('role, student_id, school_id')
     .eq('user_id', user.id)
     .single()
 
@@ -175,7 +179,7 @@ export default async function MarksPage() {
       visibleSubjects = Array.from(
         new Set(
           timetableRows
-            .map(row => row.subject?.toLowerCase?.().trim())
+            .map(row => normalizeSubject(row.subject))
             .filter((subject): subject is string => Boolean(subject))
         )
       )
@@ -195,7 +199,7 @@ export default async function MarksPage() {
       if (!classOk) return false
 
       if (!isTeacher) return true
-      return visibleSubjects.includes((a.subject ?? '').toLowerCase())
+      return visibleSubjects.includes(normalizeSubject(a.subject))
     })
 
     const allWeights = allWeightsRaw.filter(w =>
@@ -208,7 +212,7 @@ export default async function MarksPage() {
     const flatMarks = ((marksRes.data ?? []) as FlatMarkRow[]).filter(m => {
       if (!studentIdSet.has(m.student_id)) return false
       if (!isTeacher) return true
-      return visibleSubjects.includes((m.subject ?? '').toLowerCase())
+      return visibleSubjects.includes(normalizeSubject(m.subject))
     })
 
     const filteredSubmissions = allSubmissionsRaw.filter(s =>
@@ -259,6 +263,7 @@ export default async function MarksPage() {
               assignmentAvgByStudentId={assignmentAvgByStudentId}
               examTypes={examTypes}
               visibleSubjects={visibleSubjects}
+              schoolId={roleData?.school_id ?? null}
               readOnlyGradesOnly={isAdmin}
             />
           </main>

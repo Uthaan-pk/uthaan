@@ -29,7 +29,7 @@ export default async function AttendancePage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role, student_id')
+    .select('role, student_id, school_id')
     .eq('user_id', user.id)
     .single()
 
@@ -180,6 +180,7 @@ export default async function AttendancePage() {
                 students={(students as unknown as AttendanceStudent[]) ?? []}
                 initialStatus={initialStatus}
                 today={today}
+                schoolId={roleData?.school_id ?? null}
                 readOnly={isAdmin}
                 lockedStatusByStudent={lockedStatusByStudent}
                 leaveMeta={leaveMeta}

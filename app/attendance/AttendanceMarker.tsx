@@ -30,6 +30,7 @@ export default function AttendanceMarker({
   students,
   initialStatus,
   today,
+  schoolId = null,
   readOnly = false,
   lockedStatusByStudent = {},
   leaveMeta = {},
@@ -37,6 +38,7 @@ export default function AttendanceMarker({
   students: Student[]
   initialStatus: StatusMap
   today: string
+  schoolId?: string | null
   readOnly?: boolean
   lockedStatusByStudent?: Record<string, LeaveStatus>
   leaveMeta?: LeaveMeta
@@ -117,6 +119,7 @@ export default function AttendanceMarker({
         student_id: s.id,
         day: today,
         status: status[s.id],
+        school_id: schoolId,
       }))
       .filter(row => row.status !== undefined)
 

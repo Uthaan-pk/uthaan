@@ -26,6 +26,11 @@ export default async function DashboardPage() {
 
   const role = roleData?.role
 
+  if (role === 'superadmin') {
+    const impersonating = cookieStore.get('impersonate_school_id')?.value
+    if (!impersonating) redirect('/superadmin')
+  }
+
   if (role === 'parent') {
     const { data: link } = await supabase
       .from('parent_student')

@@ -15,8 +15,14 @@ export default function LoginPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.push('/dashboard')
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single()
+      router.push(roleData?.role === 'superadmin' ? '/superadmin' : '/dashboard')
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -28,12 +34,17 @@ export default function LoginPage() {
     }
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError('Invalid email or password. Please try again.')
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .single()
+      router.push(roleData?.role === 'superadmin' ? '/superadmin' : '/dashboard')
     }
   }
 

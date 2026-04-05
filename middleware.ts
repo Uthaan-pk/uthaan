@@ -67,6 +67,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  // ── Redirect superadmin away from /dashboard (unless impersonating) ───────
+  if (pathname === '/dashboard' && role === 'superadmin') {
+    const impersonating = request.cookies.get('impersonate_school_id')?.value
+    if (!impersonating) {
+      return NextResponse.redirect(new URL('/superadmin', request.url))
+    }
+  }
+
   // ── Suspension check (skip for superadmin) ───────────────────────────────
   if (role !== 'superadmin' && school_id) {
     const { data: school } = await supabase

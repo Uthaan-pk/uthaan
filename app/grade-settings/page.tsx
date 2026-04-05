@@ -27,18 +27,22 @@ export default async function GradeSettingsPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
 
   const role = roleData?.role
+  const schoolId = roleData?.school_id ?? null
+
   if (role !== 'admin' && role !== 'teacher') redirect('/dashboard')
+  if (!schoolId) redirect('/dashboard')
 
   let query = supabase
     .from('grade_weights')
     .select(
       'id, academic_year, class_num, subject, teacher_id, assignment_weight, exam_weight, final_weight, quiz_weight, created_by, created_at'
     )
+    .eq('school_id', schoolId)
     .order('academic_year', { ascending: false })
     .order('class_num', { ascending: true })
     .order('subject', { ascending: true })
@@ -61,6 +65,7 @@ export default async function GradeSettingsPage() {
             existingWeights={(weights ?? []) as WeightRow[]}
             userId={user.id}
             role={role}
+            schoolId={schoolId}
           />
         </main>
       </div>

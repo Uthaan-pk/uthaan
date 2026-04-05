@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar'
 import QuizAttemptManager from './QuizAttemptManager'
 import QuizStaffView from './QuizStaffView'
 import { CURRENT_TERM } from '@/lib/constants'
+import { resolveEffectiveRole } from '@/lib/school'
 
 type Question = {
   text: string
@@ -31,10 +32,13 @@ function normalizeQuestion(q: DBQuestion): Question {
 
 export default async function QuizPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ mode?: string }>
 }) {
   const { id } = await params
+  const { mode } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -47,7 +51,8 @@ export default async function QuizPage({
     .single()
 
   const role = roleData?.role
-  const isStaff = role === 'teacher' || role === 'admin'
+  const effectiveRole = await resolveEffectiveRole(role ?? '')
+  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
 
   const { data: quiz } = await supabase
     .from('quizzes')
@@ -89,7 +94,7 @@ export default async function QuizPage({
   if (isStaff) {
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
+        <Sidebar email={user.email!} role={effectiveRole} />
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
@@ -154,6 +159,85 @@ export default async function QuizPage({
 
   const submissionCount = submissions?.length ?? 0
   const maxAttempts = quiz.max_attempts ?? 1
+
+  // mode=results: student explicitly wants history view (from "Past results" link)
+  if (mode === 'results' && submissionCount > 0) {
+    const total = questions.length
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role={role ?? ''} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <Link href="/quizzes" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                ← Quizzes
+              </Link>
+              <span className="text-gray-200">/</span>
+              <h1 className="text-sm font-semibold text-gray-900 truncate">{quiz.title}</h1>
+            </div>
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              {CURRENT_TERM}
+            </span>
+          </header>
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-2xl space-y-4">
+              <div className="bg-white rounded-xl border border-gray-100 px-5 py-4">
+                <div className="text-xs text-gray-500 mb-3">
+                  {submissionCount} attempt{submissionCount !== 1 ? 's' : ''} completed
+                  {submissionCount < maxAttempts && (
+                    <span className="ml-2 text-[#1a2e1a] font-medium">
+                      · {maxAttempts - submissionCount} remaining
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {(submissions ?? []).map((sub, i) => {
+                    const pct = total > 0 ? Math.round(((sub.score ?? 0) / total) * 100) : 0
+                    const passed = pct >= 50
+                    return (
+                      <div key={sub.id} className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0">
+                        <span className="text-sm text-gray-700">Attempt {i + 1}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-400">
+                            {new Date(sub.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          </span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${passed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                            {pct}%
+                          </span>
+                          <span className="text-[11px] text-gray-400">{sub.score ?? 0}/{total}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {(submissions ?? []).length > 0 && total > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Best score</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {Math.round((Math.max(...(submissions ?? []).map(s => s.score ?? 0)) / total) * 100)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Link href="/quizzes" className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2 rounded-lg transition-colors">
+                  ← Back to quizzes
+                </Link>
+                {submissionCount < maxAttempts && (
+                  <Link
+                    href={`/quizzes/${id}?mode=take`}
+                    className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Retake ({maxAttempts - submissionCount} left)
+                  </Link>
+                )}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    )
+  }
 
   // All attempts exhausted — show past results
   if (submissionCount >= maxAttempts) {

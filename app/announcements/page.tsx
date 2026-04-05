@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import ComposeAnnouncement from './ComposeAnnouncement'
 import { CURRENT_TERM } from '@/lib/constants'
 import AnnouncementList from './AnnouncementList'
+import { resolveEffectiveRole } from '@/lib/school'
 
 
 export default async function AnnouncementsPage() {
@@ -21,7 +22,8 @@ export default async function AnnouncementsPage() {
     .single()
 
   const role = roleData?.role
-  const isStaff = role === 'teacher' || role === 'admin'
+  const effectiveRole = await resolveEffectiveRole(role ?? '')
+  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
 
   if (isStaff) {
     const { data: announcements } = await supabase
@@ -51,7 +53,7 @@ export default async function AnnouncementsPage() {
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
+        <Sidebar email={user.email!} role={effectiveRole} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">
@@ -76,7 +78,7 @@ export default async function AnnouncementsPage() {
                   creatorRoleMap={creatorRoleMap}
                   currentUserId={user.id}
                   isStaff={true}
-                  currentUserRole={role ?? ''}
+                  currentUserRole={effectiveRole}
                 />
               </div>
             </div>

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import QuizList, { type Quiz } from './QuizList'
 import { CURRENT_TERM } from '@/lib/constants'
+import { resolveEffectiveRole } from '@/lib/school'
 
 export default async function QuizzesPage() {
   const supabase = await createClient()
@@ -21,7 +22,8 @@ export default async function QuizzesPage() {
     .single()
 
   const role = roleData?.role ?? ''
-  const isStaff = role === 'teacher' || role === 'admin'
+  const effectiveRole = await resolveEffectiveRole(role)
+  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
 
   if (isStaff) {
     const { data: quizzes } = await supabase
@@ -32,7 +34,7 @@ export default async function QuizzesPage() {
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role} />
+        <Sidebar email={user.email!} role={effectiveRole} />
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
@@ -304,7 +306,7 @@ export default async function QuizzesPage() {
                         <div className="flex-shrink-0 flex items-center gap-2">
                           {subCount > 0 && (
                             <Link
-                              href={`/quizzes/${quiz.id}`}
+                              href={`/quizzes/${quiz.id}?mode=results`}
                               className="text-[10px] font-medium text-gray-500 hover:text-gray-700 border border-gray-200 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap"
                             >
                               Past results
@@ -312,15 +314,15 @@ export default async function QuizzesPage() {
                           )}
                           {!fullyAttempted && (
                             <Link
-                              href={`/quizzes/${quiz.id}`}
+                              href={`/quizzes/${quiz.id}?mode=take`}
                               className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
                             >
                               {subCount > 0 ? `Retake (${maxAtt - subCount} left)` : 'Take quiz'}
                             </Link>
                           )}
-                          {fullyAttempted && subCount === 0 && (
-                            <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600">
-                              Submitted
+                          {fullyAttempted && (
+                            <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                              No attempts left
                             </span>
                           )}
                         </div>

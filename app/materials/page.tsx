@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import MaterialsClient, { type Material } from './MaterialsClient'
 import { CURRENT_TERM } from '@/lib/constants'
+import { resolveEffectiveRole } from '@/lib/school'
 
 export default async function MaterialsPage() {
   const supabase = await createClient()
@@ -20,7 +21,8 @@ export default async function MaterialsPage() {
     .single()
 
   const role = roleData?.role ?? ''
-  const isStaff = role === 'teacher' || role === 'admin'
+  const effectiveRole = await resolveEffectiveRole(role)
+  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
 
   if (isStaff) {
     const { data: materials } = await supabase
@@ -30,7 +32,7 @@ export default async function MaterialsPage() {
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role} />
+        <Sidebar email={user.email!} role={effectiveRole} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Materials</h1>

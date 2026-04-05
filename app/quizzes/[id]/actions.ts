@@ -1,0 +1,49 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+
+export async function submitQuiz(
+  quizId: string,
+  answers: (number | null)[],
+  score: number
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // Fetch max_attempts for this quiz
+  const { data: quiz } = await supabase
+    .from('quizzes')
+    .select('max_attempts')
+    .eq('id', quizId)
+    .single()
+
+  if (!quiz) return { error: 'Quiz not found' }
+
+  const maxAttempts: number = quiz.max_attempts ?? 1
+
+  // Count existing submissions for this user+quiz
+  const { count } = await supabase
+    .from('quiz_submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('quiz_id', quizId)
+    .eq('user_id', user.id)
+
+  if ((count ?? 0) >= maxAttempts) {
+    return { error: 'attempt_limit_reached' }
+  }
+
+  const { error } = await supabase.from('quiz_submissions').insert({
+    quiz_id: quizId,
+    user_id: user.id,
+    answers,
+    score,
+  })
+
+  if (error) return { error: error.message }
+
+  return { success: true }
+}

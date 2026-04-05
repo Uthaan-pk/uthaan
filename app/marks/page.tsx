@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
+import { resolveEffectiveRole } from '@/lib/school'
 import GradebookGrid from './GradebookGrid'
 import ClassGradebookShell from './ClassGradebookShell'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
@@ -22,7 +23,8 @@ export default async function MarksPage() {
     .single()
 
   const role = roleData?.role ?? ''
-  const isStaff = role === 'teacher' || role === 'admin'
+  const effectiveRole = await resolveEffectiveRole(role)
+  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
 
   // ── Admin / Teacher ────────────────────────────────────────────────────────
   if (isStaff) {
@@ -194,7 +196,7 @@ export default async function MarksPage() {
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role} />
+        <Sidebar email={user.email!} role={effectiveRole} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Gradebook</h1>

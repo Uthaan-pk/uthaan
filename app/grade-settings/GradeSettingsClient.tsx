@@ -30,10 +30,12 @@ export default function GradeSettingsClient({
   existingWeights,
   userId,
   role,
+  schoolId,
 }: {
   existingWeights: WeightRow[]
   userId: string
   role: string
+  schoolId: string
 }) {
   const supabase = useMemo(() => createClient(), [])
   const [weights, setWeights] = useState(existingWeights)
@@ -101,6 +103,11 @@ export default function GradeSettingsClient({
       return
     }
 
+    if (!schoolId) {
+      toast.error('School context missing.')
+      return
+    }
+
     if (!totalOk) {
       toast.error('Weights must sum to 100%.')
       return
@@ -113,6 +120,7 @@ export default function GradeSettingsClient({
       class_num: Number(classNum),
       subject: subject.trim().toLowerCase(),
       teacher_id: userId,
+      school_id: schoolId,
       assignment_weight: Number(assignment),
       exam_weight: Number(exam),
       final_weight: Number(finals),
@@ -152,7 +160,7 @@ export default function GradeSettingsClient({
     }
 
     if (data) {
-      setWeights((prev) => [data!, ...prev.filter((w) => w.id !== data!.id)])
+      setWeights((prev) => [data, ...prev.filter((w) => w.id !== data!.id)])
     }
 
     toast.success(existingRow ? 'Weights updated!' : 'Weights saved!')

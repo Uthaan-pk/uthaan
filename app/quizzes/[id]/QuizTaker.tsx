@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import { submitQuiz } from './actions'
 
 type Question = {
   text: string
@@ -28,7 +29,7 @@ function formatTime(seconds: number): string {
 
 export default function QuizTaker({
   quiz,
-  userId,
+  userId: _userId, // server action reads user from session; prop kept for API compat
   attemptNumber,
   maxAttempts,
   onRetry,
@@ -51,9 +52,7 @@ export default function QuizTaker({
 
   const answersRef = useRef<(number | null)[]>(new Array(quiz.questions.length).fill(null))
   const hasSubmittedRef = useRef(false)
-
-  const supabase = useMemo(() => createClient(), [])
-  const supabaseRef = useRef(supabase)
+  const router = useRouter()
 
   async function doSubmit(finalAnswers: (number | null)[]) {
     if (hasSubmittedRef.current) return
@@ -66,12 +65,19 @@ export default function QuizTaker({
       0
     )
 
-    await supabaseRef.current.from('quiz_submissions').insert({
-      quiz_id: quiz.id,
-      user_id: userId,
-      answers: finalAnswers,
-      score: calculatedScore,
-    })
+    const result = await submitQuiz(quiz.id, finalAnswers, calculatedScore)
+
+    if ('error' in result) {
+      // Attempt limit reached (race/stale page): redirect to results view
+      if (result.error === 'attempt_limit_reached') {
+        router.replace(`/quizzes/${quiz.id}?mode=results`)
+        return
+      }
+      // Other server errors: reset so user can try again
+      hasSubmittedRef.current = false
+      setSubmitting(false)
+      return
+    }
 
     setScore(calculatedScore)
     setAnswers(finalAnswers)

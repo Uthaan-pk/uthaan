@@ -47,3 +47,17 @@ export async function getSchoolContext(
     isImpersonating: false,
   }
 }
+
+/**
+ * When a superadmin is browsing a school (impersonation cookie set),
+ * treat them as 'admin' for page-level access checks and UI rendering.
+ * For all other roles, returns the role unchanged.
+ *
+ * Usage: call after reading role from user_roles in any school page.
+ */
+export async function resolveEffectiveRole(realRole: string): Promise<string> {
+  if (realRole !== 'superadmin') return realRole
+  const headersList = await headers()
+  const impersonatedId = headersList.get('x-effective-school-id')
+  return impersonatedId ? 'admin' : realRole
+}

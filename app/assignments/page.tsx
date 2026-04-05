@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import AssignmentsBoard from './AssignmentsBoard'
 import { CURRENT_TERM } from '@/lib/constants'
 import AssignmentsFeed from './AssignmentsFeed'
+import { resolveEffectiveRole } from '@/lib/school'
 
 export default async function AssignmentsPage({
   searchParams,
@@ -25,7 +26,8 @@ export default async function AssignmentsPage({
     .single()
 
   const role = roleData?.role
-  const isStaff = role === 'teacher' || role === 'admin'
+  const effectiveRole = await resolveEffectiveRole(role ?? '')
+  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
 
   if (isStaff) {
     const [assignmentsRes, submissionsRes, studentsRes] = await Promise.all([
@@ -52,7 +54,7 @@ export default async function AssignmentsPage({
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
+        <Sidebar email={user.email!} role={effectiveRole} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">

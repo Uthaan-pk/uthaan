@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { CURRENT_TERM } from '@/lib/constants'
+
 const CATEGORY_OPTIONS = ['assignment', 'quiz', 'exam', 'final'] as const
 
 type Assignment = {
@@ -52,6 +53,10 @@ const SUBJECT_COLORS: Record<string, string> = {
 
 function subjectColor(s: string) {
   return SUBJECT_COLORS[s.toLowerCase()] ?? 'bg-gray-50 text-gray-600 border-gray-100'
+}
+
+function normalizeSubject(value: string) {
+  return value.trim().toLowerCase()
 }
 
 function dueInfo(dateStr: string) {
@@ -104,6 +109,7 @@ export default function AssignmentsBoard({
   currentUserId,
   role,
   initialOpenId = null,
+  visibleSubjects = [],
 }: {
   assignments: Assignment[]
   submissions: Submission[]
@@ -111,21 +117,51 @@ export default function AssignmentsBoard({
   currentUserId: string
   role: string
   initialOpenId?: string | null
+  visibleSubjects?: string[]
 }) {
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
-  const [submissions, setSubmissions] = useState<Submission[]>(initialSubs)
+
+  const isTeacher = role === 'teacher'
+  const isAdmin = role === 'admin'
+  const canManageAssignments = isTeacher
+  const canGradeAssignments = isTeacher
+
+  const allowedSubjects = useMemo(
+    () => Array.from(new Set(visibleSubjects.map(normalizeSubject))),
+    [visibleSubjects]
+  )
+
+  const subjectFilteredAssignments = useMemo(() => {
+    if (!isTeacher || allowedSubjects.length === 0) return assignments
+    return assignments.filter(a =>
+      allowedSubjects.includes(normalizeSubject(a.subject))
+    )
+  }, [assignments, isTeacher, allowedSubjects])
+
+  const allowedAssignmentIds = useMemo(
+    () => new Set(subjectFilteredAssignments.map(a => a.id)),
+    [subjectFilteredAssignments]
+  )
+
+  const [submissions, setSubmissions] = useState<Submission[]>(
+    initialSubs.filter(s => allowedAssignmentIds.has(s.assignment_id))
+  )
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'graded'>('all')
   const [drawerAssignment, setDrawerAssignment] = useState<Assignment | null>(null)
 
   useEffect(() => {
+    setSubmissions(initialSubs.filter(s => allowedAssignmentIds.has(s.assignment_id)))
+  }, [initialSubs, allowedAssignmentIds])
+
+  useEffect(() => {
     if (initialOpenId) {
-      const found = assignments.find(a => a.id === initialOpenId)
+      const found = subjectFilteredAssignments.find(a => a.id === initialOpenId)
       if (found) setDrawerAssignment(found)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [initialOpenId, subjectFilteredAssignments])
+
   const [showPostForm, setShowPostForm] = useState(false)
   const [posting, setPosting] = useState(false)
   const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null)
@@ -133,7 +169,7 @@ export default function AssignmentsBoard({
   const [newAssign, setNewAssign] = useState({
     title: '',
     description: '',
-    subject: 'math',
+    subject: allowedSubjects[0] ?? 'math',
     class_num: '',
     due_date: '',
   })
@@ -141,25 +177,33 @@ export default function AssignmentsBoard({
   const [savingGrade, setSavingGrade] = useState<string | null>(null)
 
   const classNums = useMemo(() => {
-    const nums = [...new Set(assignments.map(a => a.class_num).filter(Boolean))] as number[]
+    const nums = [
+      ...new Set(subjectFilteredAssignments.map(a => a.class_num).filter(Boolean)),
+    ] as number[]
     return nums.sort((a, b) => a - b)
-  }, [assignments])
+  }, [subjectFilteredAssignments])
 
   const filtered = useMemo(() => {
-    let list = assignments
-    if (selectedClass !== null) list = list.filter(a => a.class_num === selectedClass)
+    let list = subjectFilteredAssignments
+
+    if (selectedClass !== null) {
+      list = list.filter(a => a.class_num === selectedClass)
+    }
+
     if (filter === 'pending') {
       list = list.filter(a =>
         submissions.some(s => s.assignment_id === a.id && !s.reviewed)
       )
     }
+
     if (filter === 'graded') {
       list = list.filter(a =>
         submissions.some(s => s.assignment_id === a.id && s.reviewed)
       )
     }
+
     return list
-  }, [assignments, submissions, selectedClass, filter])
+  }, [subjectFilteredAssignments, submissions, selectedClass, filter])
 
   function submissionsFor(assignId: string) {
     return submissions.filter(s => s.assignment_id === assignId)
@@ -177,13 +221,26 @@ export default function AssignmentsBoard({
     setNewAssign({
       title: '',
       description: '',
-      subject: 'math',
+      subject: allowedSubjects[0] ?? 'math',
       class_num: '',
       due_date: '',
     })
   }
 
   function startEditAssignment(a: Assignment) {
+    if (!canManageAssignments) {
+      toast.error('Only teachers can edit assignments.')
+      return
+    }
+
+    if (isTeacher && allowedSubjects.length > 0) {
+      const ok = allowedSubjects.includes(normalizeSubject(a.subject))
+      if (!ok) {
+        toast.error('You can only edit assignments for your assigned subject.')
+        return
+      }
+    }
+
     setEditingAssignmentId(a.id)
     setShowPostForm(true)
     setRemoveAttachment(false)
@@ -230,10 +287,23 @@ export default function AssignmentsBoard({
     scorePercent: number | null,
     category: string
   ) {
-    const assignment = assignments.find(a => a.id === sub.assignment_id)
+    if (!canGradeAssignments) {
+      toast.error('Only teachers can grade assignments.')
+      return
+    }
+
+    const assignment = subjectFilteredAssignments.find(a => a.id === sub.assignment_id)
     if (!assignment) {
       toast.error('Assignment not found')
       return
+    }
+
+    if (isTeacher && allowedSubjects.length > 0) {
+      const ok = allowedSubjects.includes(normalizeSubject(assignment.subject))
+      if (!ok) {
+        toast.error('You can only grade assignments for your assigned subject.')
+        return
+      }
     }
 
     if (!category) {
@@ -307,10 +377,23 @@ export default function AssignmentsBoard({
     scorePercent: number | null,
     category: string
   ) {
-    const assignment = assignments.find(a => a.id === assignmentId)
+    if (!canGradeAssignments) {
+      toast.error('Only teachers can grade assignments.')
+      return
+    }
+
+    const assignment = subjectFilteredAssignments.find(a => a.id === assignmentId)
     if (!assignment) {
       toast.error('Assignment not found')
       return
+    }
+
+    if (isTeacher && allowedSubjects.length > 0) {
+      const ok = allowedSubjects.includes(normalizeSubject(assignment.subject))
+      if (!ok) {
+        toast.error('You can only grade assignments for your assigned subject.')
+        return
+      }
     }
 
     if (!category) {
@@ -372,9 +455,22 @@ export default function AssignmentsBoard({
   }
 
   async function postAssignment() {
+    if (!canManageAssignments) {
+      toast.error('Only teachers can post assignments.')
+      return
+    }
+
     if (!newAssign.title || !newAssign.due_date || !newAssign.class_num) {
       toast.error('Title, class, and due date are required')
       return
+    }
+
+    if (isTeacher && allowedSubjects.length > 0) {
+      const ok = allowedSubjects.includes(normalizeSubject(newAssign.subject))
+      if (!ok) {
+        toast.error('You can only post assignments for your assigned subject.')
+        return
+      }
     }
 
     setPosting(true)
@@ -383,7 +479,7 @@ export default function AssignmentsBoard({
     let attachmentName: string | null = null
 
     const editingAssignment = editingAssignmentId
-      ? assignments.find(a => a.id === editingAssignmentId) ?? null
+      ? subjectFilteredAssignments.find(a => a.id === editingAssignmentId) ?? null
       : null
 
     if (editingAssignment) {
@@ -475,8 +571,26 @@ export default function AssignmentsBoard({
   }
 
   async function deleteAssignment(id: string) {
+    if (!canManageAssignments) {
+      toast.error('Only teachers can delete assignments.')
+      return
+    }
+
+    const assignment = subjectFilteredAssignments.find(a => a.id === id)
+    if (!assignment) {
+      toast.error('Assignment not found')
+      return
+    }
+
     if (!confirm('Delete this assignment?')) return
-    await supabase.from('assignments').delete().eq('id', id)
+
+    const { error } = await supabase.from('assignments').delete().eq('id', id)
+
+    if (error) {
+      toast.error(error.message || 'Failed to delete assignment')
+      return
+    }
+
     toast.success('Deleted')
     router.refresh()
   }
@@ -487,7 +601,7 @@ export default function AssignmentsBoard({
   const drawerSubs = drawerAssignment ? submissionsFor(drawerAssignment.id) : []
 
   const editingAssignment = editingAssignmentId
-    ? assignments.find(a => a.id === editingAssignmentId) ?? null
+    ? subjectFilteredAssignments.find(a => a.id === editingAssignmentId) ?? null
     : null
 
   return (
@@ -537,18 +651,34 @@ export default function AssignmentsBoard({
           </div>
         )}
 
-        <button
-          onClick={() => {
-            resetForm()
-            setShowPostForm(true)
-          }}
-          className="ml-auto bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          + Post assignment
-        </button>
+        {canManageAssignments && (
+          <button
+            onClick={() => {
+              resetForm()
+              setShowPostForm(true)
+            }}
+            className="ml-auto bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + Post assignment
+          </button>
+        )}
       </div>
 
-      {showPostForm && (
+      {isTeacher && allowedSubjects.length > 0 && (
+        <div className="mb-4 text-xs text-gray-500 bg-white border border-gray-100 rounded-xl px-4 py-3">
+          Showing only your assigned subject{allowedSubjects.length !== 1 ? 's' : ''}:{' '}
+          <span className="capitalize">{allowedSubjects.join(', ')}</span>
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="mb-4 text-xs text-gray-500 bg-white border border-gray-100 rounded-xl px-4 py-3">
+          Admin view is read-only. Teachers are the only role allowed to post, edit,
+          delete, or grade assignments.
+        </div>
+      )}
+
+      {showPostForm && canManageAssignments && (
         <div className="bg-white border border-gray-100 rounded-xl p-5 mb-5">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">
             {editingAssignmentId ? 'Edit assignment' : 'New assignment'}
@@ -591,11 +721,13 @@ export default function AssignmentsBoard({
                     'history',
                     'geography',
                     'pe',
-                  ].map(s => (
-                    <option key={s} value={s}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </option>
-                  ))}
+                  ]
+                    .filter(s => !isTeacher || allowedSubjects.length === 0 || allowedSubjects.includes(normalizeSubject(s)))
+                    .map(s => (
+                      <option key={s} value={s}>
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -704,8 +836,8 @@ export default function AssignmentsBoard({
                     ? 'Saving…'
                     : 'Posting…'
                   : editingAssignmentId
-                  ? 'Save changes'
-                  : 'Post'}
+                    ? 'Save changes'
+                    : 'Post'}
               </button>
               <button
                 onClick={resetForm}
@@ -720,7 +852,7 @@ export default function AssignmentsBoard({
 
       {filtered.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
-          No assignments yet. Post one above.
+          No assignments available.
         </div>
       ) : (
         <div className="space-y-2">
@@ -805,18 +937,23 @@ export default function AssignmentsBoard({
                     >
                       View submissions
                     </button>
-                    <button
-                      onClick={() => startEditAssignment(a)}
-                      className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg border border-gray-100 bg-white"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteAssignment(a.id)}
-                      className="text-xs text-gray-400 hover:text-red-500 px-2 py-1.5 rounded-lg border border-gray-100"
-                    >
-                      Delete
-                    </button>
+
+                    {canManageAssignments && (
+                      <>
+                        <button
+                          onClick={() => startEditAssignment(a)}
+                          className="text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg border border-gray-100 bg-white"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteAssignment(a.id)}
+                          className="text-xs text-gray-400 hover:text-red-500 px-2 py-1.5 rounded-lg border border-gray-100"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -877,6 +1014,7 @@ export default function AssignmentsBoard({
                         savingGrade ===
                         (sub?.id ?? `missing-${drawerAssignment.id}-${student.id}`)
                       }
+                      canGrade={canGradeAssignments}
                       onSave={saveGrade}
                       onSaveMissing={saveGradeForMissingStudent}
                     />
@@ -896,6 +1034,7 @@ function StudentSubmissionRow({
   submission,
   assignmentId,
   saving,
+  canGrade,
   onSave,
   onSaveMissing,
 }: {
@@ -903,6 +1042,7 @@ function StudentSubmissionRow({
   submission: Submission | null
   assignmentId: string
   saving: boolean
+  canGrade: boolean
   onSave: (
     sub: Submission,
     grade: string,
@@ -956,79 +1096,94 @@ function StudentSubmissionRow({
 
         {expanded && (
           <div className="px-4 pb-4 space-y-3 border-t border-white/60">
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  Grade / status
+            {canGrade ? (
+              <>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <div>
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                      Grade / status
+                    </div>
+                    <select
+                      value={grade}
+                      onChange={e => setGrade(e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                    >
+                      <option value="">Select…</option>
+                      {GRADE_OPTIONS.map(g => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                      Score %
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={score}
+                      onChange={e => setScore(e.target.value)}
+                      placeholder={grade === 'Excused' ? 'Optional' : 'e.g. 85'}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                      Category
+                    </div>
+                    <select
+                      value={category}
+                      onChange={e => setCategory(e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                    >
+                      {CATEGORY_OPTIONS.map(c => (
+                        <option key={c} value={c}>
+                          {c.charAt(0).toUpperCase() + c.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                      Note
+                    </div>
+                    <input
+                      value={note}
+                      onChange={e => setNote(e.target.value)}
+                      placeholder="Optional feedback…"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                    />
+                  </div>
                 </div>
-                <select
-                  value={grade}
-                  onChange={e => setGrade(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+
+                <button
+                  onClick={() =>
+                    onSaveMissing(
+                      assignmentId,
+                      student.id,
+                      grade,
+                      note,
+                      parsedScore,
+                      category
+                    )
+                  }
+                  disabled={saving || !grade}
+                  className="w-full bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium py-2 rounded-lg disabled:opacity-50"
                 >
-                  <option value="">Select…</option>
-                  {GRADE_OPTIONS.map(g => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
-                </select>
+                  {saving ? 'Saving…' : 'Save grade'}
+                </button>
+              </>
+            ) : (
+              <div className="text-xs text-gray-500 mt-3">
+                View only. Teachers are the only role allowed to grade assignments.
               </div>
-
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  Score %
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={score}
-                  onChange={e => setScore(e.target.value)}
-                  placeholder={grade === 'Excused' ? 'Optional' : 'e.g. 85'}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-                />
-              </div>
-
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  Category
-                </div>
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-                >
-                  {CATEGORY_OPTIONS.map(c => (
-                    <option key={c} value={c}>
-                      {c.charAt(0).toUpperCase() + c.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  Note
-                </div>
-                <input
-                  value={note}
-                  onChange={e => setNote(e.target.value)}
-                  placeholder="Optional feedback…"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={() =>
-                onSaveMissing(assignmentId, student.id, grade, note, parsedScore, category)
-              }
-              disabled={saving || !grade}
-              className="w-full bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium py-2 rounded-lg disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Save grade'}
-            </button>
+            )}
           </div>
         )}
       </div>
@@ -1081,7 +1236,9 @@ function StudentSubmissionRow({
             </span>
           )}
           {submission.score_percent != null && (
-            <span className="text-[11px] text-gray-500">{submission.score_percent}%</span>
+            <span className="text-[11px] text-gray-500">
+              {submission.score_percent}%
+            </span>
           )}
           <span
             className={`text-[11px] font-medium ${
@@ -1123,79 +1280,87 @@ function StudentSubmissionRow({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            <div>
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                Grade
+          {canGrade ? (
+            <>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Grade
+                  </div>
+                  <select
+                    value={grade}
+                    onChange={e => setGrade(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  >
+                    <option value="">Select…</option>
+                    {GRADE_OPTIONS.map(g => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Score %
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={score}
+                    onChange={e => setScore(e.target.value)}
+                    placeholder={grade === 'Excused' ? 'Optional' : 'e.g. 85'}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  />
+                </div>
+
+                <div>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Category
+                  </div>
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  >
+                    {CATEGORY_OPTIONS.map(c => (
+                      <option key={c} value={c}>
+                        {c.charAt(0).toUpperCase() + c.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Note
+                  </div>
+                  <input
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                    placeholder="Optional feedback…"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                  />
+                </div>
               </div>
-              <select
-                value={grade}
-                onChange={e => setGrade(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+
+              <button
+                onClick={() =>
+                  submission && onSave(submission, grade, note, parsedScore, category)
+                }
+                disabled={saving || !grade}
+                className="w-full bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium py-2 rounded-lg disabled:opacity-50"
               >
-                <option value="">Select…</option>
-                {GRADE_OPTIONS.map(g => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
+                {saving ? 'Saving…' : 'Save grade'}
+              </button>
+            </>
+          ) : (
+            <div className="text-xs text-gray-500 mt-3">
+              View only. Teachers are the only role allowed to grade assignments.
             </div>
-
-            <div>
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                Score %
-              </div>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={score}
-                onChange={e => setScore(e.target.value)}
-                placeholder={grade === 'Excused' ? 'Optional' : 'e.g. 85'}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-              />
-            </div>
-
-            <div>
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                Category
-              </div>
-              <select
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-              >
-                {CATEGORY_OPTIONS.map(c => (
-                  <option key={c} value={c}>
-                    {c.charAt(0).toUpperCase() + c.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                Note
-              </div>
-              <input
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                placeholder="Optional feedback…"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-              />
-            </div>
-          </div>
-
-          <button
-            onClick={() =>
-              submission && onSave(submission, grade, note, parsedScore, category)
-            }
-            disabled={saving || !grade}
-            className="w-full bg-[#1a2e1a] text-[#6fcf6f] text-xs font-medium py-2 rounded-lg disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save grade'}
-          </button>
+          )}
         </div>
       )}
     </div>

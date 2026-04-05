@@ -27,48 +27,75 @@ function emptyQuestion(): Question {
 
 const optionLabels = ['A', 'B', 'C', 'D']
 
+const FALLBACK_SUBJECTS = [
+  'math',
+  'english',
+  'urdu',
+  'science',
+  'islamiat',
+  'computer',
+  'history',
+  'geography',
+  'pe',
+]
+
 export default function QuizCreateForm({
   userId,
   quizId,
   initialData,
+  visibleSubjects = [],
 }: {
   userId: string
   quizId?: string
   initialData?: InitialData
+  visibleSubjects?: string[]
 }) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
 
   const isEditing = !!quizId
+  const subjectOptions =
+    visibleSubjects.length > 0 ? visibleSubjects : FALLBACK_SUBJECTS
+
+  const initialSubject =
+    initialData?.subject && subjectOptions.includes(initialData.subject.toLowerCase())
+      ? initialData.subject.toLowerCase()
+      : subjectOptions[0] ?? ''
 
   const [title, setTitle] = useState(initialData?.title ?? '')
-  const [subject, setSubject] = useState(initialData?.subject ?? '')
+  const [subject, setSubject] = useState(initialSubject)
   const [timeLimit, setTimeLimit] = useState(initialData?.timeLimit ?? '30')
-  const [status, setStatus] = useState<'active' | 'inactive' | 'draft'>(initialData?.status ?? 'draft')
+  const [status, setStatus] = useState<'active' | 'inactive' | 'draft'>(
+    initialData?.status ?? 'draft'
+  )
   const [classNum, setClassNum] = useState<string>(
     initialData?.classNum != null ? String(initialData.classNum) : 'all'
   )
-  const [maxAttempts, setMaxAttempts] = useState(String(initialData?.maxAttempts ?? 1))
-  const [questions, setQuestions] = useState<Question[]>(initialData?.questions ?? [emptyQuestion()])
+  const [maxAttempts, setMaxAttempts] = useState(
+    String(initialData?.maxAttempts ?? 1)
+  )
+  const [questions, setQuestions] = useState<Question[]>(
+    initialData?.questions ?? [emptyQuestion()]
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function addQuestion() {
-    setQuestions((prev) => [...prev, emptyQuestion()])
+    setQuestions(prev => [...prev, emptyQuestion()])
   }
 
   function removeQuestion(index: number) {
-    setQuestions((prev) => prev.filter((_, i) => i !== index))
+    setQuestions(prev => prev.filter((_, i) => i !== index))
   }
 
   function updateQuestionText(index: number, text: string) {
-    setQuestions((prev) =>
+    setQuestions(prev =>
       prev.map((q, i) => (i === index ? { ...q, text } : q))
     )
   }
 
   function updateOption(qIndex: number, optIndex: number, value: string) {
-    setQuestions((prev) =>
+    setQuestions(prev =>
       prev.map((q, i) => {
         if (i !== qIndex) return q
         const options = [...q.options] as [string, string, string, string]
@@ -79,20 +106,31 @@ export default function QuizCreateForm({
   }
 
   function updateCorrect(qIndex: number, correct: number) {
-    setQuestions((prev) =>
+    setQuestions(prev =>
       prev.map((q, i) => (i === qIndex ? { ...q, correct } : q))
     )
   }
 
   function validate(): string | null {
     if (!title.trim()) return 'Quiz title is required.'
+    if (!subject.trim()) return 'Subject is required.'
+    if (
+      visibleSubjects.length > 0 &&
+      !visibleSubjects.includes(subject.toLowerCase())
+    ) {
+      return 'You can only create quizzes for your assigned subjects.'
+    }
+
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i]
       if (!q.text.trim()) return `Question ${i + 1} text is required.`
       for (let j = 0; j < 4; j++) {
-        if (!q.options[j].trim()) return `Question ${i + 1}, option ${optionLabels[j]} is required.`
+        if (!q.options[j].trim()) {
+          return `Question ${i + 1}, option ${optionLabels[j]} is required.`
+        }
       }
     }
+
     return null
   }
 
@@ -108,7 +146,7 @@ export default function QuizCreateForm({
 
     setSaving(true)
 
-    const dbQuestions = questions.map((q) => ({
+    const dbQuestions = questions.map(q => ({
       text: q.text,
       options: {
         A: q.options[0],
@@ -119,8 +157,8 @@ export default function QuizCreateForm({
       correct: optionLabels[q.correct],
     }))
 
-    const classNumValue = classNum === 'all' ? null : parseInt(classNum)
-    const maxAttemptsValue = parseInt(maxAttempts) || 1
+    const classNumValue = classNum === 'all' ? null : parseInt(classNum, 10)
+    const maxAttemptsValue = parseInt(maxAttempts, 10) || 1
 
     if (isEditing) {
       const { error: updateError } = await supabase
@@ -128,7 +166,7 @@ export default function QuizCreateForm({
         .update({
           title: title.trim(),
           subject: subject.trim(),
-          time_limit: parseInt(timeLimit) || 30,
+          time_limit: parseInt(timeLimit, 10) || 30,
           questions: dbQuestions,
           status,
           class_num: classNumValue,
@@ -149,7 +187,7 @@ export default function QuizCreateForm({
       const { error: insertError } = await supabase.from('quizzes').insert({
         title: title.trim(),
         subject: subject.trim(),
-        time_limit: parseInt(timeLimit) || 30,
+        time_limit: parseInt(timeLimit, 10) || 30,
         questions: dbQuestions,
         status,
         class_num: classNumValue,
@@ -164,13 +202,13 @@ export default function QuizCreateForm({
         return
       }
 
+      toast.success('Quiz created!')
       router.push('/quizzes')
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Basic info card */}
       <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
         <h2 className="text-sm font-semibold text-gray-900">Quiz details</h2>
 
@@ -179,7 +217,7 @@ export default function QuizCreateForm({
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={e => setTitle(e.target.value)}
             placeholder="e.g. Chapter 3 – Cell Biology"
             className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
           />
@@ -188,23 +226,29 @@ export default function QuizCreateForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-600">Subject</label>
-            <input
-              type="text"
+            <select
               value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Biology"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
-            />
+              onChange={e => setSubject(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+            >
+              {subjectOptions.map(sub => (
+                <option key={sub} value={sub}>
+                  {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-600">Time limit (minutes)</label>
+            <label className="text-xs font-medium text-gray-600">
+              Time limit (minutes)
+            </label>
             <input
               type="number"
               min="1"
               max="180"
               value={timeLimit}
-              onChange={(e) => setTimeLimit(e.target.value)}
+              onChange={e => setTimeLimit(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
             />
           </div>
@@ -214,7 +258,9 @@ export default function QuizCreateForm({
           <label className="text-xs font-medium text-gray-600">Status</label>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as 'active' | 'inactive' | 'draft')}
+            onChange={e =>
+              setStatus(e.target.value as 'active' | 'inactive' | 'draft')
+            }
             className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
           >
             <option value="active">Active</option>
@@ -225,137 +271,129 @@ export default function QuizCreateForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-600">Assign to class</label>
+            <label className="text-xs font-medium text-gray-600">
+              Assign to class
+            </label>
             <select
               value={classNum}
-              onChange={(e) => setClassNum(e.target.value)}
+              onChange={e => setClassNum(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
             >
               <option value="all">All classes</option>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={String(n)}>Class {n}</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(n => (
+                <option key={n} value={String(n)}>
+                  Class {n}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-600">Max attempts allowed</label>
+            <label className="text-xs font-medium text-gray-600">
+              Max attempts
+            </label>
             <input
               type="number"
               min="1"
+              max="10"
               value={maxAttempts}
-              onChange={(e) => setMaxAttempts(e.target.value)}
+              onChange={e => setMaxAttempts(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
             />
           </div>
         </div>
+
+        {error && (
+          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            {error}
+          </div>
+        )}
       </div>
 
-      {/* Questions */}
       <div className="space-y-4">
-        {questions.map((question, qIndex) => (
-          <div key={qIndex} className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
-            {/* Question header */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        {questions.map((q, qIndex) => (
+          <div
+            key={qIndex}
+            className="bg-white rounded-xl border border-gray-100 p-5 space-y-4"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-gray-900">
                 Question {qIndex + 1}
-              </span>
+              </h3>
               {questions.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeQuestion(qIndex)}
-                  className="text-xs text-gray-400 hover:text-red-500 transition-colors w-6 h-6 flex items-center justify-center rounded-md hover:bg-red-50"
+                  className="text-xs text-red-500 hover:text-red-600"
                 >
-                  ×
+                  Remove
                 </button>
               )}
             </div>
 
-            {/* Question text */}
             <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-600">Question text</label>
+              <label className="text-xs font-medium text-gray-600">
+                Question text
+              </label>
               <textarea
+                value={q.text}
+                onChange={e => updateQuestionText(qIndex, e.target.value)}
                 rows={2}
-                value={question.text}
-                onChange={(e) => updateQuestionText(qIndex, e.target.value)}
-                placeholder="Enter your question here..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] resize-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
               />
             </div>
 
-            {/* Options */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-gray-600">Answer options</label>
-              {question.options.map((opt, optIndex) => (
-                <div key={optIndex} className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-400 w-4 flex-shrink-0">
-                    {optionLabels[optIndex]}
-                  </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {q.options.map((opt, optIndex) => (
+                <div key={optIndex} className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600">
+                    Option {optionLabels[optIndex]}
+                  </label>
                   <input
                     type="text"
                     value={opt}
-                    onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
-                    placeholder={`Option ${optionLabels[optIndex]}`}
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+                    onChange={e => updateOption(qIndex, optIndex, e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
                   />
                 </div>
               ))}
             </div>
 
-            {/* Correct answer */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-gray-600">Correct answer</label>
-              <div className="flex gap-3">
-                {optionLabels.map((label, optIndex) => (
-                  <label
-                    key={optIndex}
-                    className={`flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
-                      question.correct === optIndex
-                        ? 'border-[#6fcf6f] bg-[#6fcf6f]/10 text-[#1a2e1a]'
-                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`correct-${qIndex}`}
-                      value={optIndex}
-                      checked={question.correct === optIndex}
-                      onChange={() => updateCorrect(qIndex, optIndex)}
-                      className="sr-only"
-                    />
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-gray-600">
+                Correct answer
+              </label>
+              <select
+                value={q.correct}
+                onChange={e => updateCorrect(qIndex, Number(e.target.value))}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#1a2e1a] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f] bg-white"
+              >
+                {optionLabels.map((label, i) => (
+                  <option key={label} value={i}>
                     {label}
-                  </label>
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add question button */}
-      <button
-        type="button"
-        onClick={addQuestion}
-        className="w-full border border-dashed border-gray-200 rounded-xl py-3 text-xs font-medium text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors"
-      >
-        + Add question
-      </button>
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={addQuestion}
+          className="text-xs font-medium px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors"
+        >
+          + Add question
+        </button>
 
-      {/* Error */}
-      {error && (
-        <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
-          {error}
-        </div>
-      )}
-
-      {/* Submit */}
-      <div className="flex justify-end pb-6">
         <button
           type="submit"
           disabled={saving}
-          className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+          className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
         >
-          {saving ? (isEditing ? 'Saving...' : 'Creating...') : isEditing ? 'Save changes' : 'Create quiz'}
+          {saving ? 'Saving…' : isEditing ? 'Save changes' : 'Create quiz'}
         </button>
       </div>
     </form>

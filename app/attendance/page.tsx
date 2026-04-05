@@ -4,11 +4,18 @@ import Sidebar from '@/components/Sidebar'
 import AttendanceMarker, { type Student as AttendanceStudent } from './AttendanceMarker'
 import { CURRENT_TERM } from '@/lib/constants'
 import { resolveEffectiveRole } from '@/lib/school'
+import {
+  earlyLeaveOnDay,
+  leaveCoversDay,
+  readLeaveReason,
+} from '@/lib/attendanceLeaves'
 
 const statusStyles: Record<string, string> = {
   present: 'bg-green-50 text-green-800',
   absent: 'bg-red-50 text-red-800',
   late: 'bg-amber-50 text-amber-800',
+  excused: 'bg-sky-50 text-sky-700',
+  early_leave: 'bg-indigo-50 text-indigo-700',
 }
 
 export default async function AttendancePage() {
@@ -28,29 +35,133 @@ export default async function AttendancePage() {
 
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
-  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
+  const isTeacher = effectiveRole === 'teacher'
+  const isAdmin = effectiveRole === 'admin'
+  const canViewAttendance = isTeacher || isAdmin
   const today = new Date().toISOString().split('T')[0]
 
-  if (isStaff) {
-    const { data: students } = await supabase
+  if (canViewAttendance) {
+    let visibleClassNums: number[] = []
+
+    if (isTeacher) {
+      const { data: timetableRows } = await supabase
+        .from('timetable')
+        .select('class_num')
+        .eq('teacher_id', user.id)
+        .limit(500)
+
+      visibleClassNums = Array.from(
+        new Set(
+          (timetableRows ?? [])
+            .map((row: { class_num: number | string | null }) => Number(row.class_num))
+            .filter((n: number) => !isNaN(n) && n > 0)
+        )
+      ).sort((a, b) => a - b)
+    }
+
+    let studentsQuery = supabase
       .from('students')
       .select('id, name, roll_no, stage, class_num')
       .eq('is_active', true)
       .order('name')
 
-    const { data: logs } = await supabase
+    if (isTeacher) {
+      if (visibleClassNums.length === 0) {
+        studentsQuery = studentsQuery.in('class_num', [-1])
+      } else {
+        studentsQuery = studentsQuery.in('class_num', visibleClassNums)
+      }
+    }
+
+    const { data: students } = await studentsQuery
+
+    const studentIds = (students ?? []).map((s: { id: string }) => s.id)
+
+    let logsQuery = supabase
       .from('attendance_logs')
       .select('student_id, status')
       .eq('day', today)
 
-    const initialStatus: Record<string, 'present' | 'absent'> = {}
-    logs?.forEach(log => {
-      initialStatus[log.student_id] = log.status as 'present' | 'absent'
+    if (studentIds.length > 0) {
+      logsQuery = logsQuery.in('student_id', studentIds)
+    } else {
+      logsQuery = logsQuery.in('student_id', ['00000000-0000-0000-0000-000000000000'])
+    }
+
+    const [logsRes, leavesRes, earlyLeavesRes] = await Promise.all([
+      logsQuery,
+      studentIds.length > 0
+        ? supabase
+            .from('student_leaves')
+            .select('*')
+            .in('student_id', studentIds)
+            .limit(3000)
+        : supabase
+            .from('student_leaves')
+            .select('*')
+            .in('student_id', ['00000000-0000-0000-0000-000000000000']),
+      studentIds.length > 0
+        ? supabase
+            .from('student_early_leaves')
+            .select('*')
+            .in('student_id', studentIds)
+            .limit(3000)
+        : supabase
+            .from('student_early_leaves')
+            .select('*')
+            .in('student_id', ['00000000-0000-0000-0000-000000000000']),
+    ])
+
+    const logs = logsRes.data ?? []
+    const leaves = leavesRes.data ?? []
+    const earlyLeaves = earlyLeavesRes.data ?? []
+
+    const initialStatus: Record<
+      string,
+      'present' | 'absent' | 'late' | 'excused' | 'early_leave'
+    > = {}
+    const lockedStatusByStudent: Record<string, 'excused' | 'early_leave'> = {}
+    const leaveMeta: Record<string, { label: string; reason: string | null }> = {}
+
+    logs.forEach(log => {
+      initialStatus[log.student_id] = log.status as
+        | 'present'
+        | 'absent'
+        | 'late'
+        | 'excused'
+        | 'early_leave'
+    })
+
+    leaves.forEach((leave: Record<string, unknown>) => {
+      if (!leaveCoversDay(leave, today)) return
+      const studentId = String(leave.student_id)
+      lockedStatusByStudent[studentId] = 'excused'
+      initialStatus[studentId] = 'excused'
+      leaveMeta[studentId] = {
+        label: 'Leave approved',
+        reason: readLeaveReason(leave),
+      }
+    })
+
+    earlyLeaves.forEach((leave: Record<string, unknown>) => {
+      if (!earlyLeaveOnDay(leave, today)) return
+      const studentId = String(leave.student_id)
+      if (lockedStatusByStudent[studentId] === 'excused') return
+      lockedStatusByStudent[studentId] = 'early_leave'
+      initialStatus[studentId] = 'early_leave'
+      leaveMeta[studentId] = {
+        label: 'Early leave approved',
+        reason: readLeaveReason(leave),
+      }
     })
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={effectiveRole} isImpersonating={role === 'superadmin'} />
+        <Sidebar
+          email={user.email!}
+          role={effectiveRole}
+          isImpersonating={role === 'superadmin'}
+        />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Attendance</h1>
@@ -69,6 +180,9 @@ export default async function AttendancePage() {
                 students={(students as unknown as AttendanceStudent[]) ?? []}
                 initialStatus={initialStatus}
                 today={today}
+                readOnly={isAdmin}
+                lockedStatusByStudent={lockedStatusByStudent}
+                leaveMeta={leaveMeta}
               />
             </div>
           </main>
@@ -364,7 +478,7 @@ export default async function AttendancePage() {
             Unsupported account role
           </div>
           <div className="text-xs text-gray-400">
-            Contact the school administrator.
+            Contact your administrator.
           </div>
         </div>
       </div>
@@ -379,27 +493,23 @@ function StatCard({
   color,
 }: {
   label: string
-  value: number | string
+  value: string | number
   icon: string
-  color: string
+  color: 'green' | 'red' | 'blue'
 }) {
-  const iconBg: Record<string, string> = {
-    green: 'bg-green-50',
-    red: 'bg-red-50',
-    blue: 'bg-blue-50',
-  }
+  const styles =
+    color === 'green'
+      ? 'bg-green-50 border-green-100 text-green-800'
+      : color === 'red'
+        ? 'bg-red-50 border-red-100 text-red-800'
+        : 'bg-blue-50 border-blue-100 text-blue-800'
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
-      <div
-        className={`w-8 h-8 ${iconBg[color]} rounded-lg flex items-center justify-center text-sm mb-3`}
-      >
-        {icon}
+    <div className={`rounded-xl border px-4 py-4 ${styles}`}>
+      <div className="text-xs font-medium opacity-80 mb-1">
+        {icon} {label}
       </div>
-      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-        {label}
-      </div>
-      <div className="text-2xl font-semibold text-gray-900">{value}</div>
+      <div className="text-2xl font-semibold">{value}</div>
     </div>
   )
 }

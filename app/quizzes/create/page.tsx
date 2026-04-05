@@ -3,10 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import QuizCreateForm from './QuizCreateForm'
 import { CURRENT_TERM } from '@/lib/constants'
+import { resolveEffectiveRole } from '@/lib/school'
 
 export default async function CreateQuizPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
@@ -15,14 +19,29 @@ export default async function CreateQuizPage() {
     .eq('user_id', user.id)
     .single()
 
-  const role = roleData?.role
-  const isStaff = role === 'teacher' || role === 'admin'
+  const role = roleData?.role ?? ''
+  const effectiveRole = await resolveEffectiveRole(role)
+  const isTeacher = effectiveRole === 'teacher'
 
-  if (!isStaff) redirect('/dashboard')
+  if (!isTeacher) redirect('/quizzes')
+
+  const { data: timetableRows } = await supabase
+    .from('timetable')
+    .select('subject')
+    .eq('teacher_id', user.id)
+    .limit(500)
+
+  const visibleSubjects = Array.from(
+    new Set(
+      (timetableRows ?? [])
+        .map((row: any) => (row.subject as string)?.toLowerCase?.())
+        .filter(Boolean)
+    )
+  )
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
+      <Sidebar email={user.email!} role={effectiveRole} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
@@ -34,7 +53,7 @@ export default async function CreateQuizPage() {
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl">
-            <QuizCreateForm userId={user.id} />
+            <QuizCreateForm userId={user.id} visibleSubjects={visibleSubjects} />
           </div>
         </main>
       </div>

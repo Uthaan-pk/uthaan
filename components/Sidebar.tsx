@@ -410,6 +410,14 @@ export default function Sidebar({
                 onClose={close}
                 isUrdu={isUrdu}
               />
+
+              <NavItem
+                label="Leave Management"
+                href="/admin/leaves"
+                active={pathname === '/admin/leaves'}
+                onClose={close}
+                isUrdu={isUrdu}
+              />
             </>
           )}
         </nav>

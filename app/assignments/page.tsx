@@ -13,6 +13,7 @@ export default async function AssignmentsPage({
 }) {
   const { open: initialOpenId = null } = await searchParams
   const supabase = await createClient()
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -25,36 +26,104 @@ export default async function AssignmentsPage({
     .eq('user_id', user.id)
     .single()
 
-  const role = roleData?.role
-  const effectiveRole = await resolveEffectiveRole(role ?? '')
-  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
+  const role = roleData?.role ?? ''
+  const effectiveRole = await resolveEffectiveRole(role)
+  const isTeacher = effectiveRole === 'teacher'
+  const isAdmin = effectiveRole === 'admin'
+  const isStaff = isTeacher || isAdmin
 
   if (isStaff) {
-    const [assignmentsRes, submissionsRes, studentsRes] = await Promise.all([
-      supabase
-        .from('assignments')
-        .select(
-          'id, title, description, subject, class_num, due_date, created_by, created_at, attachment_url, attachment_name'
+    const timetableQuery = isTeacher
+      ? supabase
+          .from('timetable')
+          .select('class_num, subject')
+          .eq('teacher_id', user.id)
+          .limit(500)
+      : supabase
+          .from('timetable')
+          .select('class_num, subject')
+          .limit(2000)
+
+    const [assignmentsRes, submissionsRes, studentsRes, timetableRes] =
+      await Promise.all([
+        supabase
+          .from('assignments')
+          .select(
+            'id, title, description, subject, class_num, due_date, created_by, created_at, attachment_url, attachment_name'
+          )
+          .order('created_at', { ascending: false })
+          .limit(500),
+
+        supabase
+          .from('assignment_submissions')
+          .select(
+            'id, assignment_id, student_id, file_url, text_response, submitted_at, reviewed, reviewed_at, teacher_note, grade, score_percent, category'
+          )
+          .limit(2000),
+
+        supabase
+          .from('students')
+          .select('id, name, class_num, roll_no')
+          .eq('is_active', true)
+          .order('name')
+          .limit(500),
+
+        timetableQuery,
+      ])
+
+    const timetableRows = timetableRes.data ?? []
+
+    const visibleClassNums = isTeacher
+      ? Array.from(
+          new Set(
+            timetableRows
+              .map((row: any) => Number(row.class_num))
+              .filter((n: number) => !isNaN(n) && n > 0)
+          )
+        ).sort((a, b) => a - b)
+      : Array.from(
+          new Set(
+            (studentsRes.data ?? [])
+              .map((s: any) => Number(s.class_num))
+              .filter((n: number) => !isNaN(n) && n > 0)
+          )
+        ).sort((a, b) => a - b)
+
+    const visibleSubjects = isTeacher
+      ? Array.from(
+          new Set(
+            timetableRows
+              .map((row: any) => (row.subject as string)?.toLowerCase?.())
+              .filter(Boolean)
+          )
         )
-        .order('created_at', { ascending: false })
-        .limit(500),
-      supabase
-        .from('assignment_submissions')
-        .select(
-          'id, assignment_id, student_id, file_url, text_response, submitted_at, reviewed, reviewed_at, teacher_note, grade'
-        )
-        .limit(2000),
-      supabase
-        .from('students')
-        .select('id, name, class_num, roll_no')
-        .eq('is_active', true)
-        .order('name')
-        .limit(500),
-    ])
+      : []
+
+    const assignments = (assignmentsRes.data ?? []).filter((a: any) => {
+      const classOk = visibleClassNums.includes(Number(a.class_num))
+      if (!classOk) return false
+
+      if (!isTeacher) return true
+      return visibleSubjects.includes((a.subject ?? '').toLowerCase())
+    })
+
+    const students = (studentsRes.data ?? []).filter((s: any) =>
+      visibleClassNums.includes(Number(s.class_num))
+    )
+
+    const assignmentIdSet = new Set(assignments.map((a: any) => a.id))
+
+    const submissions = (submissionsRes.data ?? []).filter((s: any) =>
+      assignmentIdSet.has(s.assignment_id)
+    )
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={effectiveRole} isImpersonating={role === 'superadmin'} />
+        <Sidebar
+          email={user.email!}
+          role={effectiveRole}
+          isImpersonating={role === 'superadmin'}
+        />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">
@@ -67,12 +136,13 @@ export default async function AssignmentsPage({
 
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <AssignmentsBoard
-              assignments={assignmentsRes.data ?? []}
-              submissions={submissionsRes.data ?? []}
-              students={studentsRes.data ?? []}
+              assignments={assignments}
+              submissions={submissions}
+              students={students}
               currentUserId={user.id}
-              role={role ?? ''}
+              role={effectiveRole}
               initialOpenId={initialOpenId}
+              visibleSubjects={visibleSubjects}
             />
           </main>
         </div>
@@ -129,6 +199,7 @@ export default async function AssignmentsPage({
         .eq('class_num', child.class_num)
         .order('due_date', { ascending: true })
         .limit(200),
+
       supabase
         .from('assignment_submissions')
         .select('id, assignment_id, submitted_at, reviewed, grade')
@@ -167,7 +238,7 @@ export default async function AssignmentsPage({
   if (!studentId) {
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
+        <Sidebar email={user.email!} role={role} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-sm font-medium text-gray-900 mb-1">
@@ -192,7 +263,7 @@ export default async function AssignmentsPage({
   if (!student) {
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={role ?? ''} />
+        <Sidebar email={user.email!} role={role} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-sm font-medium text-gray-900 mb-1">
@@ -216,6 +287,7 @@ export default async function AssignmentsPage({
       .eq('class_num', student.class_num)
       .order('due_date', { ascending: true })
       .limit(200),
+
     supabase
       .from('assignment_submissions')
       .select(
@@ -227,7 +299,7 @@ export default async function AssignmentsPage({
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
+      <Sidebar email={user.email!} role={role} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">Assignments</h1>

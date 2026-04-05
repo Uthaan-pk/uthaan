@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import QuizCreateForm from '../../create/QuizCreateForm'
 import { CURRENT_TERM } from '@/lib/constants'
+import { resolveEffectiveRole } from '@/lib/school'
 
 type DBQuestion = {
   text: string
@@ -21,7 +22,10 @@ export default async function EditQuizPage({
   const { id } = await params
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
   const { data: roleData } = await supabase
@@ -30,23 +34,48 @@ export default async function EditQuizPage({
     .eq('user_id', user.id)
     .single()
 
-  const role = roleData?.role
-  const isStaff = role === 'teacher' || role === 'admin'
+  const role = roleData?.role ?? ''
+  const effectiveRole = await resolveEffectiveRole(role)
+  const isTeacher = effectiveRole === 'teacher'
 
-  if (!isStaff) redirect('/dashboard')
+  if (!isTeacher) redirect('/quizzes')
 
-  const { data: quiz } = await supabase
-    .from('quizzes')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const [{ data: quiz }, { data: timetableRows }] = await Promise.all([
+    supabase.from('quizzes').select('*').eq('id', id).single(),
+    supabase
+      .from('timetable')
+      .select('subject')
+      .eq('teacher_id', user.id)
+      .limit(500),
+  ])
 
   if (!quiz) redirect('/quizzes')
+  if (quiz.created_by !== user.id) redirect('/quizzes')
+
+  const visibleSubjects = Array.from(
+    new Set(
+      (timetableRows ?? [])
+        .map((row: any) => (row.subject as string)?.toLowerCase?.())
+        .filter(Boolean)
+    )
+  )
+
+  if (
+    visibleSubjects.length > 0 &&
+    !visibleSubjects.includes((quiz.subject ?? '').toLowerCase())
+  ) {
+    redirect('/quizzes')
+  }
 
   const questions = Array.isArray(quiz.questions)
-    ? (quiz.questions as DBQuestion[]).map((q) => ({
+    ? (quiz.questions as DBQuestion[]).map(q => ({
         text: q.text,
-        options: [q.options.A, q.options.B, q.options.C, q.options.D] as [string, string, string, string],
+        options: [
+          q.options.A,
+          q.options.B,
+          q.options.C,
+          q.options.D,
+        ] as [string, string, string, string],
         correct: optionLabels.indexOf(q.correct),
       }))
     : []
@@ -63,7 +92,7 @@ export default async function EditQuizPage({
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
+      <Sidebar email={user.email!} role={effectiveRole} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
@@ -84,7 +113,12 @@ export default async function EditQuizPage({
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl">
-            <QuizCreateForm userId={user.id} quizId={id} initialData={initialData} />
+            <QuizCreateForm
+              userId={user.id}
+              quizId={id}
+              initialData={initialData}
+              visibleSubjects={visibleSubjects}
+            />
           </div>
         </main>
       </div>

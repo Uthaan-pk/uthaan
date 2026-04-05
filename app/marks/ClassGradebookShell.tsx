@@ -5,8 +5,6 @@ import MarksEditor from './MarksEditor'
 import { CURRENT_TERM } from '@/lib/constants'
 import type { WeightRow, ExamType } from '@/lib/gradeUtils'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 type Student = {
   id: string
   name: string
@@ -42,8 +40,6 @@ type Submission = {
   reviewed: boolean | null
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export default function ClassGradebookShell({
   allStudents,
   allMarks,
@@ -69,7 +65,6 @@ export default function ClassGradebookShell({
 }) {
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
 
-  // Derive unique class numbers from students
   const classNums = useMemo(() => {
     const set = new Set<number>()
     allStudents.forEach(s => {
@@ -79,30 +74,37 @@ export default function ClassGradebookShell({
     return Array.from(set).sort((a, b) => a - b)
   }, [allStudents])
 
-  // Students for the selected class
   const classStudents = useMemo(
-    () => (selectedClass == null ? [] : allStudents.filter(s => Number(s.class_num) === selectedClass)),
+    () =>
+      selectedClass == null
+        ? []
+        : allStudents.filter(s => Number(s.class_num) === selectedClass),
     [allStudents, selectedClass]
   )
 
-  // Assignments for the selected class
   const classAssignments = useMemo(
-    () => (selectedClass == null ? [] : assignments.filter(a => a.class_num === selectedClass)),
+    () =>
+      selectedClass == null
+        ? []
+        : assignments.filter(a => a.class_num === selectedClass),
     [assignments, selectedClass]
   )
 
-  // Weight rows for the selected class
   const classWeightRows = useMemo(
-    () => (selectedClass == null ? [] : weightRows.filter(w => w.class_num === selectedClass)),
+    () =>
+      selectedClass == null
+        ? []
+        : weightRows.filter(w => w.class_num === selectedClass),
     [weightRows, selectedClass]
   )
 
-  // Summary counts for class cards
   const studentCountByClass = useMemo(() => {
     const counts: Record<number, number> = {}
     allStudents.forEach(s => {
       const n = Number(s.class_num)
-      if (!isNaN(n)) counts[n] = (counts[n] ?? 0) + 1
+      if (!isNaN(n) && n > 0) {
+        counts[n] = (counts[n] ?? 0) + 1
+      }
     })
     return counts
   }, [allStudents])
@@ -110,12 +112,17 @@ export default function ClassGradebookShell({
   const assignmentCountByClass = useMemo(() => {
     const counts: Record<number, number> = {}
     assignments.forEach(a => {
-      if (a.class_num != null) counts[a.class_num] = (counts[a.class_num] ?? 0) + 1
+      if (a.class_num != null) {
+        counts[a.class_num] = (counts[a.class_num] ?? 0) + 1
+      }
     })
     return counts
   }, [assignments])
 
-  // ── Landing: class picker ─────────────────────────────────────────────────
+  const visibleSubjectList = useMemo(() => {
+    if (visibleSubjects.length === 0) return null
+    return visibleSubjects.join(', ')
+  }, [visibleSubjects])
 
   if (selectedClass === null) {
     return (
@@ -125,6 +132,12 @@ export default function ClassGradebookShell({
           <p className="text-xs text-gray-400 mt-0.5">
             Choose a class to enter marks, review assignments, and see final grades.
           </p>
+          {visibleSubjectList && (
+            <p className="text-xs text-gray-400 mt-1">
+              Your assigned subject{visibleSubjects.length !== 1 ? 's' : ''}:{' '}
+              <span className="capitalize">{visibleSubjectList}</span>
+            </p>
+          )}
         </div>
 
         {classNums.length === 0 ? (
@@ -135,8 +148,8 @@ export default function ClassGradebookShell({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {classNums.map(classNum => {
               const studentCount = studentCountByClass[classNum] ?? 0
-              const asgCount     = assignmentCountByClass[classNum] ?? 0
-              const hasWeights   = weightRows.some(w => w.class_num === classNum)
+              const asgCount = assignmentCountByClass[classNum] ?? 0
+              const hasWeights = weightRows.some(w => w.class_num === classNum)
 
               return (
                 <button
@@ -146,18 +159,26 @@ export default function ClassGradebookShell({
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-10 h-10 rounded-xl bg-[#1a2e1a]/[0.06] flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-bold text-[#1a2e1a]">{classNum}</span>
+                      <span className="text-sm font-bold text-[#1a2e1a]">
+                        {classNum}
+                      </span>
                     </div>
                     <svg
                       className="w-4 h-4 text-gray-300 group-hover:text-[#6fcf6f] transition-colors mt-1 flex-shrink-0"
-                      viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
                       <path d="M6 3l5 5-5 5" />
                     </svg>
                   </div>
 
-                  <div className="text-sm font-semibold text-gray-900 mb-0.5">Class {classNum}</div>
+                  <div className="text-sm font-semibold text-gray-900 mb-0.5">
+                    Class {classNum}
+                  </div>
                   <div className="text-xs text-gray-400">
                     {studentCount} student{studentCount !== 1 ? 's' : ''}
                   </div>
@@ -181,33 +202,37 @@ export default function ClassGradebookShell({
     )
   }
 
-  // ── Drill-down: gradebook for selected class ──────────────────────────────
-
   return (
     <div>
-      {/* Breadcrumb / back */}
       <div className="flex items-center gap-2.5 mb-5">
         <button
           onClick={() => setSelectedClass(null)}
           className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors"
         >
           <svg
-            width="13" height="13" viewBox="0 0 13 13" fill="none"
-            stroke="currentColor" strokeWidth="1.75"
-            strokeLinecap="round" strokeLinejoin="round"
+            width="13"
+            height="13"
+            viewBox="0 0 13 13"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path d="M8 2L3 6.5l5 4.5" />
           </svg>
           All Classes
         </button>
         <span className="text-gray-300 text-xs">/</span>
-        <span className="text-sm font-semibold text-gray-900">Class {selectedClass}</span>
+        <span className="text-sm font-semibold text-gray-900">
+          Class {selectedClass}
+        </span>
         <span className="text-xs text-gray-400 ml-auto">
-          {classStudents.length} student{classStudents.length !== 1 ? 's' : ''} · {CURRENT_TERM}
+          {classStudents.length} student{classStudents.length !== 1 ? 's' : ''} ·{' '}
+          {CURRENT_TERM}
         </span>
       </div>
 
-      {/* MarksEditor — remount on class change to reset state */}
       <MarksEditor
         key={`class-${selectedClass}`}
         students={classStudents}

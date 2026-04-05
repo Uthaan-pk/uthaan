@@ -23,18 +23,81 @@ export default async function QuizzesPage() {
 
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
-  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
+  const isTeacher = effectiveRole === 'teacher'
+  const isAdmin = effectiveRole === 'admin'
+  const isStaff = isTeacher || isAdmin
 
   if (isStaff) {
-    const { data: quizzes } = await supabase
-      .from('quizzes')
-      .select('id, title, subject, time_limit, questions, status, created_at')
-      .eq('created_by', user.id)
-      .order('created_at', { ascending: false })
+    const timetableQuery = isTeacher
+      ? supabase
+          .from('timetable')
+          .select('class_num, subject')
+          .eq('teacher_id', user.id)
+          .limit(500)
+      : supabase
+          .from('timetable')
+          .select('class_num, subject')
+          .limit(2000)
+
+    const [quizzesRes, timetableRes] = await Promise.all([
+      isTeacher
+        ? supabase
+            .from('quizzes')
+            .select(
+              'id, title, subject, time_limit, questions, status, created_at, created_by, class_num'
+            )
+            .eq('created_by', user.id)
+            .order('created_at', { ascending: false })
+        : supabase
+            .from('quizzes')
+            .select(
+              'id, title, subject, time_limit, questions, status, created_at, created_by, class_num'
+            )
+            .order('created_at', { ascending: false }),
+      timetableQuery,
+    ])
+
+    const timetableRows = timetableRes.data ?? []
+
+    const visibleClassNums = isTeacher
+      ? Array.from(
+          new Set(
+            timetableRows
+              .map((row: any) => Number(row.class_num))
+              .filter((n: number) => !isNaN(n) && n > 0)
+          )
+        ).sort((a, b) => a - b)
+      : []
+
+    const visibleSubjects = isTeacher
+      ? Array.from(
+          new Set(
+            timetableRows
+              .map((row: any) => (row.subject as string)?.toLowerCase?.())
+              .filter(Boolean)
+          )
+        )
+      : []
+
+    const quizzes = (quizzesRes.data ?? []).filter((quiz: any) => {
+      if (!isTeacher) return true
+
+      const subjectOk = visibleSubjects.includes((quiz.subject ?? '').toLowerCase())
+      const classValue =
+        quiz.class_num == null ? null : Number(quiz.class_num)
+      const classOk =
+        classValue == null || visibleClassNums.includes(classValue)
+
+      return subjectOk && classOk
+    })
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={effectiveRole} isImpersonating={role === 'superadmin'} />
+        <Sidebar
+          email={user.email!}
+          role={effectiveRole}
+          isImpersonating={role === 'superadmin'}
+        />
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
@@ -46,7 +109,10 @@ export default async function QuizzesPage() {
 
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-3xl">
-              <QuizList quizzes={(quizzes as unknown as Quiz[]) ?? []} />
+              <QuizList
+                quizzes={(quizzes as unknown as Quiz[]) ?? []}
+                canManage={isTeacher}
+              />
             </div>
           </main>
         </div>
@@ -227,29 +293,28 @@ export default async function QuizzesPage() {
       .or(`class_num.eq.${student.class_num},class_num.is.null`)
       .order('created_at', { ascending: false })
 
-    const quizIds = (quizzes ?? []).map(q => q.id)
+    const quizIds = (quizzes ?? []).map((q: any) => q.id)
 
-    const submissionCounts: Record<string, number> = {}
-    const highestScores: Record<string, number> = {}
-    if (quizIds.length > 0) {
-      const { data: submissions } = await supabase
-        .from('quiz_submissions')
-        .select('quiz_id, score')
-        .eq('user_id', user.id)
-        .in('quiz_id', quizIds)
+    const { data: submissions } =
+      quizIds.length > 0
+        ? await supabase
+            .from('quiz_submissions')
+            .select('id, quiz_id, score, submitted_at')
+            .in('quiz_id', quizIds)
+            .eq('user_id', user.id)
+            .order('submitted_at', { ascending: false })
+        : { data: [] as any[] }
 
-      for (const s of submissions ?? []) {
-        submissionCounts[s.quiz_id] = (submissionCounts[s.quiz_id] ?? 0) + 1
-        if (typeof s.score === 'number') {
-          highestScores[s.quiz_id] = Math.max(highestScores[s.quiz_id] ?? 0, s.score)
-        }
+    const latestByQuizId: Record<string, any> = {}
+    ;(submissions ?? []).forEach((sub: any) => {
+      if (!latestByQuizId[sub.quiz_id]) {
+        latestByQuizId[sub.quiz_id] = sub
       }
-    }
+    })
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role={role} />
-
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Quizzes</h1>
@@ -259,7 +324,7 @@ export default async function QuizzesPage() {
           </header>
 
           <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
                   <h2 className="text-sm font-semibold text-gray-900">
@@ -268,17 +333,17 @@ export default async function QuizzesPage() {
                 </div>
 
                 {quizzes && quizzes.length > 0 ? (
-                  quizzes.map(quiz => {
+                  quizzes.map((quiz: any) => {
                     const questionCount = Array.isArray(quiz.questions)
                       ? quiz.questions.length
                       : 0
-                    const subCount = submissionCounts[quiz.id] ?? 0
-                    const maxAtt = quiz.max_attempts ?? 1
-                    const fullyAttempted = subCount >= maxAtt
-                    const best = highestScores[quiz.id]
-                    const bestPct = (best != null && questionCount > 0)
-                      ? Math.round((best / questionCount) * 100)
-                      : null
+                    const latestSubmission = latestByQuizId[quiz.id]
+                    const scorePct =
+                      latestSubmission && questionCount > 0
+                        ? Math.round(
+                            ((latestSubmission.score ?? 0) / questionCount) * 100
+                          )
+                        : null
 
                     return (
                       <div
@@ -289,42 +354,24 @@ export default async function QuizzesPage() {
                           <div className="text-sm font-medium text-gray-900 truncate">
                             {quiz.title}
                           </div>
-                          <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-2 flex-wrap">
-                            <span>{quiz.subject} · {quiz.time_limit} min · {questionCount} question{questionCount !== 1 ? 's' : ''}</span>
-                            {bestPct !== null && (
-                              <span className={`font-medium px-1.5 py-0.5 rounded text-[10px] ${
-                                bestPct >= 80 ? 'bg-green-50 text-green-700' :
-                                bestPct >= 50 ? 'bg-amber-50 text-amber-700' :
-                                'bg-red-50 text-red-600'
-                              }`}>
-                                Best: {bestPct}%
-                              </span>
-                            )}
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {quiz.subject} · {quiz.time_limit} min · {questionCount}{' '}
+                            question{questionCount !== 1 ? 's' : ''}
                           </div>
                         </div>
 
-                        <div className="flex-shrink-0 flex items-center gap-2">
-                          {subCount > 0 && (
-                            <Link
-                              href={`/quizzes/${quiz.id}?mode=results`}
-                              className="text-[10px] font-medium text-gray-500 hover:text-gray-700 border border-gray-200 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap"
-                            >
-                              Past results
-                            </Link>
-                          )}
-                          {!fullyAttempted && (
-                            <Link
-                              href={`/quizzes/${quiz.id}?mode=take`}
-                              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-                            >
-                              {subCount > 0 ? `Retake (${maxAtt - subCount} left)` : 'Take quiz'}
-                            </Link>
-                          )}
-                          {fullyAttempted && (
-                            <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                              No attempts left
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {scorePct !== null && (
+                            <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                              Last: {scorePct}%
                             </span>
                           )}
+                          <Link
+                            href={`/quizzes/${quiz.id}`}
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f]"
+                          >
+                            Open
+                          </Link>
                         </div>
                       </div>
                     )
@@ -346,14 +393,7 @@ export default async function QuizzesPage() {
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
       <Sidebar email={user.email!} role={role} />
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-sm font-medium text-gray-900 mb-1">
-            Unsupported account role
-          </div>
-          <div className="text-xs text-gray-400">
-            Contact the school administrator.
-          </div>
-        </div>
+        <div className="text-sm text-gray-400">Unsupported account role.</div>
       </div>
     </div>
   )

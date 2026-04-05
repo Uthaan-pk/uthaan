@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import ResultsPage from './ResultsPage'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
+import { resolveEffectiveRole } from '@/lib/school'
 
 async function isReleasedForClass(
   supabase: any,
@@ -35,7 +36,8 @@ export default async function Page() {
     .eq('user_id', user.id)
     .single()
 
-  const role = roleData?.role
+  const role = roleData?.role ?? ''
+  const effectiveRole = await resolveEffectiveRole(role)
 
   if (role === 'parent') {
     const { data: link } = await supabase
@@ -242,7 +244,7 @@ export default async function Page() {
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
+      <Sidebar email={user.email!} role={effectiveRole} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">
@@ -256,7 +258,7 @@ export default async function Page() {
           <ResultsPage
             students={studentsRes.data ?? []}
             releases={releasesRes.data ?? []}
-            role={role ?? 'teacher'}
+            role={effectiveRole || 'teacher'}
           />
         </main>
       </div>

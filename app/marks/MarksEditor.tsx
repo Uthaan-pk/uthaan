@@ -51,18 +51,18 @@ type Submission = {
 const ALL_SUBJECTS = ['urdu', 'english', 'math', 'science', 'islamiat'] as const
 
 const DEFAULT_EXAM_TYPES: ExamType[] = [
-  { id: 'default-mid',   name: 'Mid Term',   category: 'mid'   },
+  { id: 'default-mid', name: 'Mid Term', category: 'mid' },
   { id: 'default-final', name: 'Final Term', category: 'final' },
-  { id: 'default-unit',  name: 'Unit Test',  category: 'unit'  },
+  { id: 'default-unit', name: 'Unit Test', category: 'unit' },
 ]
 
 const LETTER_STYLE: Record<string, string> = {
   'A+': 'text-[#1a2e1a] bg-[#6fcf6f]/20',
-  'A':  'text-green-800 bg-green-50',
-  'B':  'text-blue-800  bg-blue-50',
-  'C':  'text-amber-800 bg-amber-50',
-  'D':  'text-orange-800 bg-orange-50',
-  'F':  'text-red-800   bg-red-50',
+  A: 'text-green-800 bg-green-50',
+  B: 'text-blue-800 bg-blue-50',
+  C: 'text-amber-800 bg-amber-50',
+  D: 'text-orange-800 bg-orange-50',
+  F: 'text-red-800 bg-red-50',
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -96,7 +96,6 @@ function buildInitialState(
   return state
 }
 
-// Convert current marksState back to flat rows for grade computation
 function marksStateToFlat(
   marksState: MarksState,
   students: Student[],
@@ -121,8 +120,14 @@ function marksStateToFlat(
 function fmtDue(dateStr: string | null): string {
   if (!dateStr) return '—'
   return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
   })
+}
+
+function normalizeSubject(value: string) {
+  return value.trim().toLowerCase()
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -150,33 +155,34 @@ export default function MarksEditor({
 }) {
   const supabase = useMemo(() => createClient(), [])
 
-  // Use provided exam types or fall back to the three defaults
   const [examTypes, setExamTypes] = useState<ExamType[]>(
     examTypesProp.length > 0 ? examTypesProp : DEFAULT_EXAM_TYPES
   )
-  const [showExamForm, setShowExamForm]     = useState(false)
-  const [editingExam, setEditingExam]       = useState<ExamType | null>(null)
-  const [examFormName, setExamFormName]     = useState('')
-  const [examFormCat, setExamFormCat]       = useState<'mid' | 'final' | 'unit'>('unit')
+  const [showExamForm, setShowExamForm] = useState(false)
+  const [editingExam, setEditingExam] = useState<ExamType | null>(null)
+  const [examFormName, setExamFormName] = useState('')
+  const [examFormCat, setExamFormCat] = useState<'mid' | 'final' | 'unit'>('unit')
   const [savingExamType, setSavingExamType] = useState(false)
 
-  // Only the subjects this teacher is allowed to edit (empty = all)
   const subjects: readonly string[] = useMemo(
-    () => (visibleSubjects.length > 0 ? visibleSubjects : ALL_SUBJECTS),
+    () =>
+      visibleSubjects.length > 0
+        ? Array.from(new Set(visibleSubjects.map(normalizeSubject)))
+        : ALL_SUBJECTS,
     [visibleSubjects]
   )
 
   const examNames = useMemo(() => examTypes.map(e => e.name), [examTypes])
   const examCategoryMap = useMemo(() => buildExamCategoryMap(examTypes), [examTypes])
 
-  const [activeTab, setActiveTab]       = useState<'marks' | 'assignments' | 'grades'>('marks')
-  const [selectedExam, setSelectedExam] = useState<string>(() => examTypes[0]?.name ?? 'Mid Term')
-  const [marksState, setMarksState]     = useState<MarksState>(
+  const [activeTab, setActiveTab] = useState<'marks' | 'assignments' | 'grades'>('marks')
+  const [selectedExam, setSelectedExam] = useState<string>(
+    () => examTypes[0]?.name ?? 'Mid Term'
+  )
+  const [marksState, setMarksState] = useState<MarksState>(
     () => buildInitialState(students, allMarks, examNames, subjects)
   )
   const [saving, setSaving] = useState(false)
-
-  // ── Marks tab helpers ───────────────────────────────────────────────────────
 
   function updateMark(studentId: string, subject: string, value: string) {
     setMarksState(prev => ({
@@ -190,23 +196,74 @@ export default function MarksEditor({
 
   async function handleSave() {
     setSaving(true)
-    const rows = students.flatMap(s =>
-      subjects.map(sub => ({
-        student_id: s.id,
-        subject:    sub,
-        exam:       selectedExam,
-        percent:    Number(marksState[selectedExam]?.[s.id]?.[sub]) || 0,
-      }))
+
+    const studentIds = students.map(s => s.id)
+
+    const filledRows = students.flatMap(s =>
+      subjects.flatMap(sub => {
+        const raw = marksState[selectedExam]?.[s.id]?.[sub]?.trim() ?? ''
+
+        if (raw === '') return []
+
+        const percent = Number(raw)
+        if (Number.isNaN(percent) || percent < 0 || percent > 100) {
+          return []
+        }
+
+        return [
+          {
+            student_id: s.id,
+            subject: sub,
+            exam: selectedExam,
+            percent,
+          },
+        ]
+      })
     )
-    const { error } = await supabase
+
+    const invalidEntryExists = students.some(s =>
+      subjects.some(sub => {
+        const raw = marksState[selectedExam]?.[s.id]?.[sub]?.trim() ?? ''
+        if (raw === '') return false
+        const value = Number(raw)
+        return Number.isNaN(value) || value < 0 || value > 100
+      })
+    )
+
+    if (invalidEntryExists) {
+      setSaving(false)
+      toast.error('Marks must be between 0 and 100.')
+      return
+    }
+
+    const { error: deleteError } = await supabase
       .from('marks')
-      .upsert(rows, { onConflict: 'student_id,subject,exam' })
+      .delete()
+      .eq('exam', selectedExam)
+      .in('student_id', studentIds)
+      .in('subject', [...subjects])
+
+    if (deleteError) {
+      setSaving(false)
+      toast.error(deleteError.message || 'Failed to clear old marks.')
+      return
+    }
+
+    if (filledRows.length > 0) {
+      const { error: upsertError } = await supabase
+        .from('marks')
+        .upsert(filledRows, { onConflict: 'student_id,subject,exam' })
+
+      if (upsertError) {
+        setSaving(false)
+        toast.error(upsertError.message || 'Failed to save marks.')
+        return
+      }
+    }
+
     setSaving(false)
-    if (error) { toast.error('Failed to save marks.'); return }
     toast.success('Marks saved!')
   }
-
-  // ── Exam type CRUD ──────────────────────────────────────────────────────────
 
   function openAddExam() {
     setEditingExam(null)
@@ -228,29 +285,40 @@ export default function MarksEditor({
     setSavingExamType(true)
 
     if (editingExam && !editingExam.id.startsWith('default-')) {
-      // Update in DB
       const { error } = await supabase
         .from('exam_types')
         .update({ name, category: examFormCat })
         .eq('id', editingExam.id)
       setSavingExamType(false)
-      if (error) { toast.error('Failed to update exam type.'); return }
-      setExamTypes(prev => prev.map(e => e.id === editingExam.id ? { ...e, name, category: examFormCat } : e))
+      if (error) {
+        toast.error('Failed to update exam type.')
+        return
+      }
+      setExamTypes(prev =>
+        prev.map(e =>
+          e.id === editingExam.id ? { ...e, name, category: examFormCat } : e
+        )
+      )
       if (selectedExam === editingExam.name) setSelectedExam(name)
     } else if (!editingExam) {
-      // Insert new
       const { data, error } = await supabase
         .from('exam_types')
         .insert({ name, category: examFormCat })
         .select('id, name, category')
         .single()
       setSavingExamType(false)
-      if (error || !data) { toast.error('Failed to create exam type.'); return }
+      if (error || !data) {
+        toast.error('Failed to create exam type.')
+        return
+      }
       setExamTypes(prev => [...prev, data as ExamType])
     } else {
-      // Editing a default (id starts with 'default-') — just update local state
       setSavingExamType(false)
-      setExamTypes(prev => prev.map(e => e.id === editingExam.id ? { ...e, name, category: examFormCat } : e))
+      setExamTypes(prev =>
+        prev.map(e =>
+          e.id === editingExam.id ? { ...e, name, category: examFormCat } : e
+        )
+      )
       if (selectedExam === editingExam.name) setSelectedExam(name)
     }
 
@@ -258,47 +326,49 @@ export default function MarksEditor({
     setShowExamForm(false)
   }
 
-  // ── Final Grade tab helpers ─────────────────────────────────────────────────
-
-  // Live final grades computed from current marksState (reflects unsaved edits too)
   const liveMarks = useMemo(
     () => marksStateToFlat(marksState, students, examNames, subjects),
     [marksState, students, examNames, subjects]
   )
-  const quizAvg     = (sid: string) => quizAvgByStudentId[sid] ?? null
-  const asgAvg      = (sid: string) => assignmentAvgByStudentId[sid] ?? null
-
-  // ── Assignment tab helpers ──────────────────────────────────────────────────
+  const quizAvg = (sid: string) => quizAvgByStudentId[sid] ?? null
+  const asgAvg = (sid: string) => assignmentAvgByStudentId[sid] ?? null
 
   const studentIds = useMemo(() => new Set(students.map(s => s.id)), [students])
 
-  const enrichedAssignments = useMemo(() =>
-    assignments.map(a => {
-      const asgSubs     = submissions.filter(s => s.assignment_id === a.id && studentIds.has(s.student_id))
-      const submitted   = asgSubs.length
-      const graded      = asgSubs.filter(s => s.grade != null && s.grade !== '').length
-      const gradeNums   = asgSubs
-        .map(s => parseFloat(s.grade ?? ''))
-        .filter(n => !isNaN(n))
-      const avgGrade    = gradeNums.length > 0
-        ? Math.round(gradeNums.reduce((a, b) => a + b, 0) / gradeNums.length)
-        : null
-      return { ...a, submitted, graded, avgGrade, total: students.length }
-    }),
-    [assignments, submissions, studentIds, students.length]
+  const enrichedAssignments = useMemo(
+    () =>
+      assignments
+        .filter(a => subjects.includes(normalizeSubject(a.subject ?? '')))
+        .map(a => {
+          const asgSubs = submissions.filter(
+            s => s.assignment_id === a.id && studentIds.has(s.student_id)
+          )
+          const submitted = asgSubs.length
+          const graded = asgSubs.filter(
+            s => s.grade != null && s.grade !== ''
+          ).length
+          const gradeNums = asgSubs
+            .map(s => parseFloat(s.grade ?? ''))
+            .filter(n => !isNaN(n))
+          const avgGrade =
+            gradeNums.length > 0
+              ? Math.round(
+                  gradeNums.reduce((a, b) => a + b, 0) / gradeNums.length
+                )
+              : null
+          return { ...a, submitted, graded, avgGrade, total: students.length }
+        }),
+    [assignments, submissions, studentIds, students.length, subjects]
   )
-
-  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div>
-      {/* Tab bar */}
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex gap-1">
           {([
-            ['marks',       'Exam Marks'],
+            ['marks', 'Exam Marks'],
             ['assignments', 'Assignments'],
-            ['grades',      'Final Grade'],
+            ['grades', 'Final Grade'],
           ] as const).map(([key, label]) => (
             <button
               key={key}
@@ -314,7 +384,6 @@ export default function MarksEditor({
           ))}
         </div>
 
-        {/* Exam selector + save — only on Marks tab */}
         {activeTab === 'marks' && (
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex gap-1.5 flex-wrap">
@@ -330,10 +399,15 @@ export default function MarksEditor({
                 >
                   {et.name}
                   <span
-                    onClick={e => { e.stopPropagation(); openEditExam(et) }}
+                    onClick={e => {
+                      e.stopPropagation()
+                      openEditExam(et)
+                    }}
                     className="ml-1.5 opacity-40 hover:opacity-100 text-[10px] cursor-pointer"
                     title="Edit exam type"
-                  >✎</span>
+                  >
+                    ✎
+                  </span>
                 </button>
               ))}
               <button
@@ -355,11 +429,12 @@ export default function MarksEditor({
         )}
       </div>
 
-      {/* ── Exam type form ────────────────────────────────────────────────── */}
       {activeTab === 'marks' && showExamForm && (
         <div className="mb-4 bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-[11px] font-medium text-gray-500 mb-1">Name</label>
+            <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              Name
+            </label>
             <input
               type="text"
               value={examFormName}
@@ -369,7 +444,9 @@ export default function MarksEditor({
             />
           </div>
           <div>
-            <label className="block text-[11px] font-medium text-gray-500 mb-1">Grade category</label>
+            <label className="block text-[11px] font-medium text-gray-500 mb-1">
+              Grade category
+            </label>
             <select
               value={examFormCat}
               onChange={e => setExamFormCat(e.target.value as 'mid' | 'final' | 'unit')}
@@ -398,7 +475,6 @@ export default function MarksEditor({
         </div>
       )}
 
-      {/* ── Marks tab ─────────────────────────────────────────────────────── */}
       {activeTab === 'marks' && (
         <>
           {students.length === 0 ? (
@@ -415,7 +491,10 @@ export default function MarksEditor({
                         Student
                       </th>
                       {subjects.map(sub => (
-                        <th key={sub} className="text-left px-3 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide capitalize">
+                        <th
+                          key={sub}
+                          className="text-left px-3 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide capitalize"
+                        >
                           {sub}
                         </th>
                       ))}
@@ -423,15 +502,22 @@ export default function MarksEditor({
                   </thead>
                   <tbody>
                     {students.map((s, i) => (
-                      <tr key={s.id} className={i < students.length - 1 ? 'border-b border-gray-50' : ''}>
+                      <tr
+                        key={s.id}
+                        className={i < students.length - 1 ? 'border-b border-gray-50' : ''}
+                      >
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-full bg-green-50 flex items-center justify-center text-green-800 text-[10px] font-semibold flex-shrink-0">
                               {getInitials(s.name)}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900">{s.name}</div>
-                              <div className="text-[10px] text-gray-400">{s.roll_no}</div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {s.name}
+                              </div>
+                              <div className="text-[10px] text-gray-400">
+                                {s.roll_no}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -461,7 +547,6 @@ export default function MarksEditor({
         </>
       )}
 
-      {/* ── Assignments tab ───────────────────────────────────────────────── */}
       {activeTab === 'assignments' && (
         <>
           {enrichedAssignments.length === 0 ? (
@@ -474,7 +559,8 @@ export default function MarksEditor({
           ) : (
             <div className="space-y-2">
               {enrichedAssignments.map(a => {
-                const submittedPct = a.total > 0 ? Math.round((a.submitted / a.total) * 100) : 0
+                const submittedPct =
+                  a.total > 0 ? Math.round((a.submitted / a.total) * 100) : 0
                 return (
                   <div
                     key={a.id}
@@ -482,12 +568,16 @@ export default function MarksEditor({
                   >
                     <div className="flex items-start justify-between gap-4 flex-wrap">
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-gray-900 truncate">{a.title}</div>
+                        <div className="text-sm font-semibold text-gray-900 truncate">
+                          {a.title}
+                        </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-[11px] font-medium capitalize bg-gray-50 border border-gray-100 text-gray-600 px-2 py-0.5 rounded">
                             {a.subject}
                           </span>
-                          <span className="text-[11px] text-gray-400">Due {fmtDue(a.due_date)}</span>
+                          <span className="text-[11px] text-gray-400">
+                            Due {fmtDue(a.due_date)}
+                          </span>
                         </div>
                       </div>
 
@@ -499,7 +589,9 @@ export default function MarksEditor({
                           View submissions →
                         </Link>
                         <div className="text-center">
-                          <div className="font-semibold text-gray-900">{a.submitted}/{a.total}</div>
+                          <div className="font-semibold text-gray-900">
+                            {a.submitted}/{a.total}
+                          </div>
                           <div className="text-[10px] text-gray-400">Submitted</div>
                         </div>
                         <div className="text-center">
@@ -508,11 +600,15 @@ export default function MarksEditor({
                         </div>
                         {a.avgGrade !== null && (
                           <div className="text-center">
-                            <div className={`font-semibold px-2 py-0.5 rounded text-xs ${
-                              a.avgGrade >= 80 ? 'text-green-800 bg-green-50' :
-                              a.avgGrade >= 60 ? 'text-amber-800 bg-amber-50' :
-                              'text-red-800 bg-red-50'
-                            }`}>
+                            <div
+                              className={`font-semibold px-2 py-0.5 rounded text-xs ${
+                                a.avgGrade >= 80
+                                  ? 'text-green-800 bg-green-50'
+                                  : a.avgGrade >= 60
+                                    ? 'text-amber-800 bg-amber-50'
+                                    : 'text-red-800 bg-red-50'
+                              }`}
+                            >
                               {a.avgGrade}%
                             </div>
                             <div className="text-[10px] text-gray-400">Class avg</div>
@@ -521,7 +617,6 @@ export default function MarksEditor({
                       </div>
                     </div>
 
-                    {/* Submission progress bar */}
                     {a.total > 0 && (
                       <div className="mt-3">
                         <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
@@ -530,7 +625,9 @@ export default function MarksEditor({
                             style={{ width: `${submittedPct}%` }}
                           />
                         </div>
-                        <div className="text-[10px] text-gray-400 mt-1">{submittedPct}% of class submitted</div>
+                        <div className="text-[10px] text-gray-400 mt-1">
+                          {submittedPct}% of class submitted
+                        </div>
                       </div>
                     )}
                   </div>
@@ -541,13 +638,13 @@ export default function MarksEditor({
         </>
       )}
 
-      {/* ── Final Grade tab ───────────────────────────────────────────────── */}
       {activeTab === 'grades' && (
         <>
           {weightRows.length === 0 && (
             <div className="mb-3 bg-amber-50 border border-amber-100 text-amber-700 text-xs rounded-lg px-4 py-2.5">
-              No grade weights configured for this class. Showing simple averages across exams.
-              Configure weights in <span className="font-semibold">Grade Settings</span>.
+              No grade weights configured for this class. Showing simple averages
+              across exams. Configure weights in{' '}
+              <span className="font-semibold">Grade Settings</span>.
             </div>
           )}
 
@@ -565,7 +662,10 @@ export default function MarksEditor({
                         Student
                       </th>
                       {ALL_SUBJECTS.map(sub => (
-                        <th key={sub} className="text-center px-3 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide capitalize min-w-[90px]">
+                        <th
+                          key={sub}
+                          className="text-center px-3 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide capitalize min-w-[90px]"
+                        >
                           {sub}
                         </th>
                       ))}
@@ -588,34 +688,50 @@ export default function MarksEditor({
                         subjectGrades.map(g => [g.subject, g])
                       )
 
-                      // Overall: average of all subject finals
                       const overallVals = subjectGrades.map(g => g.overall)
-                      const overall = overallVals.length > 0
-                        ? Math.round(overallVals.reduce((a, b) => a + b, 0) / overallVals.length * 10) / 10
-                        : null
+                      const overall =
+                        overallVals.length > 0
+                          ? Math.round(
+                              (overallVals.reduce((a, b) => a + b, 0) /
+                                overallVals.length) *
+                                10
+                            ) / 10
+                          : null
 
                       return (
-                        <tr key={s.id} className={i < students.length - 1 ? 'border-b border-gray-50' : ''}>
+                        <tr
+                          key={s.id}
+                          className={i < students.length - 1 ? 'border-b border-gray-50' : ''}
+                        >
                           <td className="px-5 py-3 sticky left-0 bg-white z-10">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full bg-[#1a2e1a]/[0.07] flex items-center justify-center text-[#1a2e1a] text-[10px] font-bold flex-shrink-0">
                                 {getInitials(s.name)}
                               </div>
                               <div>
-                                <div className="text-sm font-medium text-gray-900">{s.name}</div>
-                                <div className="text-[10px] text-gray-400">{s.roll_no}</div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {s.name}
+                                </div>
+                                <div className="text-[10px] text-gray-400">
+                                  {s.roll_no}
+                                </div>
                               </div>
                             </div>
                           </td>
 
                           {ALL_SUBJECTS.map(sub => {
                             const g = gradeBySubject[sub]
-                            const style = g ? (LETTER_STYLE[g.letter] ?? LETTER_STYLE['F']) : ''
+                            const style = g
+                              ? (LETTER_STYLE[g.letter] ?? LETTER_STYLE['F'])
+                              : ''
+
                             return (
                               <td key={sub} className="px-3 py-2.5 text-center">
                                 {g ? (
                                   <div className="inline-flex flex-col items-center gap-0.5">
-                                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold ${style}`}>
+                                    <span
+                                      className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold ${style}`}
+                                    >
                                       {g.letter}
                                     </span>
                                     <span className="text-[10px] text-gray-400 tabular-nums">
@@ -632,10 +748,15 @@ export default function MarksEditor({
                           <td className="px-4 py-2.5 text-center">
                             {overall !== null ? (
                               <div className="inline-flex flex-col items-center gap-0.5">
-                                <span className={`inline-flex items-center justify-center w-9 h-9 rounded-xl text-sm font-bold ${LETTER_STYLE[letterGrade(overall)] ?? LETTER_STYLE['F']}`}>
+                                <span
+                                  className={`inline-flex items-center justify-center min-w-[2.25rem] h-8 px-2 rounded-lg text-xs font-bold ${
+                                    LETTER_STYLE[letterGrade(overall)] ??
+                                    LETTER_STYLE['F']
+                                  }`}
+                                >
                                   {letterGrade(overall)}
                                 </span>
-                                <span className="text-[10px] text-gray-400 tabular-nums font-medium">
+                                <span className="text-[10px] text-gray-400 tabular-nums">
                                   {overall}%
                                 </span>
                               </div>
@@ -651,10 +772,9 @@ export default function MarksEditor({
               </div>
             </div>
           )}
-
           <div className="mt-2 text-[11px] text-gray-400">
-            Final grades are computed live from marks entered above.
-            {weightRows.length > 0 && ' Grade weights from Grade Settings are applied per subject.'}
+            Final grades update live from the current marks, assignment averages,
+            and configured weights.
           </div>
         </>
       )}

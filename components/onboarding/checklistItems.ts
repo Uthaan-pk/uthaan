@@ -36,7 +36,7 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
     id: 'first_class',
     title: 'Create a class or section',
     description: 'Set up at least one class so you can assign students and teachers.',
-    href: '/admin',
+    href: '/students',
     emoji: '📚',
   },
   {

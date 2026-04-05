@@ -1,13 +1,21 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
-import { computeSubjectFinalGrades, fmtSubject, type FlatMarkRow, type WeightRow } from '@/lib/gradeUtils'
+import {
+  computeSubjectFinalGrades,
+  fmtSubject,
+  type FlatMarkRow,
+  type WeightRow,
+} from '@/lib/gradeUtils'
 import { letterGrade } from '@/lib/calculateGrade'
-import { CURRENT_TERM, CURRENT_YEAR, TERM_START_DATE, TERM_END_DATE } from '@/lib/constants'
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+import {
+  CURRENT_TERM,
+  CURRENT_YEAR,
+  TERM_START_DATE,
+  TERM_END_DATE,
+} from '@/lib/constants'
 
 type Student = {
   id: string
@@ -28,79 +36,123 @@ type ReleaseRow = {
   released_by?: string | null
 }
 
-// ── PDF generation ────────────────────────────────────────────────────────────
+type ReportCardData = {
+  subjectGrades: ReturnType<typeof computeSubjectFinalGrades>
+  presentCount: number
+  absentCount: number
+  lateCount: number
+  excusedCount: number
+  earlyLeaveCount: number
+  attendanceDenominator: number
+  totalDays: number
+  attendancePct: number
+  overallPct: number | null
+}
+
+async function loadReportCardData(student: Student): Promise<ReportCardData> {
+  const supabase = createClient()
+
+  const [
+    { data: rawMarks, error: marksErr },
+    { data: weightRows, error: weightsErr },
+    { data: logs, error: logsErr },
+  ] = await Promise.all([
+    supabase
+      .from('marks')
+      .select('student_id, subject, exam, percent')
+      .eq('student_id', student.id),
+
+    supabase
+      .from('grade_weights')
+      .select(
+        'id, class_num, subject, assignment_weight, exam_weight, final_weight, quiz_weight'
+      )
+      .eq('class_num', Number(student.class_num))
+      .eq('academic_year', CURRENT_YEAR),
+
+    supabase
+      .from('attendance_logs')
+      .select('status')
+      .eq('student_id', student.id)
+      .gte('day', TERM_START_DATE)
+      .lte('day', TERM_END_DATE),
+  ])
+
+  if (marksErr) throw new Error(`Could not load marks: ${marksErr.message}`)
+  if (weightsErr) {
+    throw new Error(`Could not load grade weights: ${weightsErr.message}`)
+  }
+  if (logsErr) throw new Error(`Could not load attendance: ${logsErr.message}`)
+
+  const marks: FlatMarkRow[] = (rawMarks ?? []).map((m: any) => ({
+    student_id: student.id,
+    subject: m.subject,
+    exam: m.exam,
+    percent: m.percent,
+  }))
+
+  const weights: WeightRow[] = (weightRows ?? []).map((w: any) => ({
+    id: w.id,
+    class_num: w.class_num,
+    subject: w.subject,
+    assignment_weight: w.assignment_weight,
+    exam_weight: w.exam_weight,
+    final_weight: w.final_weight,
+    quiz_weight: w.quiz_weight,
+  }))
+
+  const subjectGrades = computeSubjectFinalGrades(student.id, marks, weights)
+
+  const presentCount = (logs ?? []).filter((l: any) => l.status === 'present').length
+  const absentCount = (logs ?? []).filter((l: any) => l.status === 'absent').length
+  const lateCount = (logs ?? []).filter((l: any) => l.status === 'late').length
+  const excusedCount = (logs ?? []).filter((l: any) => l.status === 'excused').length
+  const earlyLeaveCount = (logs ?? []).filter((l: any) => l.status === 'early_leave').length
+
+  const totalDays =
+    presentCount + absentCount + lateCount + excusedCount + earlyLeaveCount
+  const attendanceDenominator = presentCount + absentCount + lateCount + earlyLeaveCount
+  const attendancePct =
+    attendanceDenominator > 0
+      ? Math.round(
+          ((presentCount + lateCount + earlyLeaveCount) / attendanceDenominator) *
+            100
+        )
+      : 0
+
+  const overallPct =
+    subjectGrades.length > 0
+      ? Math.round(
+          subjectGrades.reduce((sum, g) => sum + g.overall, 0) /
+            subjectGrades.length
+        )
+      : null
+
+  return {
+    subjectGrades,
+    presentCount,
+    absentCount,
+    lateCount,
+    excusedCount,
+    earlyLeaveCount,
+    attendanceDenominator,
+    totalDays,
+    attendancePct,
+    overallPct,
+  }
+}
 
 async function generatePDF(student: Student) {
   const { jsPDF } = await import('jspdf')
   const autoTable = (await import('jspdf-autotable')).default
 
-  const supabase = createClient()
+  const report = await loadReportCardData(student)
 
-  // Fetch all marks for the student (all exams) and grade weights for their class
-  const [{ data: rawMarks, error: marksErr }, { data: weightRows, error: weightsErr }, { data: logs, error: logsErr }] =
-    await Promise.all([
-      supabase
-        .from('marks')
-        .select('student_id, subject, exam, percent')
-        .eq('student_id', student.id),
-      supabase
-        .from('grade_weights')
-        .select('id, class_num, subject, assignment_weight, exam_weight, final_weight, quiz_weight')
-        .eq('class_num', Number(student.class_num))
-        .eq('academic_year', CURRENT_YEAR),
-      supabase
-        .from('attendance_logs')
-        .select('status')
-        .eq('student_id', student.id)
-        .gte('day', TERM_START_DATE)
-        .lte('day', TERM_END_DATE),
-    ])
-
-  if (marksErr)  throw new Error(`Could not load marks: ${marksErr.message}`)
-  if (weightsErr) throw new Error(`Could not load grade weights: ${weightsErr.message}`)
-  if (logsErr)   throw new Error(`Could not load attendance: ${logsErr.message}`)
-
-  const marks: FlatMarkRow[] = (rawMarks ?? []).map(m => ({
-    student_id: student.id,
-    subject:    m.subject,
-    exam:       m.exam,
-    percent:    m.percent,
-  }))
-
-  const weights: WeightRow[] = (weightRows ?? []).map(w => ({
-    id:                 w.id,
-    class_num:          w.class_num,
-    subject:            w.subject,
-    assignment_weight:  w.assignment_weight,
-    exam_weight:        w.exam_weight,
-    final_weight:       w.final_weight,
-    quiz_weight:        w.quiz_weight,
-  }))
-
-  // Compute one final grade per subject
-  const subjectGrades = computeSubjectFinalGrades(student.id, marks, weights)
-
-  // Attendance
-  const presentCount  = (logs ?? []).filter(l => l.status === 'present').length
-  const absentCount   = (logs ?? []).filter(l => l.status === 'absent').length
-  const totalDays     = presentCount + absentCount
-  const attendancePct = totalDays > 0
-    ? Math.round((presentCount / totalDays) * 100)
-    : 0
-
-  // Overall average across all subjects
-  const overallPct = subjectGrades.length > 0
-    ? Math.round(
-        subjectGrades.reduce((s, g) => s + g.overall, 0) / subjectGrades.length
-      )
-    : null
-
-  const doc    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  const pageW  = doc.internal.pageSize.getWidth()
-  const pageH  = doc.internal.pageSize.getHeight()
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
   const margin = 20
 
-  // ── Header bar ────────────────────────────────────────────────────────────
   doc.setFillColor(26, 46, 26)
   doc.rect(0, 0, pageW, 38, 'F')
 
@@ -113,37 +165,39 @@ async function generatePDF(student: Student) {
   doc.setFontSize(8.5)
   doc.setFont('helvetica', 'normal')
   doc.text('STUDENT REPORT CARD', pageW / 2, 18, { align: 'center' })
-  doc.text(
-    `${CURRENT_TERM}  ·  Academic Year ${CURRENT_YEAR}`,
-    pageW / 2, 24, { align: 'center' }
-  )
+  doc.text(`${CURRENT_TERM}  ·  Academic Year ${CURRENT_YEAR}`, pageW / 2, 24, {
+    align: 'center',
+  })
   doc.text(
     `Generated: ${new Date().toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     })}`,
-    pageW / 2, 30, { align: 'center' }
+    pageW / 2,
+    30,
+    { align: 'center' }
   )
 
-  // ── Student info box ──────────────────────────────────────────────────────
-  const boxY   = 44
+  const boxY = 44
   doc.setDrawColor(200, 200, 195)
   doc.setFillColor(248, 247, 244)
   doc.roundedRect(margin, boxY, pageW - margin * 2, 34, 2, 2, 'FD')
 
-  const col1x   = margin + 6
-  const col2x   = pageW / 2 + 6
-  const lineH   = 8
+  const col1x = margin + 6
+  const col2x = pageW / 2 + 6
+  const lineH = 8
   const labelW1 = 34
   const labelW2 = 22
 
   const leftFields: [string, string][] = [
-    ['Student Name',  student.name],
-    ['Class',         String(student.class_num)],
+    ['Student Name', student.name],
+    ['Class', String(student.class_num)],
     ['Academic Year', CURRENT_YEAR],
   ]
   const rightFields: [string, string][] = [
     ['Roll No.', String(student.roll_no)],
-    ['Stage',    String(student.stage ?? '—')],
+    ['Stage', String(student.stage ?? '—')],
   ]
 
   doc.setFontSize(9)
@@ -164,14 +218,13 @@ async function generatePDF(student: Student) {
     doc.text(value, col2x + labelW2, boxY + 9 + i * lineH)
   })
 
-  // ── Academic Performance ──────────────────────────────────────────────────
   const marksY = boxY + 40
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(26, 46, 26)
   doc.text('Academic Performance', margin, marksY)
 
-  const tableRows = subjectGrades.map(g => [
+  const tableRows = report.subjectGrades.map(g => [
     fmtSubject(g.subject),
     `${g.overall}%`,
     g.letter,
@@ -181,24 +234,26 @@ async function generatePDF(student: Student) {
   autoTable(doc, {
     startY: marksY + 4,
     head: [['Subject', 'Final %', 'Grade', 'Pass / Fail']],
-    body: tableRows.length > 0
-      ? tableRows
-      : [['No marks recorded for this term', '', '', '']],
-    foot: overallPct !== null
-      ? [['Overall Average', `${overallPct}%`, letterGrade(overallPct), '']]
-      : undefined,
+    body:
+      tableRows.length > 0
+        ? tableRows
+        : [['No marks recorded for this term', '', '', '']],
+    foot:
+      report.overallPct !== null
+        ? [['Overall Average', `${report.overallPct}%`, letterGrade(report.overallPct), '']]
+        : undefined,
     margin: { left: margin, right: margin },
     styles: { fontSize: 9, cellPadding: 4, textColor: [40, 40, 40] },
     headStyles: {
       fillColor: [26, 46, 26],
       textColor: [111, 207, 111],
-      fontStyle:  'bold',
-      halign:     'center',
+      fontStyle: 'bold',
+      halign: 'center',
     },
     footStyles: {
       fillColor: [235, 245, 235],
       textColor: [26, 46, 26],
-      fontStyle:  'bold',
+      fontStyle: 'bold',
     },
     columnStyles: {
       0: { cellWidth: 60 },
@@ -218,7 +273,6 @@ async function generatePDF(student: Student) {
 
   const afterMarksY = (doc as any).lastAutoTable.finalY + 10
 
-  // ── Attendance Summary ────────────────────────────────────────────────────
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(26, 46, 26)
@@ -226,31 +280,40 @@ async function generatePDF(student: Student) {
 
   autoTable(doc, {
     startY: afterMarksY + 4,
-    head: [['Total School Days', 'Days Present', 'Days Absent', 'Attendance %']],
+    head: [[
+      'Total Days',
+      'Present',
+      'Late',
+      'Early Leave',
+      'Absent',
+      'Excused',
+      'Attendance %',
+    ]],
     body: [[
-      String(totalDays),
-      String(presentCount),
-      String(absentCount),
-      `${attendancePct}%`,
+      String(report.totalDays),
+      String(report.presentCount),
+      String(report.lateCount),
+      String(report.earlyLeaveCount),
+      String(report.absentCount),
+      String(report.excusedCount),
+      `${report.attendancePct}%`,
     ]],
     margin: { left: margin, right: margin },
-    styles: { fontSize: 8.5, cellPadding: 3.5, halign: 'center', textColor: [40, 40, 40] },
+    styles: {
+      fontSize: 8.5,
+      cellPadding: 3.5,
+      halign: 'center',
+      textColor: [40, 40, 40],
+    },
     headStyles: {
       fillColor: [26, 46, 26],
       textColor: [111, 207, 111],
-      fontStyle:  'bold',
-      halign:     'center',
-    },
-    columnStyles: {
-      3: {
-        textColor: attendancePct >= 75 ? [0, 120, 60] : [180, 0, 0],
-        fontStyle: 'bold',
-      },
+      fontStyle: 'bold',
+      halign: 'center',
     },
   })
 
-  // ── Signatures ────────────────────────────────────────────────────────────
-  const sigY     = (doc as any).lastAutoTable.finalY + 22
+  const sigY = (doc as any).lastAutoTable.finalY + 22
   const sigLineW = 55
 
   if (sigY + 20 < pageH - 16) {
@@ -267,7 +330,6 @@ async function generatePDF(student: Student) {
     doc.text('Principal', prinX, sigY + 5)
   }
 
-  // ── Footer ────────────────────────────────────────────────────────────────
   doc.setFillColor(26, 46, 26)
   doc.rect(0, pageH - 12, pageW, 12, 'F')
   doc.setTextColor(111, 207, 111)
@@ -284,57 +346,237 @@ async function generatePDF(student: Student) {
   doc.save(`ReportCard_${safeName}_${student.roll_no}.pdf`)
 }
 
-// ── StudentReportCardView ─────────────────────────────────────────────────────
+function ReportCardPreview({ student }: { student: Student }) {
+  const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [report, setReport] = useState<ReportCardData | null>(null)
 
-function StudentReportCardView({ student }: { student: Student }) {
-  const [loading, setLoading] = useState(false)
+  useEffect(() => {
+    let mounted = true
+
+    async function run() {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await loadReportCardData(student)
+        if (mounted) setReport(data)
+      } catch (err: any) {
+        if (mounted) setError(err?.message ?? 'Failed to load report card.')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    run()
+    return () => {
+      mounted = false
+    }
+  }, [student])
 
   async function handleDownload() {
-    setLoading(true)
+    setDownloading(true)
     try {
       await generatePDF(student)
       toast.success('Report card downloaded.')
     } catch (err: any) {
       toast.error(err?.message ?? 'Failed to generate report card.')
     } finally {
-      setLoading(false)
+      setDownloading(false)
     }
   }
 
-  return (
-    <div className="max-w-2xl">
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-50">
-          <h2 className="text-sm font-semibold text-gray-900">Your Report Card</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Your results have been released by the school. Download your final report card below.
-          </p>
+  if (loading) {
+    return (
+      <div className="max-w-3xl">
+        <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
+          Loading report card…
         </div>
-        <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="text-sm font-semibold text-gray-900">{student.name}</div>
-            <div className="text-xs text-gray-400 mt-0.5">
-              Roll {student.roll_no} · Class {student.class_num} · {student.stage ?? '—'}
-            </div>
-            <div className="text-xs text-gray-400 mt-0.5">{CURRENT_TERM}</div>
-            <div className="text-xs text-gray-500 mt-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 inline-block">
-              Shows final subject grades computed across all exams
+      </div>
+    )
+  }
+
+  if (error || !report) {
+    return (
+      <div className="max-w-3xl">
+        <div className="bg-white rounded-xl border border-red-100 px-5 py-12 text-center text-sm text-red-600">
+          {error ?? 'Failed to load report card.'}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-3xl space-y-5">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="bg-[#1a2e1a] px-5 py-5">
+          <div className="text-center">
+            <div className="text-sm font-bold text-[#6fcf6f]">UTHAAN SCHOOL</div>
+            <div className="text-xs text-white mt-1">STUDENT REPORT CARD</div>
+            <div className="text-[11px] text-white/80 mt-1">
+              {CURRENT_TERM} · Academic Year {CURRENT_YEAR}
             </div>
           </div>
-          <button
-            onClick={handleDownload}
-            disabled={loading}
-            className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] active:scale-[0.98] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px]"
-          >
-            {loading ? 'Generating PDF…' : 'Download Report Card'}
-          </button>
+        </div>
+
+        <div className="px-5 py-5 border-b border-gray-50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-xs text-gray-400 mb-1">Student Name</div>
+              <div className="font-medium text-gray-900">{student.name}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 mb-1">Roll No.</div>
+              <div className="font-medium text-gray-900">{student.roll_no}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 mb-1">Class</div>
+              <div className="font-medium text-gray-900">{student.class_num}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 mb-1">Stage</div>
+              <div className="font-medium text-gray-900">{student.stage ?? '—'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-b border-gray-50">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">
+                Academic Performance
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Final subject grades computed across recorded marks and class weights.
+              </p>
+            </div>
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] active:scale-[0.98] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px]"
+            >
+              {downloading ? 'Generating PDF…' : 'Download PDF'}
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto border-b border-gray-50">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50/70 border-b border-gray-100">
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Subject
+                </th>
+                <th className="text-center px-3 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Final %
+                </th>
+                <th className="text-center px-3 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Grade
+                </th>
+                <th className="text-center px-3 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Result
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.subjectGrades.length > 0 ? (
+                report.subjectGrades.map((g, i) => (
+                  <tr
+                    key={g.subject}
+                    className={i < report.subjectGrades.length - 1 ? 'border-b border-gray-50' : ''}
+                  >
+                    <td className="px-5 py-3 text-gray-900 font-medium">
+                      {fmtSubject(g.subject)}
+                    </td>
+                    <td className="px-3 py-3 text-center text-gray-700">
+                      {g.overall}%
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-1 rounded-md text-xs font-semibold bg-gray-50 text-gray-800">
+                        {g.letter}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                          g.overall >= 50
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-red-50 text-red-600'
+                        }`}
+                      >
+                        {g.overall >= 50 ? 'Pass' : 'Fail'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-5 py-8 text-center text-sm text-gray-400"
+                  >
+                    No marks recorded for this term.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {report.overallPct !== null && (
+              <tfoot>
+                <tr className="border-t border-gray-100 bg-green-50/40">
+                  <td className="px-5 py-3 font-semibold text-[#1a2e1a]">
+                    Overall Average
+                  </td>
+                  <td className="px-3 py-3 text-center font-semibold text-[#1a2e1a]">
+                    {report.overallPct}%
+                  </td>
+                  <td className="px-3 py-3 text-center font-semibold text-[#1a2e1a]">
+                    {letterGrade(report.overallPct)}
+                  </td>
+                  <td className="px-3 py-3" />
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+
+        <div className="px-5 py-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">
+            Attendance Summary
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-7 gap-3">
+            <StatCard label="Total Days" value={report.totalDays} />
+            <StatCard label="Present" value={report.presentCount} />
+            <StatCard label="Late" value={report.lateCount} />
+            <StatCard label="Early Leave" value={report.earlyLeaveCount} />
+            <StatCard label="Absent" value={report.absentCount} />
+            <StatCard label="Excused" value={report.excusedCount} />
+            <StatCard label="Attendance %" value={`${report.attendancePct}%`} />
+          </div>
+          <div className="mt-3 text-xs text-gray-500">
+            Attendance % excludes excused days from the denominator.
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-// ── Main ResultsPage ──────────────────────────────────────────────────────────
+function StatCard({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number
+}) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-gray-50/70 px-4 py-3">
+      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+        {label}
+      </div>
+      <div className="text-lg font-semibold text-gray-900">{value}</div>
+    </div>
+  )
+}
 
 export default function ResultsPage({
   students,
@@ -346,17 +588,16 @@ export default function ResultsPage({
   role?: string
 }) {
   const supabase = useMemo(() => createClient(), [])
-  const [loading, setLoading]               = useState<string | null>(null)
+  const [loading, setLoading] = useState<string | null>(null)
   const [releaseLoading, setReleaseLoading] = useState<number | null>(null)
-  const [releases, setReleases]             = useState(initialReleases)
-  const [classFilter, setClassFilter]       = useState<number | 'all'>('all')
+  const [releases, setReleases] = useState(initialReleases)
+  const [classFilter, setClassFilter] = useState<number | 'all'>('all')
 
   const activeStudents = useMemo(
     () => students.filter(s => s.is_active !== false),
     [students]
   )
 
-  // ── Student / Parent view ─────────────────────────────────────────────────
   if (role === 'student' || role === 'parent') {
     if (activeStudents.length === 0) {
       return (
@@ -365,10 +606,9 @@ export default function ResultsPage({
         </div>
       )
     }
-    return <StudentReportCardView student={activeStudents[0]} />
-  }
 
-  // ── Admin / Teacher view ──────────────────────────────────────────────────
+    return <ReportCardPreview student={activeStudents[0]} />
+  }
 
   const classNums = useMemo(() => {
     const set = new Set<number>()
@@ -381,7 +621,9 @@ export default function ResultsPage({
 
   const releaseMap = useMemo(() => {
     const map: Record<number, ReleaseRow> = {}
-    releases.forEach(r => { map[r.class_num] = r })
+    releases.forEach(r => {
+      map[r.class_num] = r
+    })
     return map
   }, [releases])
 
@@ -409,14 +651,22 @@ export default function ResultsPage({
     if (existing) {
       const { data, error } = await supabase
         .from('result_releases')
-        .update({ released: !existing.released, released_at: new Date().toISOString() })
+        .update({
+          released: !existing.released,
+          released_at: new Date().toISOString(),
+        })
         .eq('id', existing.id)
         .select()
         .single()
 
       setReleaseLoading(null)
-      if (error) { toast.error(error.message); return }
-      if (data) setReleases(prev => prev.map(r => r.id === data.id ? data : r))
+      if (error) {
+        toast.error(error.message)
+        return
+      }
+      if (data) {
+        setReleases(prev => prev.map(r => (r.id === data.id ? data : r)))
+      }
       return
     }
 
@@ -424,49 +674,67 @@ export default function ResultsPage({
       .from('result_releases')
       .insert({
         academic_year: CURRENT_YEAR,
-        term:          CURRENT_TERM,
-        class_num:     classNum,
-        released:      true,
+        term: CURRENT_TERM,
+        class_num: classNum,
+        released: true,
       })
       .select()
       .single()
 
     setReleaseLoading(null)
-    if (error) { toast.error(error.message); return }
-    if (data) setReleases(prev => [...prev, data])
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    if (data) {
+      setReleases(prev => [...prev, data])
+    }
   }
 
   return (
     <div className="max-w-4xl space-y-5">
-
-      {/* Release management */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50">
-          <h2 className="text-sm font-semibold text-gray-900">Release Report Cards</h2>
+          <h2 className="text-sm font-semibold text-gray-900">
+            Release Report Cards
+          </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Release results by class so students and parents can download their final report card.
+            Release results by class so students and parents can view and download
+            their final report card.
           </p>
         </div>
 
         {classNums.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-gray-400">No classes found</div>
+          <div className="px-5 py-10 text-center text-sm text-gray-400">
+            No classes found
+          </div>
         ) : (
           <div className="divide-y divide-gray-50">
             {classNums.map(classNum => {
-              const release    = releaseMap[classNum]
+              const release = releaseMap[classNum]
               const isReleased = release?.released === true
+
               return (
-                <div key={classNum} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                <div
+                  key={classNum}
+                  className="px-5 py-3.5 flex items-center justify-between gap-4"
+                >
                   <div>
-                    <div className="text-sm font-medium text-gray-900">Class {classNum}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{CURRENT_TERM} · {CURRENT_YEAR}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      Class {classNum}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {CURRENT_TERM} · {CURRENT_YEAR}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full border ${
-                      isReleased
-                        ? 'bg-green-50 text-green-700 border-green-100'
-                        : 'bg-gray-50 text-gray-500 border-gray-100'
-                    }`}>
+                    <span
+                      className={`text-xs font-medium px-3 py-1 rounded-full border ${
+                        isReleased
+                          ? 'bg-green-50 text-green-700 border-green-100'
+                          : 'bg-gray-50 text-gray-500 border-gray-100'
+                      }`}
+                    >
                       {isReleased ? 'Released' : 'Not released'}
                     </span>
                     <button
@@ -474,7 +742,11 @@ export default function ResultsPage({
                       disabled={releaseLoading === classNum}
                       className="text-xs font-medium px-3.5 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243824] disabled:opacity-50 transition-colors min-h-[36px]"
                     >
-                      {releaseLoading === classNum ? 'Saving…' : isReleased ? 'Unrelease' : 'Release'}
+                      {releaseLoading === classNum
+                        ? 'Saving…'
+                        : isReleased
+                          ? 'Unrelease'
+                          : 'Release'}
                     </button>
                   </div>
                 </div>
@@ -484,16 +756,17 @@ export default function ResultsPage({
         )}
       </div>
 
-      {/* Student list + download */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Download Report Cards</h2>
+            <h2 className="text-sm font-semibold text-gray-900">
+              Download Report Cards
+            </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               Generate a PDF with each student&apos;s final subject grades.
             </p>
           </div>
-          {/* Class filter */}
+
           {classNums.length > 1 && (
             <div className="flex flex-wrap gap-1.5">
               <button
@@ -524,13 +797,18 @@ export default function ResultsPage({
         </div>
 
         {filteredStudents.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-gray-400">No students found</div>
+          <div className="px-5 py-10 text-center text-sm text-gray-400">
+            No students found
+          </div>
         ) : (
           <div className="divide-y divide-gray-50">
             {filteredStudents.map(s => {
               const isReleased = releaseMap[Number(s.class_num)]?.released === true
               return (
-                <div key={s.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                <div
+                  key={s.id}
+                  className="px-5 py-3.5 flex items-center justify-between gap-4"
+                >
                   <div>
                     <div className="text-sm font-medium text-gray-900">{s.name}</div>
                     <div className="text-xs text-gray-400 mt-0.5">
@@ -538,11 +816,13 @@ export default function ResultsPage({
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
-                      isReleased
-                        ? 'bg-green-50 text-green-700 border-green-100'
-                        : 'bg-gray-50 text-gray-500 border-gray-100'
-                    }`}>
+                    <span
+                      className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
+                        isReleased
+                          ? 'bg-green-50 text-green-700 border-green-100'
+                          : 'bg-gray-50 text-gray-500 border-gray-100'
+                      }`}
+                    >
                       {isReleased ? 'Visible to family' : 'Hidden'}
                     </span>
                     <button

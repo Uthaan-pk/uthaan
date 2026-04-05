@@ -53,7 +53,11 @@ export default function AssignmentChecklist({
     if (mode !== 'manual') return
     const next = new Set(manualChecked)
     const nowChecked = !next.has(aId)
-    if (nowChecked) next.add(aId) else next.delete(aId)
+    if (nowChecked) {
+      next.add(aId)
+    } else {
+      next.delete(aId)
+    }
     setManualChecked(next)
 
     startTransition(async () => {

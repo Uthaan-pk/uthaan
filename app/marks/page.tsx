@@ -5,7 +5,43 @@ import { resolveEffectiveRole } from '@/lib/school'
 import GradebookGrid from './GradebookGrid'
 import ClassGradebookShell from './ClassGradebookShell'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
-import { buildAllMarksData, type ExamType } from '@/lib/gradeUtils'
+import {
+  buildAllMarksData,
+  type ExamType,
+  type WeightRow,
+  type FlatMarkRow,
+} from '@/lib/gradeUtils'
+
+type StudentRow = {
+  id: string
+  name: string
+  roll_no: string
+  class_num: number | null
+  is_active: boolean | null
+}
+
+type AssignmentRow = {
+  id: string
+  title: string
+  subject: string
+  class_num: number | null
+  due_date: string | null
+  created_at: string | null
+}
+
+type SubmissionRow = {
+  id: string
+  assignment_id: string
+  student_id: string
+  grade: string | null
+  submitted_at: string | null
+  reviewed: boolean | null
+}
+
+type TimetableRow = {
+  class_num: number | null
+  subject: string | null
+}
 
 export default async function MarksPage() {
   const supabase = await createClient()
@@ -107,13 +143,13 @@ export default async function MarksPage() {
       marksRes.error?.message ?? null
     )
 
-    const allStudentsRaw = (studentsRes.data ?? []).filter(
-      (s: any) => s.is_active !== false
+    const allStudentsRaw = ((studentsRes.data ?? []) as StudentRow[]).filter(
+      s => s.is_active !== false
     )
-    const allAssignmentsRaw = assignmentsRes.data ?? []
-    const allSubmissionsRaw = submissionsRes.data ?? []
-    const allWeightsRaw = weightsRes.data ?? []
-    const timetableRows = timetableRes.data ?? []
+    const allAssignmentsRaw = (assignmentsRes.data ?? []) as AssignmentRow[]
+    const allSubmissionsRaw = (submissionsRes.data ?? []) as SubmissionRow[]
+    const allWeightsRaw = (weightsRes.data ?? []) as WeightRow[]
+    const timetableRows = (timetableRes.data ?? []) as TimetableRow[]
     const examTypes = (examTypesRes.data ?? []) as ExamType[]
 
     let visibleClassNums: number[] = []
@@ -123,7 +159,7 @@ export default async function MarksPage() {
       visibleClassNums = Array.from(
         new Set(
           allStudentsRaw
-            .map((s: any) => Number(s.class_num))
+            .map(s => Number(s.class_num))
             .filter((n: number) => !isNaN(n) && n > 0)
         )
       ).sort((a, b) => a - b)
@@ -131,7 +167,7 @@ export default async function MarksPage() {
       visibleClassNums = Array.from(
         new Set(
           timetableRows
-            .map((row: any) => Number(row.class_num))
+            .map(row => Number(row.class_num))
             .filter((n: number) => !isNaN(n) && n > 0)
         )
       ).sort((a, b) => a - b)
@@ -139,8 +175,8 @@ export default async function MarksPage() {
       visibleSubjects = Array.from(
         new Set(
           timetableRows
-            .map((row: any) => (row.subject as string)?.toLowerCase?.())
-            .filter(Boolean)
+            .map(row => row.subject?.toLowerCase?.().trim())
+            .filter((subject): subject is string => Boolean(subject))
         )
       )
     }
@@ -148,13 +184,13 @@ export default async function MarksPage() {
     console.log('[Gradebook] visibleClassNums:', visibleClassNums)
     console.log('[Gradebook] allStudentsRaw:', allStudentsRaw.length)
 
-    const allStudents = allStudentsRaw.filter((s: any) =>
+    const allStudents = allStudentsRaw.filter(s =>
       visibleClassNums.includes(Number(s.class_num))
     )
 
     console.log('[Gradebook] allStudents (after filter):', allStudents.length)
 
-    const allAssignments = allAssignmentsRaw.filter((a: any) => {
+    const allAssignments = allAssignmentsRaw.filter(a => {
       const classOk = visibleClassNums.includes(Number(a.class_num))
       if (!classOk) return false
 
@@ -162,20 +198,20 @@ export default async function MarksPage() {
       return visibleSubjects.includes((a.subject ?? '').toLowerCase())
     })
 
-    const allWeights = allWeightsRaw.filter((w: any) =>
+    const allWeights = allWeightsRaw.filter(w =>
       visibleClassNums.includes(Number(w.class_num))
     )
 
-    const studentIdSet = new Set(allStudents.map((s: any) => s.id))
-    const assignmentIdSet = new Set(allAssignments.map((a: any) => a.id))
+    const studentIdSet = new Set(allStudents.map(s => s.id))
+    const assignmentIdSet = new Set(allAssignments.map(a => a.id))
 
-    const flatMarks = (marksRes.data ?? []).filter((m: any) => {
+    const flatMarks = ((marksRes.data ?? []) as FlatMarkRow[]).filter(m => {
       if (!studentIdSet.has(m.student_id)) return false
       if (!isTeacher) return true
       return visibleSubjects.includes((m.subject ?? '').toLowerCase())
     })
 
-    const filteredSubmissions = allSubmissionsRaw.filter((s: any) =>
+    const filteredSubmissions = allSubmissionsRaw.filter(s =>
       assignmentIdSet.has(s.assignment_id)
     )
 
@@ -213,22 +249,18 @@ export default async function MarksPage() {
           </header>
 
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            {isTeacher ? (
-              <ClassGradebookShell
-                allStudents={allStudents}
-                allMarks={allMarks}
-                flatMarks={flatMarks}
-                assignments={allAssignments}
-                submissions={filteredSubmissions}
-                weightRows={allWeights}
-                quizAvgByStudentId={{}}
-                assignmentAvgByStudentId={assignmentAvgByStudentId}
-                examTypes={examTypes}
-                visibleSubjects={visibleSubjects}
-              />
-            ) : (
-              <GradebookGrid students={allStudents} marks={flatMarks} />
-            )}
+            <ClassGradebookShell
+              allStudents={allStudents}
+              allMarks={allMarks}
+              assignments={allAssignments}
+              submissions={filteredSubmissions}
+              weightRows={allWeights}
+              quizAvgByStudentId={{}}
+              assignmentAvgByStudentId={assignmentAvgByStudentId}
+              examTypes={examTypes}
+              visibleSubjects={visibleSubjects}
+              readOnlyGradesOnly={isAdmin}
+            />
           </main>
         </div>
       </div>
@@ -293,7 +325,7 @@ export default async function MarksPage() {
             </span>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <GradebookGrid students={[child]} marks={marksRes.data ?? []} />
+            <GradebookGrid students={[child]} marks={marksRes.data ?? []} readOnly />
           </main>
         </div>
       </div>
@@ -352,7 +384,7 @@ export default async function MarksPage() {
             </span>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <GradebookGrid students={[student]} marks={marksRes.data ?? []} />
+            <GradebookGrid students={[student]} marks={marksRes.data ?? []} readOnly />
           </main>
         </div>
       </div>

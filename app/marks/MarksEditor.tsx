@@ -7,7 +7,6 @@ import toast from 'react-hot-toast'
 import { letterGrade } from '@/lib/calculateGrade'
 import {
   computeSubjectFinalGrades,
-  fmtSubject,
   buildExamCategoryMap,
   type WeightRow,
   type ExamType,
@@ -69,11 +68,6 @@ const LETTER_STYLE: Record<string, string> = {
 
 function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-}
-
-function avgOf(vals: (string | undefined)[]): number | null {
-  const nums = vals.map(v => Number(v)).filter(n => !isNaN(n) && n > 0)
-  return nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : null
 }
 
 function buildInitialState(
@@ -142,6 +136,7 @@ export default function MarksEditor({
   assignmentAvgByStudentId,
   examTypes: examTypesProp = [],
   visibleSubjects = [],
+  readOnlyGradesOnly = false,
 }: {
   students: Student[]
   allMarks: AllMarksData
@@ -152,6 +147,7 @@ export default function MarksEditor({
   assignmentAvgByStudentId: Record<string, number>
   examTypes?: ExamType[]
   visibleSubjects?: string[]
+  readOnlyGradesOnly?: boolean
 }) {
   const supabase = useMemo(() => createClient(), [])
 
@@ -175,7 +171,9 @@ export default function MarksEditor({
   const examNames = useMemo(() => examTypes.map(e => e.name), [examTypes])
   const examCategoryMap = useMemo(() => buildExamCategoryMap(examTypes), [examTypes])
 
-  const [activeTab, setActiveTab] = useState<'marks' | 'assignments' | 'grades'>('marks')
+  const [activeTab, setActiveTab] = useState<'marks' | 'assignments' | 'grades'>(
+    readOnlyGradesOnly ? 'grades' : 'marks'
+  )
   const [selectedExam, setSelectedExam] = useState<string>(
     () => examTypes[0]?.name ?? 'Mid Term'
   )
@@ -216,6 +214,7 @@ export default function MarksEditor({
             subject: sub,
             exam: selectedExam,
             percent,
+            source: 'manual',
           },
         ]
       })
@@ -364,27 +363,36 @@ export default function MarksEditor({
   return (
     <div>
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <div className="flex gap-1">
-          {([
-            ['marks', 'Exam Marks'],
-            ['assignments', 'Assignments'],
-            ['grades', 'Final Grade'],
-          ] as const).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                activeTab === key
-                  ? 'bg-[#1a2e1a] text-[#6fcf6f]'
-                  : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {readOnlyGradesOnly ? (
+          <div>
+            <div className="text-sm font-semibold text-gray-900">Final Grades</div>
+            <div className="text-xs text-gray-400 mt-0.5">
+              Read-only academic summary for this class.
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-1">
+            {([
+              ['marks', 'Exam Marks'],
+              ['assignments', 'Assignments'],
+              ['grades', 'Final Grade'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  activeTab === key
+                    ? 'bg-[#1a2e1a] text-[#6fcf6f]'
+                    : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {activeTab === 'marks' && (
+        {!readOnlyGradesOnly && activeTab === 'marks' && (
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex gap-1.5 flex-wrap">
               {examTypes.map(et => (
@@ -429,7 +437,7 @@ export default function MarksEditor({
         )}
       </div>
 
-      {activeTab === 'marks' && showExamForm && (
+      {!readOnlyGradesOnly && activeTab === 'marks' && showExamForm && (
         <div className="mb-4 bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap items-end gap-3">
           <div>
             <label className="block text-[11px] font-medium text-gray-500 mb-1">
@@ -475,7 +483,7 @@ export default function MarksEditor({
         </div>
       )}
 
-      {activeTab === 'marks' && (
+      {!readOnlyGradesOnly && activeTab === 'marks' && (
         <>
           {students.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
@@ -547,7 +555,7 @@ export default function MarksEditor({
         </>
       )}
 
-      {activeTab === 'assignments' && (
+      {!readOnlyGradesOnly && activeTab === 'assignments' && (
         <>
           {enrichedAssignments.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center">
@@ -773,8 +781,9 @@ export default function MarksEditor({
             </div>
           )}
           <div className="mt-2 text-[11px] text-gray-400">
-            Final grades update live from the current marks, assignment averages,
-            and configured weights.
+            {readOnlyGradesOnly
+              ? 'Read-only final grades computed from recorded marks, assignment averages, and configured weights.'
+              : 'Final grades update live from the current marks, assignment averages, and configured weights.'}
           </div>
         </>
       )}

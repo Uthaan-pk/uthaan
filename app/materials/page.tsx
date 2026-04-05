@@ -22,7 +22,7 @@ export default async function MaterialsPage() {
 
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
-  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
+  const isStaff = effectiveRole === 'teacher'
 
   if (isStaff) {
     const { data: materials } = await supabase
@@ -51,6 +51,10 @@ export default async function MaterialsPage() {
         </div>
       </div>
     )
+  }
+
+  if (effectiveRole === 'admin') {
+    redirect('/dashboard')
   }
 
   if (role === 'parent') {

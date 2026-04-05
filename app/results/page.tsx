@@ -39,6 +39,10 @@ export default async function Page() {
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
 
+  if (effectiveRole === 'admin') {
+    redirect('/marks')
+  }
+
   if (role === 'parent') {
     const { data: link } = await supabase
       .from('parent_student')

@@ -56,8 +56,11 @@ export default async function QuizPage({
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
   const isTeacher = effectiveRole === 'teacher'
-  const isAdmin = effectiveRole === 'admin'
-  const isStaff = isTeacher || isAdmin
+  const isStaff = isTeacher
+
+  if (effectiveRole === 'admin') {
+    redirect('/dashboard')
+  }
 
   const { data: quiz } = await supabase
     .from('quizzes')

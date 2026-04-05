@@ -25,7 +25,7 @@ function normalizeDate(value: unknown): string {
 
 function fullDayRangeLabel(row: LeaveRow) {
   const start = normalizeDate(
-    row.start_date ?? row.from_date ?? row.day ?? row.date ?? row.leave_date
+    row.start_date ?? row.from_date ?? row.date ?? row.leave_date
   )
   const end = normalizeDate(row.end_date ?? row.to_date ?? row.until_date ?? start)
 
@@ -35,7 +35,7 @@ function fullDayRangeLabel(row: LeaveRow) {
 }
 
 function earlyLeaveDateLabel(row: LeaveRow) {
-  const day = normalizeDate(row.day ?? row.date ?? row.leave_date ?? row.early_leave_date)
+  const day = normalizeDate(row.leave_date ?? row.date ?? row.early_leave_date)
   return day || 'Date not set'
 }
 
@@ -116,23 +116,6 @@ export default function LeaveManager({
           end_date: resolvedEnd,
           reason: reason || null,
         },
-        {
-          student_id: studentId,
-          from_date: startDate,
-          to_date: resolvedEnd,
-          reason: reason || null,
-        },
-        {
-          student_id: studentId,
-          leave_date: startDate,
-          end_date: resolvedEnd,
-          reason: reason || null,
-        },
-        {
-          student_id: studentId,
-          day: startDate,
-          reason: reason || null,
-        },
       ])
 
       setLeaves(prev => [data, ...prev])
@@ -159,17 +142,7 @@ export default function LeaveManager({
       const data = await tryInsert('student_early_leaves', [
         {
           student_id: studentId,
-          day,
-          reason: earlyReason || null,
-        },
-        {
-          student_id: studentId,
           leave_date: day,
-          reason: earlyReason || null,
-        },
-        {
-          student_id: studentId,
-          early_leave_date: day,
           reason: earlyReason || null,
         },
       ])

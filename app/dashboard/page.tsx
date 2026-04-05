@@ -5,6 +5,13 @@ import Sidebar from '@/components/Sidebar'
 import Link from 'next/link'
 import { translations, type Language } from '@/lib/translations'
 import AssignmentChecklist from './AssignmentChecklist'
+import { resolveEffectiveRole } from '@/lib/school'
+import {
+  computeSubjectFinalGrades,
+  type FlatMarkRow,
+  type WeightRow,
+} from '@/lib/gradeUtils'
+import { CURRENT_YEAR } from '@/lib/constants'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -25,6 +32,7 @@ export default async function DashboardPage() {
     .single()
 
   const role = roleData?.role
+  const effectiveRole = await resolveEffectiveRole(role ?? '')
 
   if (role === 'superadmin') {
     const impersonating = cookieStore.get('impersonate_school_id')?.value
@@ -322,6 +330,232 @@ export default async function DashboardPage() {
   }
 
   const today = new Date().toISOString().split('T')[0]
+
+  if (effectiveRole === 'admin') {
+    const [
+      studentsRes,
+      feesRes,
+      absenceRes,
+      marksRes,
+      weightsRes,
+      announcementsRes,
+    ] = await Promise.all([
+      supabase
+        .from('students')
+        .select('id, name, class_num')
+        .eq('is_active', true),
+      supabase
+        .from('fees')
+        .select('student_id, paid, due_date'),
+      supabase
+        .from('attendance_logs')
+        .select('student_id, status'),
+      supabase
+        .from('marks')
+        .select('student_id, subject, exam, percent'),
+      supabase
+        .from('grade_weights')
+        .select(
+          'id, class_num, subject, assignment_weight, exam_weight, final_weight, quiz_weight'
+        )
+        .eq('academic_year', CURRENT_YEAR),
+      supabase
+        .from('announcements')
+        .select('id, title, created_at')
+        .order('created_at', { ascending: false })
+        .limit(3),
+    ])
+
+    const students = studentsRes.data ?? []
+    const totalStudents = students.length
+    const recentAnnouncements = announcementsRes.data ?? []
+
+    const overdueFeeStudentIds = new Set(
+      (feesRes.data ?? [])
+        .filter(f => !f.paid && f.due_date < today)
+        .map(f => f.student_id)
+    )
+
+    const absencesByStudent = (absenceRes.data ?? []).reduce<Record<string, number>>(
+      (acc, row) => {
+        if (row.status === 'absent') {
+          acc[row.student_id] = (acc[row.student_id] ?? 0) + 1
+        }
+        return acc
+      },
+      {}
+    )
+    const studentsWithHighAbsences = Object.values(absencesByStudent).filter(
+      count => count > 10
+    ).length
+
+    const marks = (marksRes.data ?? []) as FlatMarkRow[]
+    const weights = (weightsRes.data ?? []) as WeightRow[]
+    const studentsFailing = students.filter(student => {
+      const grades = computeSubjectFinalGrades(student.id, marks, weights)
+      return grades.some(grade => grade.overall < 50)
+    }).length
+
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar
+          email={user.email!}
+          role="admin"
+          isImpersonating={role === 'superadmin'}
+        />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
+            <h1 className="text-sm font-semibold text-gray-900">
+              {t.dashboard}
+            </h1>
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              Admin overview
+            </span>
+          </header>
+
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-3xl space-y-5">
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/students"
+                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    {t.totalStudents}
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {totalStudents}
+                  </div>
+                  <div className="text-[11px] text-gray-400 mt-1">
+                    {t.viewAllStudents} →
+                  </div>
+                </Link>
+
+                <Link
+                  href="/fees"
+                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                    overdueFeeStudentIds.size > 0
+                      ? 'border-l-4 border-l-red-400 border-gray-100'
+                      : 'border-gray-100'
+                  }`}
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Overdue Fees
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {overdueFeeStudentIds.size}
+                  </div>
+                  <div className="text-[11px] text-gray-400 mt-1">
+                    Students with unpaid overdue fees →
+                  </div>
+                </Link>
+
+                <Link
+                  href="/attendance"
+                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                    studentsWithHighAbsences > 0
+                      ? 'border-l-4 border-l-amber-400 border-gray-100'
+                      : 'border-gray-100'
+                  }`}
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    High Absences
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {studentsWithHighAbsences}
+                  </div>
+                  <div className="text-[11px] text-gray-400 mt-1">
+                    Students above 10 absences →
+                  </div>
+                </Link>
+
+                <Link
+                  href="/marks"
+                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                    studentsFailing > 0
+                      ? 'border-l-4 border-l-red-400 border-gray-100'
+                      : 'border-gray-100'
+                  }`}
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    Failing Students
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {studentsFailing}
+                  </div>
+                  <div className="text-[11px] text-gray-400 mt-1">
+                    Students failing one or more subjects →
+                  </div>
+                </Link>
+              </div>
+
+              <div className="bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+                <div>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide">
+                    Admin tools
+                  </div>
+                  <div className="text-xl font-semibold text-gray-900 mt-0.5">
+                    Read-only academics
+                  </div>
+                </div>
+
+                <div className="w-px h-8 bg-gray-100 hidden sm:block" />
+
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/admin"
+                    className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
+                  >
+                    {t.adminPanel} →
+                  </Link>
+                  <Link
+                    href="/admin/leaves"
+                    className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
+                  >
+                    Leave Management →
+                  </Link>
+                  <Link
+                    href="/marks"
+                    className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
+                  >
+                    Final grades →
+                  </Link>
+                </div>
+              </div>
+
+              {recentAnnouncements.length > 0 && (
+                <div>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
+                    {t.recentAnnouncements}
+                  </div>
+                  <div className="space-y-2">
+                    {recentAnnouncements.map((a) => (
+                      <div
+                        key={a.id}
+                        className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#6fcf6f] flex-shrink-0" />
+                        <div className="text-sm text-gray-900 flex-1">
+                          {a.title}
+                        </div>
+                        <div className="text-[11px] text-gray-400 flex-shrink-0">
+                          {new Date(a.created_at).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
   const [
     studentsRes,
     assignmentsRes,
@@ -359,7 +593,7 @@ export default async function DashboardPage() {
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
       <Sidebar
         email={user.email!}
-        role={role === 'superadmin' ? 'admin' : (role ?? '')}
+        role={effectiveRole}
         isImpersonating={role === 'superadmin'}
       />
       <div className="flex-1 flex flex-col overflow-hidden">

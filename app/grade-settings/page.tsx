@@ -34,7 +34,7 @@ export default async function GradeSettingsPage() {
   const role = roleData?.role
   const schoolId = roleData?.school_id ?? null
 
-  if (role !== 'admin' && role !== 'teacher') redirect('/dashboard')
+  if (role !== 'teacher') redirect('/dashboard')
   if (!schoolId) redirect('/dashboard')
 
   let query = supabase
@@ -47,9 +47,7 @@ export default async function GradeSettingsPage() {
     .order('class_num', { ascending: true })
     .order('subject', { ascending: true })
 
-  if (role === 'teacher') {
-    query = query.eq('teacher_id', user.id)
-  }
+  query = query.eq('teacher_id', user.id)
 
   const { data: weights } = await query
 

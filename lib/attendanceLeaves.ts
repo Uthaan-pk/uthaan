@@ -17,7 +17,7 @@ function pickDate(row: Record<string, unknown>, keys: string[]): string | null {
 }
 
 export function leaveCoversDay(row: Record<string, unknown>, day: string): boolean {
-  const start = pickDate(row, ['start_date', 'from_date', 'day', 'date', 'leave_date'])
+  const start = pickDate(row, ['start_date', 'from_date', 'date', 'leave_date'])
   if (!start) return false
 
   const end = pickDate(row, ['end_date', 'to_date', 'until_date']) ?? start
@@ -25,7 +25,7 @@ export function leaveCoversDay(row: Record<string, unknown>, day: string): boole
 }
 
 export function earlyLeaveOnDay(row: Record<string, unknown>, day: string): boolean {
-  const d = pickDate(row, ['day', 'date', 'leave_date', 'early_leave_date'])
+  const d = pickDate(row, ['leave_date', 'date', 'early_leave_date'])
   return d === day
 }
 

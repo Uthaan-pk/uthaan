@@ -115,9 +115,11 @@ export default function Sidebar({
     width: '14rem',
   }
 
-  const isStaff = role === 'teacher' || role === 'admin'
+  const isTeacher = role === 'teacher'
+  const isAdmin = role === 'admin'
+  const isStaff = isTeacher || isAdmin
   const isParent = role === 'parent'
-  const canSeeResults = isStaff || role === 'student' || isParent
+  const canSeeResults = isTeacher || role === 'student' || isParent
 
   return (
     <>
@@ -274,13 +276,15 @@ export default function Sidebar({
             {t.academic}
           </p>
 
-          <NavItem
-            label={t.assignments}
-            href="/assignments"
-            active={pathname.startsWith('/assignments')}
-            onClose={close}
-            isUrdu={isUrdu}
-          />
+          {(isTeacher || role === 'student' || isParent) && (
+            <NavItem
+              label={t.assignments}
+              href="/assignments"
+              active={pathname.startsWith('/assignments')}
+              onClose={close}
+              isUrdu={isUrdu}
+            />
+          )}
 
           <NavItem
             label={t.gradebook}
@@ -308,13 +312,15 @@ export default function Sidebar({
             isUrdu={isUrdu}
           />
 
-          <NavItem
-            label={t.quizzes}
-            href="/quizzes"
-            active={pathname.startsWith('/quizzes')}
-            onClose={close}
-            isUrdu={isUrdu}
-          />
+          {(isTeacher || role === 'student' || isParent) && (
+            <NavItem
+              label={t.quizzes}
+              href="/quizzes"
+              active={pathname.startsWith('/quizzes')}
+              onClose={close}
+              isUrdu={isUrdu}
+            />
+          )}
 
           <NavItem
             label={t.timetable}
@@ -324,13 +330,15 @@ export default function Sidebar({
             isUrdu={isUrdu}
           />
 
-          <NavItem
-            label={t.materials}
-            href="/materials"
-            active={pathname === '/materials'}
-            onClose={close}
-            isUrdu={isUrdu}
-          />
+          {(isTeacher || role === 'student' || isParent) && (
+            <NavItem
+              label={t.materials}
+              href="/materials"
+              active={pathname === '/materials'}
+              onClose={close}
+              isUrdu={isUrdu}
+            />
+          )}
 
           {(role === 'admin' || role === 'student' || isParent) && (
             <NavItem
@@ -358,7 +366,7 @@ export default function Sidebar({
             />
           )}
 
-          {isStaff && (
+          {isTeacher && (
             <NavItem
               label={t.gradeSettings}
               href="/grade-settings"

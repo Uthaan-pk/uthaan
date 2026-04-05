@@ -112,6 +112,7 @@ export default function AttendanceMarker({
     setSaving(true)
 
     const rows = visibleStudents
+      .filter(s => !isLocked(s.id))
       .map(s => ({
         student_id: s.id,
         day: today,

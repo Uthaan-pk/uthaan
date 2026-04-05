@@ -24,8 +24,7 @@ export default async function QuizzesPage() {
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
   const isTeacher = effectiveRole === 'teacher'
-  const isAdmin = effectiveRole === 'admin'
-  const isStaff = isTeacher || isAdmin
+  const isStaff = isTeacher
 
   if (isStaff) {
     const timetableQuery = isTeacher
@@ -118,6 +117,10 @@ export default async function QuizzesPage() {
         </div>
       </div>
     )
+  }
+
+  if (effectiveRole === 'admin') {
+    redirect('/dashboard')
   }
 
   if (role === 'parent') {

@@ -22,13 +22,24 @@ function gradeColor(p: number | null) {
   return 'text-red-600'
 }
 
-export default function GradebookGrid({ students, marks: initialMarks }: {
+export default function GradebookGrid({
+  students,
+  marks: initialMarks,
+  readOnly = true,
+  allowedExams,
+}: {
   students: Student[]
   marks: MarkRow[]
+  readOnly?: boolean
+  allowedExams?: string[]
 }) {
   const supabase = useMemo(() => createClient(), [])
   const [marks, setMarks] = useState<MarkRow[]>(initialMarks)
-  const [selectedExam, setSelectedExam] = useState('Mid Term')
+  const examOptions = useMemo(
+    () => (allowedExams && allowedExams.length > 0 ? allowedExams : EXAMS),
+    [allowedExams]
+  )
+  const [selectedExam, setSelectedExam] = useState(() => examOptions[0] ?? 'Mid Term')
   const [editingCell, setEditingCell] = useState<{ studentId: string; subject: string } | null>(null)
   const [editValue, setEditValue] = useState('')
   const [saving, setSaving] = useState(false)
@@ -43,13 +54,14 @@ export default function GradebookGrid({ students, marks: initialMarks }: {
   }, [marks, selectedExam])
 
   function startEdit(studentId: string, subject: string) {
+    if (readOnly) return
     const existing = markMap[studentId]?.[subject]
     setEditingCell({ studentId, subject })
     setEditValue(existing?.percent != null ? String(existing.percent) : '')
   }
 
   async function saveCell() {
-    if (!editingCell) return
+    if (readOnly || !editingCell) return
     const pct = parseFloat(editValue)
     if (isNaN(pct) || pct < 0 || pct > 100) { toast.error('Enter 0–100'); return }
     setSaving(true)
@@ -88,16 +100,22 @@ export default function GradebookGrid({ students, marks: initialMarks }: {
     <div>
       {/* Exam selector */}
       <div className="flex gap-2 mb-5 flex-wrap">
-        {EXAMS.map(e => (
+        {examOptions.map(e => (
           <button key={e} onClick={() => setSelectedExam(e)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${selectedExam === e ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]' : 'bg-white border-gray-200 text-gray-500 hover:text-gray-700'}`}>
             {e}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-3 text-[11px] text-gray-400">
-          <span><span className="inline-block w-2 h-2 rounded-full bg-[#6fcf6f] mr-1"/>auto from submission</span>
-          <span><span className="inline-block w-2 h-2 rounded-full bg-purple-400 mr-1"/>manual entry</span>
-        </div>
+        {readOnly ? (
+          <div className="ml-auto text-[11px] text-gray-400">
+            Read-only view
+          </div>
+        ) : (
+          <div className="ml-auto flex items-center gap-3 text-[11px] text-gray-400">
+            <span><span className="inline-block w-2 h-2 rounded-full bg-[#6fcf6f] mr-1"/>auto from submission</span>
+            <span><span className="inline-block w-2 h-2 rounded-full bg-purple-400 mr-1"/>manual entry</span>
+          </div>
+        )}
       </div>
 
       {students.length === 0 ? (
@@ -139,7 +157,7 @@ export default function GradebookGrid({ students, marks: initialMarks }: {
                           const isEditing = editingCell?.studentId === student.id && editingCell?.subject === subject
                           return (
                             <td key={subject} className="px-2 py-2 text-center">
-                              {isEditing ? (
+                              {!readOnly && isEditing ? (
                                 <div className="flex items-center gap-1 justify-center">
                                   <input type="number" min="0" max="100" value={editValue} onChange={e => setEditValue(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') saveCell(); if (e.key === 'Escape') setEditingCell(null) }}
@@ -148,8 +166,11 @@ export default function GradebookGrid({ students, marks: initialMarks }: {
                                   <button onClick={() => setEditingCell(null)} className="text-[10px] text-gray-400">✕</button>
                                 </div>
                               ) : (
-                                <button onClick={() => startEdit(student.id, subject)}
-                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition-colors ${gradeColor(mk?.percent ?? null)}`}>
+                                <button
+                                  onClick={() => startEdit(student.id, subject)}
+                                  disabled={readOnly}
+                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded transition-colors ${readOnly ? '' : 'hover:bg-gray-100'} ${gradeColor(mk?.percent ?? null)}`}
+                                >
                                   {mk?.percent != null ? (
                                     <>
                                       <span className={`inline-block w-1.5 h-1.5 rounded-full ${mk.source === 'manual' ? 'bg-purple-400' : 'bg-[#6fcf6f]'}`}/>
@@ -175,7 +196,11 @@ export default function GradebookGrid({ students, marks: initialMarks }: {
               </table>
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-gray-400">Click any cell to edit · Enter to save · Esc to cancel</div>
+          <div className="mt-2 text-[11px] text-gray-400">
+            {readOnly
+              ? 'Read-only gradebook.'
+              : 'Click any cell to edit · Enter to save · Esc to cancel'}
+          </div>
         </>
       )}
     </div>

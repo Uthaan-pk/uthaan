@@ -13,13 +13,6 @@ type Student = {
   user_id?: string | null
 }
 
-type FlatMarkRow = {
-  student_id: string
-  subject: string
-  exam: string
-  percent: number | null
-}
-
 type AllMarksData = Record<string, Record<string, Record<string, number | null>>>
 
 type Assignment = {
@@ -43,7 +36,6 @@ type Submission = {
 export default function ClassGradebookShell({
   allStudents,
   allMarks,
-  flatMarks,
   assignments,
   submissions,
   weightRows,
@@ -51,10 +43,10 @@ export default function ClassGradebookShell({
   assignmentAvgByStudentId,
   examTypes = [],
   visibleSubjects = [],
+  readOnlyGradesOnly = false,
 }: {
   allStudents: Student[]
   allMarks: AllMarksData
-  flatMarks: FlatMarkRow[]
   assignments: Assignment[]
   submissions: Submission[]
   weightRows: WeightRow[]
@@ -62,6 +54,7 @@ export default function ClassGradebookShell({
   assignmentAvgByStudentId: Record<string, number>
   examTypes?: ExamType[]
   visibleSubjects?: string[]
+  readOnlyGradesOnly?: boolean
 }) {
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
 
@@ -130,7 +123,9 @@ export default function ClassGradebookShell({
         <div className="mb-5">
           <h2 className="text-sm font-semibold text-gray-900">Select a Class</h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Choose a class to enter marks, review assignments, and see final grades.
+            {readOnlyGradesOnly
+              ? 'Choose a class to review final grades.'
+              : 'Choose a class to enter marks, review assignments, and see final grades.'}
           </p>
           {visibleSubjectList && (
             <p className="text-xs text-gray-400 mt-1">
@@ -244,6 +239,7 @@ export default function ClassGradebookShell({
         assignmentAvgByStudentId={assignmentAvgByStudentId}
         examTypes={examTypes}
         visibleSubjects={visibleSubjects}
+        readOnlyGradesOnly={readOnlyGradesOnly}
       />
     </div>
   )

@@ -53,7 +53,7 @@ export default async function AnnouncementsPage() {
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={effectiveRole} />
+        <Sidebar email={user.email!} role={effectiveRole} isImpersonating={role === 'superadmin'} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">

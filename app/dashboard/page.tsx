@@ -357,7 +357,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role={role ?? ''} />
+      <Sidebar
+        email={user.email!}
+        role={role === 'superadmin' ? 'admin' : (role ?? '')}
+        isImpersonating={role === 'superadmin'}
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">

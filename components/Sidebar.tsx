@@ -85,9 +85,11 @@ function LangToggle() {
 export default function Sidebar({
   email,
   role,
+  isImpersonating = false,
 }: {
   email: string
   role: string
+  isImpersonating?: boolean
 }) {
   const pathname = usePathname()
   const username = email.split('@')[0]
@@ -202,6 +204,18 @@ export default function Sidebar({
             </button>
           )}
         </div>
+
+        {isImpersonating && (
+          <div className="bg-amber-500/15 border-b border-amber-500/25 px-4 py-2 flex items-center justify-between gap-2">
+            <span className="text-[10px] text-amber-300 font-medium">Browsing school</span>
+            <a
+              href="/auth/exit-school"
+              className="text-[10px] text-amber-300 hover:text-amber-100 underline underline-offset-2 transition-colors whitespace-nowrap"
+            >
+              Exit ↗
+            </a>
+          </div>
+        )}
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           <p

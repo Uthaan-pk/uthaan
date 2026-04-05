@@ -94,7 +94,7 @@ export default async function QuizPage({
   if (isStaff) {
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-        <Sidebar email={user.email!} role={effectiveRole} />
+        <Sidebar email={user.email!} role={effectiveRole} isImpersonating={role === 'superadmin'} />
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">

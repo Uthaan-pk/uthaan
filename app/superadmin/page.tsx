@@ -1,0 +1,230 @@
+import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  toggleSchoolStatus,
+  deleteSchool,
+  impersonateSchool,
+  stopImpersonating,
+} from './actions'
+import OnboardSchoolForm from './OnboardSchoolForm'
+
+type SchoolRow = {
+  id: string
+  name: string
+  slug: string
+  is_active: boolean | null
+  created_at: string | null
+  student_count: number
+  user_count: number
+}
+
+export default async function SuperadminPage() {
+  // ── Auth guard ─────────────────────────────────────────────────────────
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .single()
+
+  if (roleData?.role !== 'superadmin') redirect('/dashboard')
+
+  // ── Data ───────────────────────────────────────────────────────────────
+  const admin = createAdminClient()
+
+  const [schoolsRes, studentsRes, usersRes] = await Promise.all([
+    admin.from('schools').select('id, name, slug, is_active, created_at').order('created_at'),
+    admin.from('students').select('id, school_id'),
+    admin.from('user_roles').select('user_id, school_id, role'),
+  ])
+
+  const schools: SchoolRow[] = (schoolsRes.data ?? []).map((s: any) => ({
+    ...s,
+    student_count: (studentsRes.data ?? []).filter((st: any) => st.school_id === s.id).length,
+    user_count: (usersRes.data ?? []).filter(
+      (u: any) => u.school_id === s.id && u.role !== 'superadmin'
+    ).length,
+  }))
+
+  // ── Active impersonation ────────────────────────────────────────────────
+  const cookieStore = await cookies()
+  const impersonatingId = cookieStore.get('impersonate_school_id')?.value ?? null
+  const impersonatingSchool = impersonatingId
+    ? schools.find((s) => s.id === impersonatingId)
+    : null
+
+  // ── Render ─────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-[#f8f7f4]">
+      {/* Top bar */}
+      <header className="bg-[#1a2e1a] px-6 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold text-[#6fcf6f] tracking-tight">Uthaan</span>
+          <span className="text-white/30 text-xs">·</span>
+          <span className="text-white/60 text-xs font-medium uppercase tracking-widest">Superadmin</span>
+        </div>
+        <a
+          href="/dashboard"
+          className="text-xs text-white/50 hover:text-white/80 transition-colors"
+        >
+          ← App
+        </a>
+      </header>
+
+      {/* Impersonation banner */}
+      {impersonatingSchool && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5 flex items-center justify-between">
+          <span className="text-xs text-amber-800 font-medium">
+            Browsing as: <span className="font-bold">{impersonatingSchool.name}</span>
+          </span>
+          <form action={stopImpersonating}>
+            <button
+              type="submit"
+              className="text-xs text-amber-700 hover:text-amber-900 underline underline-offset-2 transition-colors"
+            >
+              Stop impersonating
+            </button>
+          </form>
+        </div>
+      )}
+
+      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+        {/* Add New School */}
+        <section className="bg-white rounded-xl border border-gray-100 p-6">
+          <div className="mb-5">
+            <h2 className="text-sm font-semibold text-gray-900">Add New School</h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Creates the school and an admin account in one step.
+            </p>
+          </div>
+          <OnboardSchoolForm />
+        </section>
+
+        {/* Schools table */}
+        <section>
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">
+            Schools{' '}
+            <span className="text-gray-400 font-normal">({schools.length})</span>
+          </h2>
+
+          {schools.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-100 px-5 py-10 text-center text-sm text-gray-400">
+              No schools yet.
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Name</th>
+                    <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Slug</th>
+                    <th className="text-right text-xs font-medium text-gray-400 px-5 py-3">Students</th>
+                    <th className="text-right text-xs font-medium text-gray-400 px-5 py-3">Users</th>
+                    <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Status</th>
+                    <th className="text-left text-xs font-medium text-gray-400 px-5 py-3">Created</th>
+                    <th className="text-right text-xs font-medium text-gray-400 px-5 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schools.map((school, i) => (
+                    <tr
+                      key={school.id}
+                      className={i < schools.length - 1 ? 'border-b border-gray-50' : ''}
+                    >
+                      <td className="px-5 py-3.5 font-medium text-gray-900">{school.name}</td>
+                      <td className="px-5 py-3.5 text-gray-400 font-mono text-xs">{school.slug}</td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-gray-700">
+                        {school.student_count}
+                      </td>
+                      <td className="px-5 py-3.5 text-right tabular-nums text-gray-700">
+                        {school.user_count}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {school.is_active === false ? (
+                          <span className="text-[10px] font-medium bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded-full">
+                            Suspended
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/20 px-2 py-0.5 rounded-full">
+                            Active
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 text-xs text-gray-400">
+                        {school.created_at
+                          ? new Date(school.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })
+                          : '—'}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Impersonate */}
+                          <form action={impersonateSchool.bind(null, school.id)}>
+                            <button
+                              type="submit"
+                              className="text-xs text-[#1a2e1a]/60 hover:text-[#1a2e1a] border border-gray-200 hover:border-[#6fcf6f]/50 px-2.5 py-1 rounded-lg transition-colors"
+                            >
+                              Browse
+                            </button>
+                          </form>
+
+                          {/* Suspend / Activate */}
+                          <form action={toggleSchoolStatus.bind(null, school.id, school.is_active !== false)}>
+                            <button
+                              type="submit"
+                              className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                                school.is_active === false
+                                  ? 'text-green-700 border-green-200 hover:border-green-400 hover:text-green-800'
+                                  : 'text-amber-700 border-amber-200 hover:border-amber-400 hover:text-amber-800'
+                              }`}
+                            >
+                              {school.is_active === false ? 'Activate' : 'Suspend'}
+                            </button>
+                          </form>
+
+                          {/* Delete */}
+                          <DeleteButton schoolId={school.id} schoolName={school.name} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
+  )
+}
+
+// ── Delete button with confirmation (client component) ─────────────────────
+
+function DeleteButton({ schoolId, schoolName }: { schoolId: string; schoolName: string }) {
+  return (
+    <form
+      action={deleteSchool.bind(null, schoolId)}
+      onSubmit={
+        // inline onSubmit via script attribute won't work in RSC; use a client trick below
+        undefined
+      }
+    >
+      <DeleteConfirmButton schoolName={schoolName} />
+    </form>
+  )
+}
+
+// Needs 'use client' for onClick confirm — extracted as a tiny client component
+import DeleteConfirmButton from './DeleteConfirmButton'

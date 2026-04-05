@@ -19,6 +19,29 @@ export type WeightRow = {
   quiz_weight: number
 }
 
+export type ExamType = {
+  id: string
+  name: string
+  category: 'mid' | 'final' | 'unit'
+}
+
+/** Default mapping for the three built-in exam names */
+export const DEFAULT_EXAM_CATEGORY_MAP: Record<string, 'mid' | 'final' | 'unit'> = {
+  'Mid Term':   'mid',
+  'Final Term': 'final',
+  'Unit Test':  'unit',
+}
+
+/** Build a name→category map from an ExamType array (falls back to DEFAULT if empty) */
+export function buildExamCategoryMap(
+  examTypes: ExamType[]
+): Record<string, 'mid' | 'final' | 'unit'> {
+  if (examTypes.length === 0) return DEFAULT_EXAM_CATEGORY_MAP
+  const map: Record<string, 'mid' | 'final' | 'unit'> = {}
+  for (const et of examTypes) map[et.name] = et.category
+  return map
+}
+
 export type SubjectGrade = {
   subject: string
   displayName: string
@@ -77,10 +100,9 @@ function avg(vals: (number | null | undefined)[]): number | null {
 /**
  * Compute a final grade for each subject that has at least one mark recorded.
  *
- * Mapping of exam names → GradeInput fields:
- *   'Mid Term'   → examAvg
- *   'Final Term' → finalAvg
- *   'Unit Test'  → assignmentAvg (falls back to assignmentAvg arg if no Unit Test)
+ * examCategoryMap maps exam names → 'mid' | 'final' | 'unit'.
+ * Multiple marks in the same category are averaged together.
+ * Defaults to the three built-in exam names when not provided.
  *
  * If a WeightRow exists for the subject, uses calculateGrade with those weights.
  * Otherwise falls back to a simple average across all available exam values.
@@ -91,28 +113,27 @@ export function computeSubjectFinalGrades(
   weightRows: WeightRow[],
   quizAvg: number | null = null,
   assignmentAvg: number | null = null,
+  examCategoryMap: Record<string, 'mid' | 'final' | 'unit'> = DEFAULT_EXAM_CATEGORY_MAP,
 ): SubjectGrade[] {
-  // Bucket marks by subject and exam type
-  const bySubject: Record<
-    string,
-    { mid: number | null; final: number | null; unit: number | null }
-  > = {}
+  // Bucket marks by subject → category → values[]
+  const bySubject: Record<string, { mid: number[]; final: number[]; unit: number[] }> = {}
 
   for (const m of marks) {
     if (m.student_id !== studentId || m.percent == null) continue
     const sub = m.subject.toLowerCase()
-    if (!bySubject[sub]) bySubject[sub] = { mid: null, final: null, unit: null }
-    if (m.exam === 'Mid Term')        bySubject[sub].mid   = m.percent
-    else if (m.exam === 'Final Term') bySubject[sub].final = m.percent
-    else if (m.exam === 'Unit Test')  bySubject[sub].unit  = m.percent
+    if (!bySubject[sub]) bySubject[sub] = { mid: [], final: [], unit: [] }
+    const cat = examCategoryMap[m.exam] ?? 'unit'
+    bySubject[sub][cat].push(m.percent)
   }
 
   const result: SubjectGrade[] = []
 
   for (const [subject, exams] of Object.entries(bySubject)) {
-    const available = [exams.mid, exams.final, exams.unit].filter(
-      (v): v is number => v != null
-    )
+    const midAvg   = avg(exams.mid)
+    const finalAvg = avg(exams.final)
+    const unitAvg  = avg(exams.unit)
+
+    const available = [midAvg, finalAvg, unitAvg].filter((v): v is number => v != null)
     if (available.length === 0) continue
 
     const weights = weightRows.find(w => w.subject.toLowerCase() === subject)
@@ -127,9 +148,9 @@ export function computeSubjectFinalGrades(
       }
       const gr = calculateGrade(
         {
-          examAvg:       exams.mid,
-          finalAvg:      exams.final,
-          assignmentAvg: exams.unit ?? assignmentAvg,
+          examAvg:       midAvg,
+          finalAvg:      finalAvg,
+          assignmentAvg: unitAvg ?? assignmentAvg,
           quizAvg,
         },
         gradeWeights

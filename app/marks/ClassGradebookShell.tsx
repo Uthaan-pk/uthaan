@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import MarksEditor from './MarksEditor'
 import { CURRENT_TERM } from '@/lib/constants'
-import type { WeightRow } from '@/lib/gradeUtils'
+import type { WeightRow, ExamType } from '@/lib/gradeUtils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -53,6 +53,8 @@ export default function ClassGradebookShell({
   weightRows,
   quizAvgByStudentId,
   assignmentAvgByStudentId,
+  examTypes = [],
+  visibleSubjects = [],
 }: {
   allStudents: Student[]
   allMarks: AllMarksData
@@ -62,6 +64,8 @@ export default function ClassGradebookShell({
   weightRows: WeightRow[]
   quizAvgByStudentId: Record<string, number>
   assignmentAvgByStudentId: Record<string, number>
+  examTypes?: ExamType[]
+  visibleSubjects?: string[]
 }) {
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
 
@@ -125,7 +129,7 @@ export default function ClassGradebookShell({
 
         {classNums.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
-            No classes found. Add active students first.
+            No classes are currently assigned to this account.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -213,6 +217,8 @@ export default function ClassGradebookShell({
         submissions={submissions}
         quizAvgByStudentId={quizAvgByStudentId}
         assignmentAvgByStudentId={assignmentAvgByStudentId}
+        examTypes={examTypes}
+        visibleSubjects={visibleSubjects}
       />
     </div>
   )

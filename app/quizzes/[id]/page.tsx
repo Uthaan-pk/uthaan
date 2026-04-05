@@ -144,28 +144,28 @@ export default async function QuizPage({
     )
   }
 
-  // Count how many attempts this student has already used
+  // Count how many attempts this student has already used (with scores for past-results view)
   const { data: submissions } = await supabase
     .from('quiz_submissions')
-    .select('id')
+    .select('id, score, submitted_at')
     .eq('quiz_id', id)
     .eq('user_id', user.id)
+    .order('submitted_at', { ascending: true })
 
   const submissionCount = submissions?.length ?? 0
   const maxAttempts = quiz.max_attempts ?? 1
 
-  // All attempts exhausted
+  // All attempts exhausted — show past results
   if (submissionCount >= maxAttempts) {
+    const total = questions.length
+
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role={role ?? ''} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
-              <Link
-                href="/quizzes"
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-              >
+              <Link href="/quizzes" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
                 ← Quizzes
               </Link>
               <span className="text-gray-200">/</span>
@@ -175,16 +175,42 @@ export default async function QuizPage({
               {CURRENT_TERM}
             </span>
           </header>
-          <main className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-sm text-gray-500 mb-1">You have used all your attempts for this quiz.</div>
-              <div className="text-xs text-gray-400 mb-4">
-                {maxAttempts} of {maxAttempts} attempt{maxAttempts !== 1 ? 's' : ''} used.
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-2xl space-y-4">
+              <div className="bg-white rounded-xl border border-gray-100 px-5 py-4">
+                <div className="text-xs text-gray-500 mb-3">
+                  All {maxAttempts} attempt{maxAttempts !== 1 ? 's' : ''} used.
+                </div>
+                <div className="space-y-2">
+                  {(submissions ?? []).map((sub, i) => {
+                    const pct = total > 0 ? Math.round(((sub.score ?? 0) / total) * 100) : 0
+                    const passed = pct >= 50
+                    return (
+                      <div key={sub.id} className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0">
+                        <span className="text-sm text-gray-700">Attempt {i + 1}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-400">
+                            {new Date(sub.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          </span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${passed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                            {pct}%
+                          </span>
+                          <span className="text-[11px] text-gray-400">{sub.score ?? 0}/{total}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {(submissions ?? []).length > 0 && total > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Best score</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {Math.round((Math.max(...(submissions ?? []).map(s => s.score ?? 0)) / total) * 100)}%
+                    </span>
+                  </div>
+                )}
               </div>
-              <Link
-                href="/quizzes"
-                className="text-xs text-[#1a2e1a] underline underline-offset-2"
-              >
+              <Link href="/quizzes" className="inline-block text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2 rounded-lg transition-colors">
                 ← Back to quizzes
               </Link>
             </div>

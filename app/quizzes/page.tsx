@@ -228,15 +228,19 @@ export default async function QuizzesPage() {
     const quizIds = (quizzes ?? []).map(q => q.id)
 
     const submissionCounts: Record<string, number> = {}
+    const highestScores: Record<string, number> = {}
     if (quizIds.length > 0) {
       const { data: submissions } = await supabase
         .from('quiz_submissions')
-        .select('quiz_id')
+        .select('quiz_id, score')
         .eq('user_id', user.id)
         .in('quiz_id', quizIds)
 
       for (const s of submissions ?? []) {
         submissionCounts[s.quiz_id] = (submissionCounts[s.quiz_id] ?? 0) + 1
+        if (typeof s.score === 'number') {
+          highestScores[s.quiz_id] = Math.max(highestScores[s.quiz_id] ?? 0, s.score)
+        }
       }
     }
 
@@ -269,6 +273,10 @@ export default async function QuizzesPage() {
                     const subCount = submissionCounts[quiz.id] ?? 0
                     const maxAtt = quiz.max_attempts ?? 1
                     const fullyAttempted = subCount >= maxAtt
+                    const best = highestScores[quiz.id]
+                    const bestPct = (best != null && questionCount > 0)
+                      ? Math.round((best / questionCount) * 100)
+                      : null
 
                     return (
                       <div
@@ -279,25 +287,41 @@ export default async function QuizzesPage() {
                           <div className="text-sm font-medium text-gray-900 truncate">
                             {quiz.title}
                           </div>
-                          <div className="text-xs text-gray-400 mt-0.5">
-                            {quiz.subject} · {quiz.time_limit} min ·{' '}
-                            {questionCount} question
-                            {questionCount !== 1 ? 's' : ''}
+                          <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                            <span>{quiz.subject} · {quiz.time_limit} min · {questionCount} question{questionCount !== 1 ? 's' : ''}</span>
+                            {bestPct !== null && (
+                              <span className={`font-medium px-1.5 py-0.5 rounded text-[10px] ${
+                                bestPct >= 80 ? 'bg-green-50 text-green-700' :
+                                bestPct >= 50 ? 'bg-amber-50 text-amber-700' :
+                                'bg-red-50 text-red-600'
+                              }`}>
+                                Best: {bestPct}%
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        <div className="flex-shrink-0">
-                          {fullyAttempted ? (
-                            <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600">
-                              Submitted
-                            </span>
-                          ) : (
+                        <div className="flex-shrink-0 flex items-center gap-2">
+                          {subCount > 0 && (
+                            <Link
+                              href={`/quizzes/${quiz.id}`}
+                              className="text-[10px] font-medium text-gray-500 hover:text-gray-700 border border-gray-200 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap"
+                            >
+                              Past results
+                            </Link>
+                          )}
+                          {!fullyAttempted && (
                             <Link
                               href={`/quizzes/${quiz.id}`}
                               className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
                             >
-                              Take quiz
+                              {subCount > 0 ? `Retake (${maxAtt - subCount} left)` : 'Take quiz'}
                             </Link>
+                          )}
+                          {fullyAttempted && subCount === 0 && (
+                            <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600">
+                              Submitted
+                            </span>
                           )}
                         </div>
                       </div>

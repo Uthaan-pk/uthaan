@@ -1,10 +1,17 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { letterGrade } from '@/lib/calculateGrade'
-import { computeSubjectFinalGrades, fmtSubject, type WeightRow } from '@/lib/gradeUtils'
+import {
+  computeSubjectFinalGrades,
+  fmtSubject,
+  buildExamCategoryMap,
+  type WeightRow,
+  type ExamType,
+} from '@/lib/gradeUtils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,9 +48,13 @@ type Submission = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const SUBJECTS = ['urdu', 'english', 'math', 'science', 'islamiat'] as const
-const EXAMS    = ['Mid Term', 'Final Term', 'Unit Test'] as const
-type Exam      = typeof EXAMS[number]
+const ALL_SUBJECTS = ['urdu', 'english', 'math', 'science', 'islamiat'] as const
+
+const DEFAULT_EXAM_TYPES: ExamType[] = [
+  { id: 'default-mid',   name: 'Mid Term',   category: 'mid'   },
+  { id: 'default-final', name: 'Final Term', category: 'final' },
+  { id: 'default-unit',  name: 'Unit Test',  category: 'unit'  },
+]
 
 const LETTER_STYLE: Record<string, string> = {
   'A+': 'text-[#1a2e1a] bg-[#6fcf6f]/20',
@@ -65,13 +76,18 @@ function avgOf(vals: (string | undefined)[]): number | null {
   return nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : null
 }
 
-function buildInitialState(students: Student[], allMarks: AllMarksData): MarksState {
+function buildInitialState(
+  students: Student[],
+  allMarks: AllMarksData,
+  examNames: string[],
+  subjects: readonly string[],
+): MarksState {
   const state: MarksState = {}
-  for (const exam of EXAMS) {
+  for (const exam of examNames) {
     state[exam] = {}
     for (const s of students) {
       state[exam][s.id] = {}
-      for (const sub of SUBJECTS) {
+      for (const sub of subjects) {
         const val = allMarks[exam]?.[s.id]?.[sub]
         state[exam][s.id][sub] = val != null ? String(val) : ''
       }
@@ -83,12 +99,14 @@ function buildInitialState(students: Student[], allMarks: AllMarksData): MarksSt
 // Convert current marksState back to flat rows for grade computation
 function marksStateToFlat(
   marksState: MarksState,
-  students: Student[]
+  students: Student[],
+  examNames: string[],
+  subjects: readonly string[],
 ): { student_id: string; subject: string; exam: string; percent: number | null }[] {
   const rows: { student_id: string; subject: string; exam: string; percent: number | null }[] = []
-  for (const exam of EXAMS) {
+  for (const exam of examNames) {
     for (const s of students) {
-      for (const sub of SUBJECTS) {
+      for (const sub of subjects) {
         const raw = marksState[exam]?.[s.id]?.[sub]
         const pct = raw !== '' && raw != null ? parseFloat(raw) : null
         if (pct != null && !isNaN(pct)) {
@@ -117,6 +135,8 @@ export default function MarksEditor({
   submissions,
   quizAvgByStudentId,
   assignmentAvgByStudentId,
+  examTypes: examTypesProp = [],
+  visibleSubjects = [],
 }: {
   students: Student[]
   allMarks: AllMarksData
@@ -125,13 +145,36 @@ export default function MarksEditor({
   submissions: Submission[]
   quizAvgByStudentId: Record<string, number>
   assignmentAvgByStudentId: Record<string, number>
+  examTypes?: ExamType[]
+  visibleSubjects?: string[]
 }) {
   const supabase = useMemo(() => createClient(), [])
 
-  const [activeTab, setActiveTab]     = useState<'marks' | 'assignments' | 'grades'>('marks')
-  const [selectedExam, setSelectedExam] = useState<Exam>('Mid Term')
-  const [marksState, setMarksState]   = useState<MarksState>(() => buildInitialState(students, allMarks))
-  const [saving, setSaving]           = useState(false)
+  // Use provided exam types or fall back to the three defaults
+  const [examTypes, setExamTypes] = useState<ExamType[]>(
+    examTypesProp.length > 0 ? examTypesProp : DEFAULT_EXAM_TYPES
+  )
+  const [showExamForm, setShowExamForm]     = useState(false)
+  const [editingExam, setEditingExam]       = useState<ExamType | null>(null)
+  const [examFormName, setExamFormName]     = useState('')
+  const [examFormCat, setExamFormCat]       = useState<'mid' | 'final' | 'unit'>('unit')
+  const [savingExamType, setSavingExamType] = useState(false)
+
+  // Only the subjects this teacher is allowed to edit (empty = all)
+  const subjects: readonly string[] = useMemo(
+    () => (visibleSubjects.length > 0 ? visibleSubjects : ALL_SUBJECTS),
+    [visibleSubjects]
+  )
+
+  const examNames = useMemo(() => examTypes.map(e => e.name), [examTypes])
+  const examCategoryMap = useMemo(() => buildExamCategoryMap(examTypes), [examTypes])
+
+  const [activeTab, setActiveTab]       = useState<'marks' | 'assignments' | 'grades'>('marks')
+  const [selectedExam, setSelectedExam] = useState<string>(() => examTypes[0]?.name ?? 'Mid Term')
+  const [marksState, setMarksState]     = useState<MarksState>(
+    () => buildInitialState(students, allMarks, examNames, subjects)
+  )
+  const [saving, setSaving] = useState(false)
 
   // ── Marks tab helpers ───────────────────────────────────────────────────────
 
@@ -148,7 +191,7 @@ export default function MarksEditor({
   async function handleSave() {
     setSaving(true)
     const rows = students.flatMap(s =>
-      SUBJECTS.map(sub => ({
+      subjects.map(sub => ({
         student_id: s.id,
         subject:    sub,
         exam:       selectedExam,
@@ -163,10 +206,65 @@ export default function MarksEditor({
     toast.success('Marks saved!')
   }
 
+  // ── Exam type CRUD ──────────────────────────────────────────────────────────
+
+  function openAddExam() {
+    setEditingExam(null)
+    setExamFormName('')
+    setExamFormCat('unit')
+    setShowExamForm(true)
+  }
+
+  function openEditExam(et: ExamType) {
+    setEditingExam(et)
+    setExamFormName(et.name)
+    setExamFormCat(et.category)
+    setShowExamForm(true)
+  }
+
+  async function saveExamType() {
+    const name = examFormName.trim()
+    if (!name) return
+    setSavingExamType(true)
+
+    if (editingExam && !editingExam.id.startsWith('default-')) {
+      // Update in DB
+      const { error } = await supabase
+        .from('exam_types')
+        .update({ name, category: examFormCat })
+        .eq('id', editingExam.id)
+      setSavingExamType(false)
+      if (error) { toast.error('Failed to update exam type.'); return }
+      setExamTypes(prev => prev.map(e => e.id === editingExam.id ? { ...e, name, category: examFormCat } : e))
+      if (selectedExam === editingExam.name) setSelectedExam(name)
+    } else if (!editingExam) {
+      // Insert new
+      const { data, error } = await supabase
+        .from('exam_types')
+        .insert({ name, category: examFormCat })
+        .select('id, name, category')
+        .single()
+      setSavingExamType(false)
+      if (error || !data) { toast.error('Failed to create exam type.'); return }
+      setExamTypes(prev => [...prev, data as ExamType])
+    } else {
+      // Editing a default (id starts with 'default-') — just update local state
+      setSavingExamType(false)
+      setExamTypes(prev => prev.map(e => e.id === editingExam.id ? { ...e, name, category: examFormCat } : e))
+      if (selectedExam === editingExam.name) setSelectedExam(name)
+    }
+
+    toast.success(editingExam ? 'Exam type updated.' : 'Exam type created.')
+    setShowExamForm(false)
+  }
+
   // ── Final Grade tab helpers ─────────────────────────────────────────────────
 
   // Live final grades computed from current marksState (reflects unsaved edits too)
-  const liveMarks   = useMemo(() => marksStateToFlat(marksState, students), [marksState, students])
+  const liveMarks = useMemo(
+    () => marksStateToFlat(marksState, students, examNames, subjects),
+    [marksState, students, examNames, subjects]
+  )
   const quizAvg     = (sid: string) => quizAvgByStudentId[sid] ?? null
   const asgAvg      = (sid: string) => assignmentAvgByStudentId[sid] ?? null
 
@@ -219,20 +317,32 @@ export default function MarksEditor({
         {/* Exam selector + save — only on Marks tab */}
         {activeTab === 'marks' && (
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex gap-1.5">
-              {EXAMS.map(exam => (
+            <div className="flex gap-1.5 flex-wrap">
+              {examTypes.map(et => (
                 <button
-                  key={exam}
-                  onClick={() => setSelectedExam(exam)}
+                  key={et.id}
+                  onClick={() => setSelectedExam(et.name)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    selectedExam === exam
+                    selectedExam === et.name
                       ? 'bg-[#1a2e1a] text-[#6fcf6f]'
                       : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
                   }`}
                 >
-                  {exam}
+                  {et.name}
+                  <span
+                    onClick={e => { e.stopPropagation(); openEditExam(et) }}
+                    className="ml-1.5 opacity-40 hover:opacity-100 text-[10px] cursor-pointer"
+                    title="Edit exam type"
+                  >✎</span>
                 </button>
               ))}
+              <button
+                onClick={openAddExam}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+                title="Add exam type"
+              >
+                + Add
+              </button>
             </div>
             <button
               onClick={handleSave}
@@ -244,6 +354,49 @@ export default function MarksEditor({
           </div>
         )}
       </div>
+
+      {/* ── Exam type form ────────────────────────────────────────────────── */}
+      {activeTab === 'marks' && showExamForm && (
+        <div className="mb-4 bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-[11px] font-medium text-gray-500 mb-1">Name</label>
+            <input
+              type="text"
+              value={examFormName}
+              onChange={e => setExamFormName(e.target.value)}
+              placeholder="e.g. Midterm 2"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900 w-44 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-gray-500 mb-1">Grade category</label>
+            <select
+              value={examFormCat}
+              onChange={e => setExamFormCat(e.target.value as 'mid' | 'final' | 'unit')}
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+            >
+              <option value="mid">Mid-term weight</option>
+              <option value="final">Final weight</option>
+              <option value="unit">Unit/assignment weight</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={saveExamType}
+              disabled={savingExamType || !examFormName.trim()}
+              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {savingExamType ? 'Saving…' : editingExam ? 'Update' : 'Create'}
+            </button>
+            <button
+              onClick={() => setShowExamForm(false)}
+              className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Marks tab ─────────────────────────────────────────────────────── */}
       {activeTab === 'marks' && (
@@ -261,7 +414,7 @@ export default function MarksEditor({
                       <th className="text-left px-5 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
                         Student
                       </th>
-                      {SUBJECTS.map(sub => (
+                      {subjects.map(sub => (
                         <th key={sub} className="text-left px-3 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide capitalize">
                           {sub}
                         </th>
@@ -282,7 +435,7 @@ export default function MarksEditor({
                             </div>
                           </div>
                         </td>
-                        {SUBJECTS.map(sub => (
+                        {subjects.map(sub => (
                           <td key={sub} className="px-3 py-3">
                             <input
                               type="number"
@@ -339,6 +492,12 @@ export default function MarksEditor({
                       </div>
 
                       <div className="flex items-center gap-4 text-xs flex-shrink-0">
+                        <Link
+                          href={`/assignments?open=${a.id}`}
+                          className="text-[11px] font-medium text-[#1a2e1a] bg-[#6fcf6f]/10 border border-[#6fcf6f]/20 hover:bg-[#6fcf6f]/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          View submissions →
+                        </Link>
                         <div className="text-center">
                           <div className="font-semibold text-gray-900">{a.submitted}/{a.total}</div>
                           <div className="text-[10px] text-gray-400">Submitted</div>
@@ -405,7 +564,7 @@ export default function MarksEditor({
                       <th className="text-left px-5 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide sticky left-0 bg-gray-50/80 z-10 min-w-[160px]">
                         Student
                       </th>
-                      {SUBJECTS.map(sub => (
+                      {ALL_SUBJECTS.map(sub => (
                         <th key={sub} className="text-center px-3 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide capitalize min-w-[90px]">
                           {sub}
                         </th>
@@ -423,6 +582,7 @@ export default function MarksEditor({
                         weightRows,
                         quizAvg(s.id),
                         asgAvg(s.id),
+                        examCategoryMap,
                       )
                       const gradeBySubject = Object.fromEntries(
                         subjectGrades.map(g => [g.subject, g])
@@ -448,7 +608,7 @@ export default function MarksEditor({
                             </div>
                           </td>
 
-                          {SUBJECTS.map(sub => {
+                          {ALL_SUBJECTS.map(sub => {
                             const g = gradeBySubject[sub]
                             const style = g ? (LETTER_STYLE[g.letter] ?? LETTER_STYLE['F']) : ''
                             return (

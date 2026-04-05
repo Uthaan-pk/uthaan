@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -103,12 +103,14 @@ export default function AssignmentsBoard({
   students,
   currentUserId,
   role,
+  initialOpenId = null,
 }: {
   assignments: Assignment[]
   submissions: Submission[]
   students: Student[]
   currentUserId: string
   role: string
+  initialOpenId?: string | null
 }) {
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
@@ -116,6 +118,14 @@ export default function AssignmentsBoard({
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'graded'>('all')
   const [drawerAssignment, setDrawerAssignment] = useState<Assignment | null>(null)
+
+  useEffect(() => {
+    if (initialOpenId) {
+      const found = assignments.find(a => a.id === initialOpenId)
+      if (found) setDrawerAssignment(found)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [showPostForm, setShowPostForm] = useState(false)
   const [posting, setPosting] = useState(false)
   const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null)

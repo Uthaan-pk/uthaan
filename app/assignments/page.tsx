@@ -5,7 +5,12 @@ import AssignmentsBoard from './AssignmentsBoard'
 import { CURRENT_TERM } from '@/lib/constants'
 import AssignmentsFeed from './AssignmentsFeed'
 
-export default async function AssignmentsPage() {
+export default async function AssignmentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ open?: string }>
+}) {
+  const { open: initialOpenId = null } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -65,6 +70,7 @@ export default async function AssignmentsPage() {
               students={studentsRes.data ?? []}
               currentUserId={user.id}
               role={role ?? ''}
+              initialOpenId={initialOpenId}
             />
           </main>
         </div>

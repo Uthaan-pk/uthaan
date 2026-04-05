@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import Link from 'next/link'
 import { translations, type Language } from '@/lib/translations'
+import AssignmentChecklist from './AssignmentChecklist'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -175,6 +176,10 @@ export default async function DashboardPage() {
     let dueToday = 0
     let avgMark: number | null = null
 
+    let checklistAssignments: { id: string; title: string; subject: string; due_date: string | null }[] = []
+    let checklistSubmissions: { assignment_id: string }[] = []
+    let manualChecks: { assignment_id: string }[] = []
+
     if (studentId) {
       const { data: student } = await supabase
         .from('students')
@@ -183,12 +188,22 @@ export default async function DashboardPage() {
         .single()
 
       if (student?.class_num) {
-        const [assignRes, marksRes] = await Promise.all([
+        const [assignRes, marksRes, subsRes, checksRes] = await Promise.all([
           supabase
             .from('assignments')
-            .select('id, due_date')
-            .eq('class_num', student.class_num),
+            .select('id, title, subject, due_date')
+            .eq('class_num', student.class_num)
+            .order('due_date', { ascending: true })
+            .limit(100),
           supabase.from('marks').select('percent').eq('student_id', studentId),
+          supabase
+            .from('assignment_submissions')
+            .select('assignment_id')
+            .eq('student_id', studentId),
+          supabase
+            .from('assignment_manual_checks')
+            .select('assignment_id')
+            .eq('student_id', studentId),
         ])
 
         dueToday = (assignRes.data ?? []).filter(
@@ -202,6 +217,10 @@ export default async function DashboardPage() {
                 marks.reduce((a, m) => a + Number(m.percent), 0) / marks.length
               )
             : null
+
+        checklistAssignments = assignRes.data ?? []
+        checklistSubmissions = subsRes.data ?? []
+        manualChecks = checksRes.data ?? []
       }
     }
 
@@ -219,68 +238,77 @@ export default async function DashboardPage() {
           </header>
 
           <main className="flex-1 overflow-y-auto p-6">
-            <div className="grid grid-cols-2 gap-3 max-w-2xl">
-              <Link
-                href="/assignments"
-                className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                  dueToday > 0
-                    ? 'border-l-4 border-l-amber-400 border-gray-100'
-                    : 'border-gray-100'
-                }`}
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.dueToday}
-                </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {dueToday}
-                </div>
-                <div
-                  className={`text-[11px] mt-1 font-medium ${
-                    dueToday > 0 ? 'text-amber-600' : 'text-gray-400'
+            <div className="max-w-2xl space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/assignments"
+                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                    dueToday > 0
+                      ? 'border-l-4 border-l-amber-400 border-gray-100'
+                      : 'border-gray-100'
                   }`}
                 >
-                  {dueToday > 0 ? `${t.submitNow} →` : t.allClear}
-                </div>
-              </Link>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    {t.dueToday}
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {dueToday}
+                  </div>
+                  <div
+                    className={`text-[11px] mt-1 font-medium ${
+                      dueToday > 0 ? 'text-amber-600' : 'text-gray-400'
+                    }`}
+                  >
+                    {dueToday > 0 ? `${t.submitNow} →` : t.allClear}
+                  </div>
+                </Link>
 
-              <Link
-                href="/marks"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.myAverage}
-                </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {avgMark !== null ? `${avgMark}%` : '—'}
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1">
-                  {t.viewGradebook} →
-                </div>
-              </Link>
+                <Link
+                  href="/marks"
+                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    {t.myAverage}
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {avgMark !== null ? `${avgMark}%` : '—'}
+                  </div>
+                  <div className="text-[11px] text-gray-400 mt-1">
+                    {t.viewGradebook} →
+                  </div>
+                </Link>
 
-              <Link
-                href="/timetable"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.timetableView}
-                </div>
-                <div className="text-sm font-medium text-gray-700 mt-2">
-                  {t.viewSchedule} →
-                </div>
-              </Link>
+                <Link
+                  href="/timetable"
+                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    {t.timetableView}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 mt-2">
+                    {t.viewSchedule} →
+                  </div>
+                </Link>
 
-              <Link
-                href="/quizzes"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.quizzes}
-                </div>
-                <div className="text-sm font-medium text-gray-700 mt-2">
-                  {t.checkActive} →
-                </div>
-              </Link>
+                <Link
+                  href="/quizzes"
+                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                >
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                    {t.quizzes}
+                  </div>
+                  <div className="text-sm font-medium text-gray-700 mt-2">
+                    {t.checkActive} →
+                  </div>
+                </Link>
+              </div>
+
+              <AssignmentChecklist
+                assignments={checklistAssignments}
+                submissions={checklistSubmissions}
+                manualChecks={manualChecks}
+                studentId={studentId ?? ''}
+              />
             </div>
           </main>
         </div>

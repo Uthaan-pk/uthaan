@@ -4,7 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import GradebookGrid from './GradebookGrid'
 import ClassGradebookShell from './ClassGradebookShell'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
-import { buildAllMarksData } from '@/lib/gradeUtils'
+import { buildAllMarksData, type ExamType } from '@/lib/gradeUtils'
 
 export default async function MarksPage() {
   const supabase = await createClient()
@@ -50,6 +50,7 @@ export default async function MarksPage() {
       submissionsRes,
       weightsRes,
       timetableRes,
+      examTypesRes,
     ] = await Promise.all([
       supabase
         .from('students')
@@ -82,6 +83,12 @@ export default async function MarksPage() {
         .limit(2000),
 
       timetableQuery,
+
+      supabase
+        .from('exam_types')
+        .select('id, name, category')
+        .order('created_at', { ascending: true })
+        .limit(100),
     ])
 
     // ── Debug logging (remove once confirmed working) ──────────────────────
@@ -105,10 +112,12 @@ export default async function MarksPage() {
     const allAssignmentsRaw = assignmentsRes.data ?? []
     const allSubmissionsRaw = submissionsRes.data ?? []
     const allWeightsRaw = weightsRes.data ?? []
-    // timetableRows is already scoped to this teacher (for teacher role)
     const timetableRows = timetableRes.data ?? []
+    const examTypes = (examTypesRes.data ?? []) as ExamType[]
 
     let visibleClassNums: number[] = []
+    // Subjects this teacher is assigned to (empty for admin = no restriction)
+    let visibleSubjects: string[] = []
 
     if (role === 'admin') {
       visibleClassNums = Array.from(
@@ -119,7 +128,7 @@ export default async function MarksPage() {
         )
       ).sort((a, b) => a - b)
     } else {
-      // timetableRows is pre-filtered by teacher_id in the query above
+      // Teacher: scope to their timetable entries only — no fallback to all classes
       visibleClassNums = Array.from(
         new Set(
           timetableRows
@@ -128,17 +137,13 @@ export default async function MarksPage() {
         )
       ).sort((a, b) => a - b)
 
-      // Fallback: if timetable returned nothing, derive classes from all active students
-      if (visibleClassNums.length === 0) {
-        console.log('[Gradebook] timetable fallback — deriving classes from students')
-        visibleClassNums = Array.from(
-          new Set(
-            allStudentsRaw
-              .map((s: any) => Number(s.class_num))
-              .filter((n: number) => !isNaN(n) && n > 0)
-          )
-        ).sort((a, b) => a - b)
-      }
+      visibleSubjects = Array.from(
+        new Set(
+          timetableRows
+            .map((row: any) => (row.subject as string)?.toLowerCase?.())
+            .filter(Boolean)
+        )
+      )
     }
 
     console.log('[Gradebook] visibleClassNums:', visibleClassNums)
@@ -208,6 +213,8 @@ export default async function MarksPage() {
               weightRows={allWeights}
               quizAvgByStudentId={{}}
               assignmentAvgByStudentId={assignmentAvgByStudentId}
+              examTypes={examTypes}
+              visibleSubjects={visibleSubjects}
             />
           </main>
         </div>

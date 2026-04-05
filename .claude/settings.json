@@ -8,7 +8,9 @@
       "Bash(ls -la /Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]/)",
       "Bash(find /Users/asadchaudhry/Desktop/uthaan -path */node_modules -prune -o -name *.schema.* -o -name *database* -type f)",
       "WebFetch(domain:uthaan-one.vercel.app)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(grep -r SUPABASE_SERVICE_ROLE_KEY /Users/asadchaudhry/Desktop/uthaan --include=*.ts --include=*.tsx -l)",
+      "mcp__claude_ai_Supabase__execute_sql"
     ],
     "additionalDirectories": [
       "/Users/asadchaudhry/Desktop/uthaan/app/quizzes/[id]",

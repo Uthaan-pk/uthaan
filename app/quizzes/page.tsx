@@ -309,7 +309,10 @@ export default async function QuizzesPage() {
         : { data: [] as any[] }
 
     const latestByQuizId: Record<string, any> = {}
+    const submissionCountByQuizId: Record<string, number> = {}
     ;(submissions ?? []).forEach((sub: any) => {
+      submissionCountByQuizId[sub.quiz_id] =
+        (submissionCountByQuizId[sub.quiz_id] ?? 0) + 1
       if (!latestByQuizId[sub.quiz_id]) {
         latestByQuizId[sub.quiz_id] = sub
       }
@@ -341,12 +344,19 @@ export default async function QuizzesPage() {
                       ? quiz.questions.length
                       : 0
                     const latestSubmission = latestByQuizId[quiz.id]
+                    const attemptsUsed = submissionCountByQuizId[quiz.id] ?? 0
+                    const maxAttempts = quiz.max_attempts ?? 1
+                    const hasPastAttempts = attemptsUsed > 0
+                    const hasRemainingAttempts = attemptsUsed < maxAttempts
                     const scorePct =
                       latestSubmission && questionCount > 0
                         ? Math.round(
                             ((latestSubmission.score ?? 0) / questionCount) * 100
                           )
                         : null
+                    const href = hasPastAttempts
+                      ? `/quizzes/${quiz.id}?mode=results`
+                      : `/quizzes/${quiz.id}`
 
                     return (
                       <div
@@ -369,11 +379,18 @@ export default async function QuizzesPage() {
                               Last: {scorePct}%
                             </span>
                           )}
+                          {hasPastAttempts && (
+                            <span className="text-[10px] font-medium px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200">
+                              {hasRemainingAttempts
+                                ? `${attemptsUsed}/${maxAttempts} attempts`
+                                : 'Completed'}
+                            </span>
+                          )}
                           <Link
-                            href={`/quizzes/${quiz.id}`}
+                            href={href}
                             className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#1a2e1a] text-[#6fcf6f]"
                           >
-                            Open
+                            {hasPastAttempts ? 'View results' : 'Open'}
                           </Link>
                         </div>
                       </div>

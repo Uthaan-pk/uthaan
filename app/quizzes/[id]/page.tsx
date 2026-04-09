@@ -206,8 +206,11 @@ export default async function QuizPage({
 
   const submissionCount = submissions?.length ?? 0
   const maxAttempts = quiz.max_attempts ?? 1
+  const hasRemainingAttempts = submissionCount < maxAttempts
+  const shouldShowResults =
+    mode === 'results' || (mode !== 'attempt' && submissionCount > 0)
 
-  if (mode === 'results') {
+  if (shouldShowResults) {
     const total = questions.length
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -236,7 +239,7 @@ export default async function QuizPage({
                 <div className="text-xs text-gray-500 mb-3">
                   {submissionCount} attempt{submissionCount !== 1 ? 's' : ''}{' '}
                   completed
-                  {submissionCount < maxAttempts && (
+                  {hasRemainingAttempts && (
                     <span className="ml-2 text-[#1a2e1a] font-medium">
                       · {maxAttempts - submissionCount} remaining
                     </span>
@@ -295,12 +298,22 @@ export default async function QuizPage({
                   </div>
                 )}
               </div>
-              <Link
-                href="/quizzes"
-                className="inline-block text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2 rounded-lg transition-colors"
-              >
-                ← Back to quizzes
-              </Link>
+              <div className="flex items-center gap-3">
+                {hasRemainingAttempts && (
+                  <Link
+                    href={`/quizzes/${id}?mode=attempt`}
+                    className="inline-block text-xs bg-[#1a2e1a] text-[#6fcf6f] px-4 py-2 rounded-lg transition-colors hover:bg-[#243d24]"
+                  >
+                    Start attempt {submissionCount + 1} of {maxAttempts}
+                  </Link>
+                )}
+                <Link
+                  href="/quizzes"
+                  className="inline-block text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2 rounded-lg transition-colors"
+                >
+                  ← Back to quizzes
+                </Link>
+              </div>
             </div>
           </main>
         </div>
@@ -309,7 +322,7 @@ export default async function QuizPage({
   }
 
   // Server-side attempt gate
-  if (submissionCount >= maxAttempts) {
+  if (!hasRemainingAttempts) {
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role={role} />

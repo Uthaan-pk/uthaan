@@ -99,6 +99,14 @@ export async function middleware(request: NextRequest) {
 
       return NextResponse.next({ request: { headers: requestHeaders } })
     }
+
+    // Superadmin without impersonation should only be at /superadmin or /dashboard.
+    // All school-scoped pages would have no school context — redirect to /superadmin.
+    const allowedForSuperadmin = ['/superadmin', '/dashboard', '/auth']
+    const isAllowed = allowedForSuperadmin.some((p) => pathname.startsWith(p))
+    if (!isAllowed) {
+      return NextResponse.redirect(new URL('/superadmin', request.url))
+    }
   }
 
   return response

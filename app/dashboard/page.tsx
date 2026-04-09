@@ -11,7 +11,8 @@ import {
   type FlatMarkRow,
   type WeightRow,
 } from '@/lib/gradeUtils'
-import { CURRENT_YEAR } from '@/lib/constants'
+import { CURRENT_YEAR, TERM_START_DATE } from '@/lib/constants'
+import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -494,7 +495,8 @@ export default async function DashboardPage() {
         .select('student_id, paid, due_date'),
       supabase
         .from('attendance_logs')
-        .select('student_id, status'),
+        .select('student_id, status')
+        .gte('day', TERM_START_DATE),
       supabase
         .from('marks')
         .select('student_id, subject, exam, percent'),
@@ -521,18 +523,11 @@ export default async function DashboardPage() {
         .map(f => f.student_id)
     )
 
-    const absencesByStudent = (absenceRes.data ?? []).reduce<Record<string, number>>(
-      (acc, row) => {
-        if (row.status === 'absent') {
-          acc[row.student_id] = (acc[row.student_id] ?? 0) + 1
-        }
-        return acc
-      },
-      {}
-    )
-    const studentsWithHighAbsences = Object.values(absencesByStudent).filter(
-      count => count > 10
-    ).length
+    const attMap = buildAttendanceMap(absenceRes.data ?? [])
+    const studentsWithHighAbsences = students.filter((s) => {
+      const pct = attMap[s.id]
+      return pct !== null && pct !== undefined && pct < 75
+    }).length
 
     const marks = (marksRes.data ?? []) as FlatMarkRow[]
     const weights = (weightsRes.data ?? []) as WeightRow[]
@@ -596,7 +591,7 @@ export default async function DashboardPage() {
                 </Link>
 
                 <Link
-                  href="/attendance"
+                  href="/attendance/low"
                   className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
                     studentsWithHighAbsences > 0
                       ? 'border-l-4 border-l-amber-400 border-gray-100'
@@ -604,13 +599,13 @@ export default async function DashboardPage() {
                   }`}
                 >
                   <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    High Absences
+                    Low Attendance
                   </div>
                   <div className="text-2xl font-semibold text-gray-900">
                     {studentsWithHighAbsences}
                   </div>
                   <div className="text-[11px] text-gray-400 mt-1">
-                    Students above 10 absences →
+                    Students below 75% attendance →
                   </div>
                 </Link>
 

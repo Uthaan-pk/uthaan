@@ -207,7 +207,7 @@ export default async function QuizPage({
   const submissionCount = submissions?.length ?? 0
   const maxAttempts = quiz.max_attempts ?? 1
 
-  if (mode === 'results' && submissionCount > 0) {
+  if (mode === 'results') {
     const total = questions.length
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">

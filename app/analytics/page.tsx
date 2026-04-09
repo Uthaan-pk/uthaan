@@ -41,16 +41,33 @@ export default async function AnalyticsPage() {
     redirect('/dashboard')
   }
 
-  const [studentsRes, marksRes] = await Promise.all([
+  const [studentsRes, marksRes, timetableRes] = await Promise.all([
     supabase
       .from('students')
       .select('id, name, class_num')
       .eq('is_active', true),
     supabase.from('marks').select('student_id, subject, percent'),
+    effectiveRole === 'teacher'
+      ? supabase
+          .from('timetable')
+          .select('class_num, subject')
+          .eq('teacher_id', user.id)
+          .limit(500)
+      : Promise.resolve({ data: null }),
   ])
 
   const students: StudentRow[] = studentsRes.data ?? []
   const marks: MarkRow[] = marksRes.data ?? []
+
+  // Build teacher visibility filter (class_num+subject combos)
+  type TeacherSlot = { class_num: number; subject: string }
+  const teacherSlots: TeacherSlot[] | null =
+    effectiveRole === 'teacher' && timetableRes.data
+      ? (timetableRes.data as TeacherSlot[])
+      : null
+  const teacherVisibleKeys: Set<string> | null = teacherSlots
+    ? new Set(teacherSlots.map((r) => `${r.class_num}__${String(r.subject).toLowerCase()}`))
+    : null
 
   // Build studentId → student map
   const studentMap = new Map<string, StudentRow>()
@@ -89,7 +106,9 @@ export default async function AnalyticsPage() {
 
   // Compute stats for each group
   const cards: SubjectCard[] = []
-  for (const [, group] of groupData.entries()) {
+  for (const [groupKey, group] of groupData.entries()) {
+    // Teachers only see their own class+subject combos
+    if (teacherVisibleKeys && !teacherVisibleKeys.has(groupKey)) continue
     if (group.scores.length === 0) continue
 
     const vals = group.scores.map((s) => s.score)

@@ -1,5 +1,7 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 export type SubmitQuizResult = { success: boolean; error?: string }
@@ -10,6 +12,7 @@ export async function submitQuiz(
   score: number
 ): Promise<SubmitQuizResult> {
   const supabase = await createClient()
+  const resultsUrl = `/quizzes/${quizId}?mode=results`
 
   const {
     data: { user },
@@ -35,7 +38,7 @@ export async function submitQuiz(
     .eq('user_id', user.id)
 
   if ((count ?? 0) >= maxAttempts) {
-    return { success: false, error: 'attempt_limit_reached' }
+    redirect(resultsUrl)
   }
 
   const { error } = await supabase.from('quiz_submissions').insert({
@@ -47,5 +50,7 @@ export async function submitQuiz(
 
   if (error) return { success: false, error: error.message }
 
-  return { success: true }
+  revalidatePath(`/quizzes/${quizId}`)
+  revalidatePath('/quizzes')
+  redirect(resultsUrl)
 }

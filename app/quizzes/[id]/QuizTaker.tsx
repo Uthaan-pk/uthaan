@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { submitQuiz } from './actions'
 
 type Question = {
@@ -42,16 +41,17 @@ export default function QuizTaker({
   const [selected, setSelected] = useState<number | null>(null)
   const [timeLeft, setTimeLeft] = useState(quiz.time_limit * 60)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const answersRef = useRef<(number | null)[]>(new Array(quiz.questions.length).fill(null))
   const hasSubmittedRef = useRef(false)
-  const router = useRouter()
 
   async function doSubmit(finalAnswers: (number | null)[]) {
     if (hasSubmittedRef.current) return
     hasSubmittedRef.current = true
 
     setSubmitting(true)
+    setSubmitError(null)
 
     const calculatedScore = quiz.questions.reduce(
       (acc, q, i) => acc + (finalAnswers[i] === q.correct ? 1 : 0),
@@ -60,19 +60,10 @@ export default function QuizTaker({
 
     const result = await submitQuiz(quiz.id, finalAnswers, calculatedScore)
 
-    if (!result.success) {
-      if (result.error === 'attempt_limit_reached') {
-        // Attempt limit hit server-side — redirect to results
-        router.replace(`/quizzes/${quiz.id}?mode=results`)
-        return
-      }
-      // Other server errors: allow retry
-      hasSubmittedRef.current = false
-      setSubmitting(false)
-      return
-    }
-
-    router.replace(`/quizzes/${quiz.id}?mode=results`)
+    // Successful submissions and attempt-limit hits redirect server-side.
+    hasSubmittedRef.current = false
+    setSubmitting(false)
+    setSubmitError(result.error ?? 'Could not submit quiz. Please try again.')
   }
 
   function autoSubmit() {
@@ -142,6 +133,12 @@ export default function QuizTaker({
 
   return (
     <div className="space-y-4">
+      {submitError && (
+        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs text-red-700">
+          {submitError}
+        </div>
+      )}
+
       {/* Attempt indicator */}
       {maxAttempts > 1 && (
         <div className="text-xs text-gray-400 text-right">

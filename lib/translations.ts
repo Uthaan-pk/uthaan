@@ -53,6 +53,20 @@ export type TranslationKeys =
   | 'notMarkedToday'
   | 'markNow'
   | 'noneActive'
+  | 'todaySchedule'
+  | 'period'
+  | 'noPeriods'
+  | 'upcomingQuizzes'
+  | 'activeNow'
+  | 'dueTomorrow'
+  | 'attendanceStatus'
+  | 'present'
+  | 'absent'
+  | 'late'
+  | 'notRecorded'
+  | 'todayOverview'
+  | 'homeworkDue'
+  | 'analytics'
 
 export const translations: Record<Language, Record<TranslationKeys, string>> = {
   en: {
@@ -108,6 +122,20 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     notMarkedToday: 'Not marked today',
     markNow: 'Mark now',
     noneActive: 'None active',
+    todaySchedule: "Today's Schedule",
+    period: 'Period',
+    noPeriods: 'No classes today',
+    upcomingQuizzes: 'Upcoming Quizzes',
+    activeNow: 'Active now',
+    dueTomorrow: 'Due tomorrow',
+    attendanceStatus: 'Attendance',
+    present: 'Present',
+    absent: 'Absent',
+    late: 'Late',
+    notRecorded: 'Not recorded yet',
+    todayOverview: 'Today',
+    homeworkDue: 'Homework Due',
+    analytics: 'Analytics',
   },
   ur: {
     dashboard: 'ڈیش بورڈ',
@@ -162,5 +190,19 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     notMarkedToday: 'آج حاضری نہیں لگی',
     markNow: 'ابھی نشان لگائیں',
     noneActive: 'کوئی فعال نہیں',
+    todaySchedule: 'آج کا شیڈول',
+    period: 'پیریڈ',
+    noPeriods: 'آج کوئی کلاس نہیں',
+    upcomingQuizzes: 'آنے والے کوئزز',
+    activeNow: 'ابھی فعال',
+    dueTomorrow: 'کل واجب الادا',
+    attendanceStatus: 'حاضری',
+    present: 'حاضر',
+    absent: 'غیر حاضر',
+    late: 'دیر سے آئے',
+    notRecorded: 'ابھی درج نہیں',
+    todayOverview: 'آج',
+    homeworkDue: 'ہوم ورک',
+    analytics: 'تجزیہ',
   },
 }

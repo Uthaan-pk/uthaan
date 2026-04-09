@@ -8,7 +8,9 @@ import {
   earlyLeaveOnDay,
   leaveCoversDay,
   readLeaveReason,
+  buildAttendanceMap,
 } from '@/lib/attendanceLeaves'
+import { TERM_START_DATE } from '@/lib/constants'
 
 const statusStyles: Record<string, string> = {
   present: 'bg-green-50 text-green-800',
@@ -88,7 +90,7 @@ export default async function AttendancePage() {
       logsQuery = logsQuery.in('student_id', ['00000000-0000-0000-0000-000000000000'])
     }
 
-    const [logsRes, leavesRes, earlyLeavesRes] = await Promise.all([
+    const [logsRes, leavesRes, earlyLeavesRes, termLogsRes] = await Promise.all([
       logsQuery,
       studentIds.length > 0
         ? supabase
@@ -110,11 +112,24 @@ export default async function AttendancePage() {
             .from('student_early_leaves')
             .select('*')
             .in('student_id', ['00000000-0000-0000-0000-000000000000']),
+      studentIds.length > 0
+        ? supabase
+            .from('attendance_logs')
+            .select('student_id, status')
+            .in('student_id', studentIds)
+            .gte('day', TERM_START_DATE)
+            .limit(50000)
+        : Promise.resolve({ data: [] }),
     ])
 
     const logs = logsRes.data ?? []
     const leaves = leavesRes.data ?? []
     const earlyLeaves = earlyLeavesRes.data ?? []
+
+    const termAttMap = buildAttendanceMap(termLogsRes.data ?? [])
+    const belowThresholdCount = Object.values(termAttMap).filter(
+      (pct) => pct !== null && pct < 75
+    ).length
 
     const initialStatus: Record<
       string,
@@ -175,16 +190,33 @@ export default async function AttendancePage() {
           </header>
 
           <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-2xl">
-              <AttendanceMarker
-                students={(students as unknown as AttendanceStudent[]) ?? []}
-                initialStatus={initialStatus}
-                today={today}
-                schoolId={roleData?.school_id ?? null}
-                readOnly={isAdmin}
-                lockedStatusByStudent={lockedStatusByStudent}
-                leaveMeta={leaveMeta}
-              />
+            <div className="max-w-2xl space-y-4">
+              {isAdmin && belowThresholdCount > 0 && (
+                <div className="bg-white rounded-xl border border-l-4 border-l-red-400 border-gray-100 px-5 py-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      Low Attendance This Term
+                    </div>
+                    <div className="text-sm text-gray-700">
+                      <span className="font-semibold text-red-600">{belowThresholdCount}</span> student{belowThresholdCount !== 1 ? 's' : ''} below 75% attendance
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-red-50 text-red-600">
+                    Action needed
+                  </span>
+                </div>
+              )}
+              <div>
+                <AttendanceMarker
+                  students={(students as unknown as AttendanceStudent[]) ?? []}
+                  initialStatus={initialStatus}
+                  today={today}
+                  schoolId={roleData?.school_id ?? null}
+                  readOnly={isAdmin}
+                  lockedStatusByStudent={lockedStatusByStudent}
+                  leaveMeta={leaveMeta}
+                />
+              </div>
             </div>
           </main>
         </div>

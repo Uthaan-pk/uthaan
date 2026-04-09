@@ -2,17 +2,19 @@
 
 import { createClient } from '@/lib/supabase/server'
 
+export type SubmitQuizResult = { success: boolean; error?: string }
+
 export async function submitQuiz(
   quizId: string,
   answers: (number | null)[],
   score: number
-): Promise<{ success: true } | { error: string }> {
+): Promise<SubmitQuizResult> {
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
+  if (!user) return { success: false, error: 'Not authenticated' }
 
   // Fetch max_attempts for this quiz
   const { data: quiz } = await supabase
@@ -21,7 +23,7 @@ export async function submitQuiz(
     .eq('id', quizId)
     .single()
 
-  if (!quiz) return { error: 'Quiz not found' }
+  if (!quiz) return { success: false, error: 'Quiz not found' }
 
   const maxAttempts: number = quiz.max_attempts ?? 1
 
@@ -33,7 +35,7 @@ export async function submitQuiz(
     .eq('user_id', user.id)
 
   if ((count ?? 0) >= maxAttempts) {
-    return { error: 'attempt_limit_reached' }
+    return { success: false, error: 'attempt_limit_reached' }
   }
 
   const { error } = await supabase.from('quiz_submissions').insert({
@@ -43,7 +45,7 @@ export async function submitQuiz(
     score,
   })
 
-  if (error) return { error: error.message }
+  if (error) return { success: false, error: error.message }
 
   return { success: true }
 }

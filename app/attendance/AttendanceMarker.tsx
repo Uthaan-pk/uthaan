@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import type { LeaveStatus } from '@/lib/attendanceLeaves'
@@ -47,6 +47,62 @@ export default function AttendanceMarker({
   const [saving, setSaving] = useState(false)
   const [classFilter, setClassFilter] = useState<number | 'all'>('all')
   const supabase = useMemo(() => createClient(), [])
+  // Track the current user's id to distinguish self-saves from remote changes
+  const myUserIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    // Get current user id to avoid showing "updated by another teacher" for own saves
+    supabase.auth.getUser().then(({ data }) => {
+      myUserIdRef.current = data.user?.id ?? null
+    })
+  }, [supabase])
+
+  useEffect(() => {
+    if (!schoolId) return
+
+    const studentIdSet = new Set(students.map((s) => s.id))
+
+    const channel = supabase
+      .channel(`attendance:${schoolId}:${today}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_logs',
+          filter: `school_id=eq.${schoolId}`,
+        },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as {
+            student_id?: string
+            day?: string
+            status?: string
+          } | null
+          if (!row?.student_id || row.day !== today) return
+          if (!studentIdSet.has(row.student_id)) return
+
+          const newStatus = row.status as MarkStatus | undefined
+          if (!newStatus) return
+
+          setStatus((prev) => {
+            // Skip if our local state already matches (prevents echo from own saves)
+            if (prev[row.student_id!] === newStatus) return prev
+            return { ...prev, [row.student_id!]: newStatus }
+          })
+
+          toast('Updated by another teacher', {
+            icon: '🔄',
+            style: { fontSize: '12px' },
+            duration: 2500,
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, schoolId, today, students])
 
   const classNums = useMemo(() => {
     const set = new Set<number>()

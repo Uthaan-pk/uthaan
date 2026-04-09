@@ -366,6 +366,16 @@ export default function Sidebar({
             />
           )}
 
+          {isStaff && (
+            <NavItem
+              label={t.analytics}
+              href="/analytics"
+              active={pathname === '/analytics'}
+              onClose={close}
+              isUrdu={isUrdu}
+            />
+          )}
+
           {isTeacher && (
             <NavItem
               label={t.gradeSettings}
@@ -423,6 +433,22 @@ export default function Sidebar({
                 label="Leave Management"
                 href="/admin/leaves"
                 active={pathname === '/admin/leaves'}
+                onClose={close}
+                isUrdu={isUrdu}
+              />
+
+              <NavItem
+                label="Audit Log"
+                href="/admin/audit"
+                active={pathname === '/admin/audit'}
+                onClose={close}
+                isUrdu={isUrdu}
+              />
+
+              <NavItem
+                label={t.gradeSettings}
+                href="/grade-settings"
+                active={pathname === '/grade-settings'}
                 onClose={close}
                 isUrdu={isUrdu}
               />

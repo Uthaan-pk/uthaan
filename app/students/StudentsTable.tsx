@@ -35,7 +35,20 @@ function getInitials(name: string) {
     .slice(0, 2)
 }
 
-export default function StudentsTable({ students }: { students: Student[] }) {
+function attBadgeClass(pct: number | null | undefined): string {
+  if (pct === null || pct === undefined) return 'bg-gray-50 text-gray-400'
+  if (pct < 75) return 'bg-red-50 text-red-600'
+  if (pct < 85) return 'bg-amber-50 text-amber-600'
+  return 'bg-green-50 text-green-700'
+}
+
+export default function StudentsTable({
+  students,
+  attendanceMap = {},
+}: {
+  students: Student[]
+  attendanceMap?: Record<string, number | null>
+}) {
   const [search, setSearch] = useState('')
   const [studentList, setStudentList] = useState<Student[]>(students)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
@@ -167,6 +180,9 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                 <th className="text-left px-4 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
                   Class
                 </th>
+                <th className="text-left px-4 py-3.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Attendance
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -198,12 +214,22 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                     <td className="px-4 py-3.5 text-gray-500 text-sm">
                       {student.class_num ?? '—'}
                     </td>
+                    <td className="px-4 py-3.5">
+                      {(() => {
+                        const pct = attendanceMap[student.id]
+                        return (
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${attBadgeClass(pct)}`}>
+                            {pct !== null && pct !== undefined ? `${pct}%` : '—'}
+                          </span>
+                        )
+                      })()}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-5 py-12 text-center text-sm text-gray-400"
                   >
                     {search

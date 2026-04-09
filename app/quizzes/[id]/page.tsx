@@ -308,6 +308,45 @@ export default async function QuizPage({
     )
   }
 
+  // Server-side attempt gate
+  if (submissionCount >= maxAttempts) {
+    return (
+      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <Sidebar email={user.email!} role={role} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+            <h1 className="text-sm font-semibold text-gray-900 truncate">{quiz.title}</h1>
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              {CURRENT_TERM}
+            </span>
+          </header>
+          <main className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-sm">
+              <div className="text-sm font-medium text-gray-900 mb-1">
+                No more attempts
+              </div>
+              <div className="text-xs text-gray-400 mb-4">
+                You have used all {maxAttempts} attempt{maxAttempts !== 1 ? 's' : ''} for this quiz.
+              </div>
+              <Link
+                href={`/quizzes/${id}?mode=results`}
+                className="text-xs text-[#1a2e1a] underline underline-offset-2 mr-4"
+              >
+                View my results
+              </Link>
+              <Link
+                href="/quizzes"
+                className="text-xs text-gray-500 underline underline-offset-2"
+              >
+                ← Back to quizzes
+              </Link>
+            </div>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
   if (questions.length === 0) {
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">

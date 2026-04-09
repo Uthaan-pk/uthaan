@@ -56,6 +56,7 @@ async function loadReportCardData(student: Student): Promise<ReportCardData> {
     { data: rawMarks, error: marksErr },
     { data: weightRows, error: weightsErr },
     { data: logs, error: logsErr },
+    { data: catWeightRows },
   ] = await Promise.all([
     supabase
       .from('marks')
@@ -76,6 +77,11 @@ async function loadReportCardData(student: Student): Promise<ReportCardData> {
       .eq('student_id', student.id)
       .gte('day', TERM_START_DATE)
       .lte('day', TERM_END_DATE),
+
+    supabase
+      .from('grade_category_weights')
+      .select('class_num, category, weight')
+      .or(`class_num.eq.${Number(student.class_num)},class_num.is.null`)
   ])
 
   if (marksErr) throw new Error(`Could not load marks: ${marksErr.message}`)
@@ -101,7 +107,51 @@ async function loadReportCardData(student: Student): Promise<ReportCardData> {
     quiz_weight: w.quiz_weight,
   }))
 
-  const subjectGrades = computeSubjectFinalGrades(student.id, marks, weights)
+  // Build fallback weights from category weights (class-specific > school-wide)
+  // Only used for subjects that have no subject-specific weights
+  let fallbackWeightRow: WeightRow | null = null
+  if ((catWeightRows ?? []).length > 0) {
+    // Prefer class-specific over school-wide (null class_num)
+    const classCats = (catWeightRows ?? []).filter(
+      (r: any) => r.class_num === Number(student.class_num)
+    )
+    const useCats = classCats.length > 0 ? classCats : (catWeightRows ?? []).filter((r: any) => r.class_num == null)
+
+    if (useCats.length > 0) {
+      const catMap: Record<string, number> = {}
+      for (const r of useCats as any[]) catMap[r.category] = r.weight
+
+      fallbackWeightRow = {
+        id: 'fallback',
+        class_num: Number(student.class_num),
+        subject: '__fallback__',
+        assignment_weight: catMap['assignment'] ?? 25,
+        exam_weight: catMap['midterm'] ?? 25,
+        final_weight: catMap['final'] ?? 25,
+        quiz_weight: catMap['quiz'] ?? 25,
+      }
+    }
+  }
+
+  // Get all unique subjects in the marks, inject fallback weight row for any
+  // subject that doesn't already have a specific weight configured
+  const subjectsWithWeights = new Set(weights.map((w) => w.subject.toLowerCase()))
+  const allSubjectsInMarks = Array.from(
+    new Set(marks.map((m) => m.subject.toLowerCase()))
+  )
+  const fallbackWeights: WeightRow[] = []
+  if (fallbackWeightRow) {
+    for (const sub of allSubjectsInMarks) {
+      if (!subjectsWithWeights.has(sub)) {
+        fallbackWeights.push({ ...fallbackWeightRow, subject: sub })
+      }
+    }
+  }
+
+  const subjectGrades = computeSubjectFinalGrades(student.id, marks, [
+    ...weights,
+    ...fallbackWeights,
+  ])
 
   const presentCount = (logs ?? []).filter((l: any) => l.status === 'present').length
   const absentCount = (logs ?? []).filter((l: any) => l.status === 'absent').length

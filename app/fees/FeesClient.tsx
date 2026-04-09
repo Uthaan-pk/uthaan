@@ -286,40 +286,50 @@ export default function FeesClient({
                             </span>
                           </td>
                           <td className="px-5 py-3.5">
-                            {fee.paid ? (
-                              isConfirming ? (
-                                <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
+                              {fee.paid ? (
+                                isConfirming ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => handleMarkUnpaid(fee)}
+                                      disabled={acting === fee.id}
+                                      className="text-[11px] text-white bg-red-500 hover:bg-red-600 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                    >
+                                      {acting === fee.id ? '…' : 'Confirm'}
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmUnpaidId(null)}
+                                      className="text-[11px] text-gray-400 hover:text-gray-600 px-1"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
                                   <button
-                                    onClick={() => handleMarkUnpaid(fee)}
-                                    disabled={acting === fee.id}
-                                    className="text-[11px] text-white bg-red-500 hover:bg-red-600 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
+                                    onClick={() => setConfirmUnpaidId(fee.id)}
+                                    className="text-[11px] text-gray-400 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded px-2 py-1 transition-colors whitespace-nowrap"
                                   >
-                                    {acting === fee.id ? '…' : 'Confirm'}
+                                    Mark Unpaid
                                   </button>
-                                  <button
-                                    onClick={() => setConfirmUnpaidId(null)}
-                                    className="text-[11px] text-gray-400 hover:text-gray-600 px-1"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
+                                )
                               ) : (
                                 <button
-                                  onClick={() => setConfirmUnpaidId(fee.id)}
-                                  className="text-[11px] text-gray-400 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded px-2 py-1 transition-colors whitespace-nowrap"
+                                  onClick={() => handleMarkPaid(fee)}
+                                  disabled={acting === fee.id}
+                                  className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
                                 >
-                                  Mark Unpaid
+                                  {acting === fee.id ? '…' : 'Mark Paid'}
                                 </button>
-                              )
-                            ) : (
-                              <button
-                                onClick={() => handleMarkPaid(fee)}
-                                disabled={acting === fee.id}
-                                className="text-[11px] text-[#1a2e1a] hover:text-[#6fcf6f] border border-gray-200 hover:border-[#6fcf6f]/40 rounded px-2 py-1 transition-colors disabled:opacity-50 whitespace-nowrap"
+                              )}
+                              <a
+                                href={`/fees/receipt/${fee.student_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[11px] text-gray-400 hover:text-[#1a2e1a] border border-gray-200 hover:border-gray-300 rounded px-2 py-1 transition-colors whitespace-nowrap"
                               >
-                                {acting === fee.id ? '…' : 'Mark Paid'}
-                              </button>
-                            )}
+                                Print receipt
+                              </a>
+                            </div>
                           </td>
                         </tr>
                       )
@@ -365,40 +375,50 @@ export default function FeesClient({
                           </div>
                         </div>
 
-                        {fee.paid ? (
-                          isConfirming ? (
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                          {fee.paid ? (
+                            isConfirming ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleMarkUnpaid(fee)}
+                                  disabled={acting === fee.id}
+                                  className="text-xs text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-2 min-h-[40px] disabled:opacity-50"
+                                >
+                                  {acting === fee.id ? '…' : 'Confirm unpaid'}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmUnpaidId(null)}
+                                  className="text-xs text-gray-400 px-2 py-2"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
                               <button
-                                onClick={() => handleMarkUnpaid(fee)}
-                                disabled={acting === fee.id}
-                                className="text-xs text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-2 min-h-[40px] disabled:opacity-50"
+                                onClick={() => setConfirmUnpaidId(fee.id)}
+                                className="text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-2 min-h-[40px] hover:border-red-200 hover:text-red-600 transition-colors"
                               >
-                                {acting === fee.id ? '…' : 'Confirm unpaid'}
+                                Mark Unpaid
                               </button>
-                              <button
-                                onClick={() => setConfirmUnpaidId(null)}
-                                className="text-xs text-gray-400 px-2 py-2"
-                              >
-                                Cancel
-                              </button>
-                            </div>
+                            )
                           ) : (
                             <button
-                              onClick={() => setConfirmUnpaidId(fee.id)}
-                              className="text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-2 min-h-[40px] hover:border-red-200 hover:text-red-600 transition-colors"
+                              onClick={() => handleMarkPaid(fee)}
+                              disabled={acting === fee.id}
+                              className="text-xs font-medium bg-[#1a2e1a] text-[#6fcf6f] rounded-lg px-3 py-2 min-h-[40px] hover:bg-[#243d24] disabled:opacity-50 transition-colors"
                             >
-                              Mark Unpaid
+                              {acting === fee.id ? '…' : 'Mark Paid'}
                             </button>
-                          )
-                        ) : (
-                          <button
-                            onClick={() => handleMarkPaid(fee)}
-                            disabled={acting === fee.id}
-                            className="text-xs font-medium bg-[#1a2e1a] text-[#6fcf6f] rounded-lg px-3 py-2 min-h-[40px] hover:bg-[#243d24] disabled:opacity-50 transition-colors"
+                          )}
+                          <a
+                            href={`/fees/receipt/${fee.student_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-gray-400 border border-gray-200 rounded-lg px-3 py-2 min-h-[40px] flex items-center hover:text-[#1a2e1a] hover:border-gray-300 transition-colors"
                           >
-                            {acting === fee.id ? '…' : 'Mark Paid'}
-                          </button>
-                        )}
+                            Receipt
+                          </a>
+                        </div>
                       </div>
                     </div>
                   )

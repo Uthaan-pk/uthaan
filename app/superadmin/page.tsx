@@ -9,6 +9,9 @@ import {
   stopImpersonating,
 } from './actions'
 import OnboardSchoolForm from './OnboardSchoolForm'
+import UsageTable, { type UsageRow } from './UsageTable'
+import { TERM_START_DATE } from '@/lib/constants'
+import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 
 type SchoolRow = {
   id: string
@@ -40,19 +43,62 @@ export default async function SuperadminPage() {
   // ── Data ───────────────────────────────────────────────────────────────
   const admin = createAdminClient()
 
-  const [schoolsRes, studentsRes, usersRes] = await Promise.all([
+  const [schoolsRes, studentsRes, usersRes, quizzesRes, assignmentsRes, attLogsRes] = await Promise.all([
     admin.from('schools').select('id, name, slug, is_active, created_at').order('created_at'),
-    admin.from('students').select('id, school_id'),
+    admin.from('students').select('id, school_id, is_active'),
     admin.from('user_roles').select('user_id, school_id, role'),
+    admin.from('quizzes').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
+    admin.from('assignments').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
+    admin.from('attendance_logs').select('student_id, status, school_id').gte('day', TERM_START_DATE),
   ])
 
   const schools: SchoolRow[] = (schoolsRes.data ?? []).map((s: any) => ({
     ...s,
-    student_count: (studentsRes.data ?? []).filter((st: any) => st.school_id === s.id).length,
+    student_count: (studentsRes.data ?? []).filter((st: any) => st.school_id === s.id && st.is_active !== false).length,
     user_count: (usersRes.data ?? []).filter(
       (u: any) => u.school_id === s.id && u.role !== 'superadmin'
     ).length,
   }))
+
+  // Build per-school usage rows
+  const attLogsBySchool = new Map<string, Array<{ student_id: string; status: string }>>()
+  for (const log of attLogsRes.data ?? []) {
+    const sid = (log as any).school_id as string | null
+    if (!sid) continue
+    if (!attLogsBySchool.has(sid)) attLogsBySchool.set(sid, [])
+    attLogsBySchool.get(sid)!.push({ student_id: (log as any).student_id, status: (log as any).status })
+  }
+
+  const usageRows: UsageRow[] = (schoolsRes.data ?? []).map((s: any) => {
+    const schoolStudents = (studentsRes.data ?? []).filter(
+      (st: any) => st.school_id === s.id && st.is_active !== false
+    )
+    const teachers = (usersRes.data ?? []).filter(
+      (u: any) => u.school_id === s.id && u.role === 'teacher'
+    ).length
+    const quizzes = (quizzesRes.data ?? []).filter((q: any) => q.school_id === s.id).length
+    const assignments = (assignmentsRes.data ?? []).filter((a: any) => a.school_id === s.id).length
+
+    const schoolLogs = attLogsBySchool.get(s.id) ?? []
+    let avgAttendance: number | null = null
+    if (schoolLogs.length > 0) {
+      const attMap = buildAttendanceMap(schoolLogs)
+      const pcts = Object.values(attMap).filter((p): p is number => p !== null)
+      avgAttendance = pcts.length > 0
+        ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length)
+        : null
+    }
+
+    return {
+      schoolId: s.id,
+      schoolName: s.name,
+      students: schoolStudents.length,
+      teachers,
+      quizzes,
+      assignments,
+      avgAttendance,
+    }
+  })
 
   // ── Active impersonation ────────────────────────────────────────────────
   const cookieStore = await cookies()
@@ -107,6 +153,19 @@ export default async function SuperadminPage() {
             </p>
           </div>
           <OnboardSchoolForm />
+        </section>
+
+        {/* Usage table */}
+        <section>
+          <h2 className="text-sm font-semibold text-gray-900 mb-1">School Usage</h2>
+          <p className="text-xs text-gray-400 mb-3">Current term stats. Click column headers to sort.</p>
+          {usageRows.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-100 px-5 py-10 text-center text-sm text-gray-400">
+              No schools yet.
+            </div>
+          ) : (
+            <UsageTable rows={usageRows} />
+          )}
         </section>
 
         {/* Schools table */}

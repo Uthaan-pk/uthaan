@@ -186,12 +186,24 @@ export default async function DashboardPage() {
   if (role === 'student') {
     const studentId = roleData?.student_id
     const today = new Date().toISOString().split('T')[0]
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+    const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+
     let dueToday = 0
     let avgMark: number | null = null
 
     let checklistAssignments: { id: string; title: string; subject: string; due_date: string | null }[] = []
     let checklistSubmissions: { assignment_id: string }[] = []
     let manualChecks: { assignment_id: string }[] = []
+
+    type TodayPeriod = { period: number; subject: string; start_time: string; end_time: string }
+    type UpcomingQuiz = { id: string; title: string; subject: string; status: string }
+    type HomeworkItem = { id: string; title: string; subject: string; due_date: string | null }
+
+    let todayPeriods: TodayPeriod[] = []
+    let upcomingQuizzes: UpcomingQuiz[] = []
+    let homeworkDue: HomeworkItem[] = []
+    let attendanceToday: string | null = null
 
     if (studentId) {
       const { data: student } = await supabase
@@ -201,7 +213,7 @@ export default async function DashboardPage() {
         .single()
 
       if (student?.class_num) {
-        const [assignRes, marksRes, subsRes, checksRes] = await Promise.all([
+        const [assignRes, marksRes, subsRes, checksRes, timetableRes, quizzesRes, attRes] = await Promise.all([
           supabase
             .from('assignments')
             .select('id, title, subject, due_date')
@@ -217,6 +229,23 @@ export default async function DashboardPage() {
             .from('assignment_manual_checks')
             .select('assignment_id')
             .eq('student_id', studentId),
+          supabase
+            .from('timetable')
+            .select('period, subject, start_time, end_time')
+            .eq('class_num', student.class_num)
+            .eq('day', todayName)
+            .order('period', { ascending: true }),
+          supabase
+            .from('quizzes')
+            .select('id, title, subject, status')
+            .eq('status', 'active')
+            .or(`class_num.eq.${student.class_num},class_num.is.null`),
+          supabase
+            .from('attendance_logs')
+            .select('status')
+            .eq('student_id', studentId)
+            .eq('day', today)
+            .maybeSingle(),
         ])
 
         dueToday = (assignRes.data ?? []).filter(
@@ -234,6 +263,12 @@ export default async function DashboardPage() {
         checklistAssignments = assignRes.data ?? []
         checklistSubmissions = subsRes.data ?? []
         manualChecks = checksRes.data ?? []
+        todayPeriods = (timetableRes.data ?? []) as TodayPeriod[]
+        upcomingQuizzes = (quizzesRes.data ?? []) as UpcomingQuiz[]
+        homeworkDue = (assignRes.data ?? []).filter(
+          (a) => a.due_date === today || a.due_date === tomorrow
+        ) as HomeworkItem[]
+        attendanceToday = attRes.data?.status ?? null
       }
     }
 
@@ -252,6 +287,116 @@ export default async function DashboardPage() {
 
           <main className="flex-1 overflow-y-auto p-6">
             <div className="max-w-2xl space-y-4">
+              {/* Today Overview */}
+              <div>
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
+                  {t.todayOverview}
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {/* Attendance status */}
+                  <div className="bg-white rounded-xl border border-gray-100 p-4">
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                      {t.attendanceStatus}
+                    </div>
+                    {attendanceToday === 'present' && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                        <span className="text-sm font-medium text-green-700">{t.present}</span>
+                      </div>
+                    )}
+                    {attendanceToday === 'absent' && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                        <span className="text-sm font-medium text-red-600">{t.absent}</span>
+                      </div>
+                    )}
+                    {attendanceToday === 'late' && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
+                        <span className="text-sm font-medium text-amber-600">{t.late}</span>
+                      </div>
+                    )}
+                    {!attendanceToday && (
+                      <div className="text-xs text-gray-400 mt-1">{t.notRecorded}</div>
+                    )}
+                  </div>
+
+                  {/* Upcoming quizzes */}
+                  <div className="bg-white rounded-xl border border-gray-100 p-4">
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                      {t.upcomingQuizzes}
+                    </div>
+                    {upcomingQuizzes.length > 0 ? (
+                      <div className="space-y-1 mt-1">
+                        {upcomingQuizzes.slice(0, 2).map((q) => (
+                          <div key={q.id} className="text-xs text-gray-700 truncate">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#6fcf6f] mr-1.5 align-middle" />
+                            {q.title}
+                          </div>
+                        ))}
+                        {upcomingQuizzes.length > 2 && (
+                          <div className="text-[11px] text-gray-400">+{upcomingQuizzes.length - 2} more</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-400 mt-1">{t.noneActive}</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Homework due today/tomorrow */}
+                {homeworkDue.length > 0 && (
+                  <div className="bg-white rounded-xl border border-l-4 border-l-amber-400 border-gray-100 p-4 mb-3">
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
+                      {t.homeworkDue}
+                    </div>
+                    <div className="space-y-1.5">
+                      {homeworkDue.slice(0, 4).map((a) => (
+                        <div key={a.id} className="flex items-center justify-between gap-3">
+                          <div className="text-xs text-gray-700 truncate">
+                            <span className="text-gray-400 mr-1">{a.subject}</span>
+                            {a.title}
+                          </div>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
+                            a.due_date === today
+                              ? 'bg-red-50 text-red-600'
+                              : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {a.due_date === today ? t.dueToday : t.dueTomorrow}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Today's timetable */}
+                <div className="bg-white rounded-xl border border-gray-100 p-4">
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
+                    {t.todaySchedule}
+                  </div>
+                  {todayPeriods.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {todayPeriods.map((p) => (
+                        <div key={p.period} className="flex items-center gap-3">
+                          <span className="text-[11px] text-gray-400 w-6 text-right flex-shrink-0">
+                            {p.period}
+                          </span>
+                          <span className="text-[11px] text-gray-400 flex-shrink-0">
+                            {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                          </span>
+                          <span className="text-xs font-medium text-gray-800 truncate">
+                            {p.subject}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-gray-400">{t.noPeriods}</div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <Link
                   href="/assignments"

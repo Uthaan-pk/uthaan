@@ -3,6 +3,8 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import StudentsTable from './StudentsTable'
+import { buildAttendanceMap } from '@/lib/attendanceLeaves'
+import { TERM_START_DATE } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -27,13 +29,19 @@ export default async function StudentsPage() {
 
   if (role === 'student') redirect('/dashboard')
 
-  const { data: students } = await supabase
-    .from('students')
-    .select(
-      'id, name, roll_no, email, stage, class_num, created_at, is_active'
-    )
-    .eq('is_active', true)
-    .order('name')
+  const [{ data: students }, { data: attLogs }] = await Promise.all([
+    supabase
+      .from('students')
+      .select('id, name, roll_no, email, stage, class_num, created_at, is_active')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('attendance_logs')
+      .select('student_id, status')
+      .gte('day', TERM_START_DATE),
+  ])
+
+  const attendanceMap = buildAttendanceMap(attLogs ?? [])
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -48,7 +56,7 @@ export default async function StudentsPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
-          <StudentsTable students={students ?? []} />
+          <StudentsTable students={students ?? []} attendanceMap={attendanceMap} />
         </main>
       </div>
     </div>

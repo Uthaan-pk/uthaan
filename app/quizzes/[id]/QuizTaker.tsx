@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { submitQuiz } from './actions'
 
@@ -32,7 +31,6 @@ export default function QuizTaker({
   userId: _userId, // server action reads user from session; prop kept for API compat
   attemptNumber,
   maxAttempts,
-  onRetry,
 }: {
   quiz: Quiz
   userId: string
@@ -41,13 +39,8 @@ export default function QuizTaker({
   onRetry: () => void
 }) {
   const [current, setCurrent] = useState(0)
-  const [answers, setAnswers] = useState<(number | null)[]>(
-    new Array(quiz.questions.length).fill(null)
-  )
   const [selected, setSelected] = useState<number | null>(null)
   const [timeLeft, setTimeLeft] = useState(quiz.time_limit * 60)
-  const [submitted, setSubmitted] = useState(false)
-  const [score, setScore] = useState(0)
   const [submitting, setSubmitting] = useState(false)
 
   const answersRef = useRef<(number | null)[]>(new Array(quiz.questions.length).fill(null))
@@ -67,22 +60,19 @@ export default function QuizTaker({
 
     const result = await submitQuiz(quiz.id, finalAnswers, calculatedScore)
 
-    if ('error' in result) {
-      // Attempt limit reached (race/stale page): redirect to results view
+    if (!result.success) {
       if (result.error === 'attempt_limit_reached') {
+        // Attempt limit hit server-side — redirect to results
         router.replace(`/quizzes/${quiz.id}?mode=results`)
         return
       }
-      // Other server errors: reset so user can try again
+      // Other server errors: allow retry
       hasSubmittedRef.current = false
       setSubmitting(false)
       return
     }
 
-    setScore(calculatedScore)
-    setAnswers(finalAnswers)
-    setSubmitting(false)
-    setSubmitted(true)
+    router.replace(`/quizzes/${quiz.id}?mode=results`)
   }
 
   function autoSubmit() {
@@ -109,7 +99,6 @@ export default function QuizTaker({
     const newAnswers = [...answersRef.current]
     newAnswers[current] = selected
     answersRef.current = newAnswers
-    setAnswers(newAnswers)
 
     if (current === quiz.questions.length - 1) {
       doSubmit(newAnswers)
@@ -135,106 +124,6 @@ export default function QuizTaker({
     return (
       <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
         <div className="text-sm text-gray-500">This quiz has no questions.</div>
-      </div>
-    )
-  }
-
-  // Post-submit view
-  if (submitted) {
-    const pct = total > 0 ? Math.round((score / total) * 100) : 0
-    const passed = pct >= 50
-    const attemptsRemaining = attemptNumber < maxAttempts
-
-    return (
-      <div className="space-y-6">
-        {/* Score card */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 text-center">
-          <div className={`text-4xl font-bold mb-1 ${passed ? 'text-green-600' : 'text-red-500'}`}>
-            {pct}%
-          </div>
-          <div className="text-sm text-gray-500 mb-2">{score} of {total} correct</div>
-          <div className={`text-xs font-medium px-3 py-1 rounded-full inline-block ${
-            passed ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'
-          }`}>
-            {passed ? 'Passed' : 'Not passed'}
-          </div>
-        </div>
-
-        {/* Review */}
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-50">
-            <h3 className="text-sm font-semibold text-gray-900">Review</h3>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {quiz.questions.map((q, qIndex) => {
-              const studentAnswer = answers[qIndex] ?? null
-              const isCorrect = studentAnswer === q.correct
-
-              return (
-                <div key={qIndex} className="px-5 py-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      isCorrect ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                    }`}>
-                      {isCorrect ? 'Correct' : 'Wrong'}
-                    </span>
-                    <span className="text-xs font-semibold text-gray-400">Q{qIndex + 1}</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-900 mb-3">{q.text}</div>
-                  <div className="space-y-1.5">
-                    {q.options.map((opt, optIndex) => {
-                      const isCorrectOpt = q.correct === optIndex
-                      const isStudentWrongChoice = studentAnswer === optIndex && !isCorrectOpt
-
-                      return (
-                        <div
-                          key={optIndex}
-                          className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
-                            isCorrectOpt
-                              ? 'bg-green-50 text-green-800'
-                              : isStudentWrongChoice
-                              ? 'bg-red-50 text-red-700'
-                              : 'text-gray-500'
-                          }`}
-                        >
-                          <span className="font-semibold w-4 flex-shrink-0">
-                            {optionLabels[optIndex]}
-                          </span>
-                          <span>{opt}</span>
-                          {isCorrectOpt && (
-                            <span className="ml-auto font-medium text-green-600">✓ Correct</span>
-                          )}
-                          {isStudentWrongChoice && (
-                            <span className="ml-auto font-medium text-red-600">✗ Your answer</span>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Navigation buttons */}
-        <div className="flex items-center justify-between pb-6">
-          <Link
-            href="/quizzes"
-            className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-4 py-2 rounded-lg transition-colors"
-          >
-            ← Back to Quizzes
-          </Link>
-          {attemptsRemaining && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              Retry Quiz
-            </button>
-          )}
-        </div>
       </div>
     )
   }

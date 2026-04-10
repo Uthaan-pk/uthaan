@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
@@ -14,7 +13,6 @@ export async function submitQuiz(
 ): Promise<SubmitQuizResult> {
   const supabase = await createClient()
   const admin = createAdminClient()
-  const resultsUrl = `/quizzes/${quizId}?mode=results`
 
   const {
     data: { user },
@@ -69,24 +67,29 @@ export async function submitQuiz(
 
   const { count } = await admin
     .from('quiz_submissions')
-    .select('id', { count: 'exact', head: true })
+    .select('*', { count: 'exact', head: true })
     .eq('quiz_id', quizId)
     .eq('user_id', user.id)
 
-  if ((count ?? 0) >= maxAttempts) {
-    redirect(resultsUrl)
+  const attemptNumber = (count ?? 0) + 1
+
+  if (attemptNumber > maxAttempts) {
+    return { success: false, error: 'No attempts remaining' }
   }
 
   const { error } = await admin.from('quiz_submissions').insert({
     quiz_id: quizId,
     user_id: user.id,
+    school_id: student.school_id,
     answers,
     score,
+    submitted_at: new Date().toISOString(),
+    attempt_number: attemptNumber,
   })
 
   if (error) return { success: false, error: error.message }
 
   revalidatePath(`/quizzes/${quizId}`)
   revalidatePath('/quizzes')
-  redirect(resultsUrl)
+  return { success: true }
 }

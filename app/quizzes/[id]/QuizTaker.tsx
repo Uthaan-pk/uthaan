@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { submitQuiz } from './actions'
 
 type Question = {
@@ -42,6 +43,7 @@ export default function QuizTaker({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  const router = useRouter()
   const answersRef = useRef<(number | null)[]>(new Array(quiz.questions.length).fill(null))
   const hasSubmittedRef = useRef(false)
   void userId
@@ -60,7 +62,11 @@ export default function QuizTaker({
 
     const result = await submitQuiz(quiz.id, finalAnswers, calculatedScore)
 
-    // Successful submissions and attempt-limit hits redirect server-side.
+    if (result.success) {
+      router.push(`/quizzes/${quiz.id}?mode=results`)
+      return
+    }
+
     hasSubmittedRef.current = false
     setSubmitting(false)
     setSubmitError(result.error ?? 'Could not submit quiz. Please try again.')

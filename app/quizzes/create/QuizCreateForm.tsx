@@ -41,11 +41,13 @@ const FALLBACK_SUBJECTS = [
 
 export default function QuizCreateForm({
   userId,
+  schoolId,
   quizId,
   initialData,
   visibleSubjects = [],
 }: {
   userId: string
+  schoolId?: string | null
   quizId?: string
   initialData?: InitialData
   visibleSubjects?: string[]
@@ -192,6 +194,7 @@ export default function QuizCreateForm({
         status,
         class_num: classNumValue,
         max_attempts: maxAttemptsValue,
+        school_id: schoolId ?? null,
         created_by: userId,
       })
 

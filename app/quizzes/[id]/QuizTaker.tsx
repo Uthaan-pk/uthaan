@@ -27,7 +27,7 @@ function formatTime(seconds: number): string {
 
 export default function QuizTaker({
   quiz,
-  userId: _userId, // server action reads user from session; prop kept for API compat
+  userId, // server action reads user from session; prop kept for API compat
   attemptNumber,
   maxAttempts,
 }: {
@@ -35,7 +35,6 @@ export default function QuizTaker({
   userId: string
   attemptNumber: number
   maxAttempts: number
-  onRetry: () => void
 }) {
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
@@ -45,6 +44,7 @@ export default function QuizTaker({
 
   const answersRef = useRef<(number | null)[]>(new Array(quiz.questions.length).fill(null))
   const hasSubmittedRef = useRef(false)
+  void userId
 
   async function doSubmit(finalAnswers: (number | null)[]) {
     if (hasSubmittedRef.current) return
@@ -67,7 +67,7 @@ export default function QuizTaker({
   }
 
   function autoSubmit() {
-    doSubmit(answersRef.current)
+    void doSubmit(answersRef.current)
   }
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function QuizTaker({
     answersRef.current = newAnswers
 
     if (current === quiz.questions.length - 1) {
-      doSubmit(newAnswers)
+      void doSubmit(newAnswers)
     } else {
       setCurrent(current + 1)
       setSelected(null)

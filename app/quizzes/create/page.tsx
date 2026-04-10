@@ -5,6 +5,10 @@ import QuizCreateForm from './QuizCreateForm'
 import { CURRENT_TERM } from '@/lib/constants'
 import { resolveEffectiveRole } from '@/lib/school'
 
+type TimetableRow = {
+  subject: string | null
+}
+
 export default async function CreateQuizPage() {
   const supabase = await createClient()
   const {
@@ -15,7 +19,7 @@ export default async function CreateQuizPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
 
@@ -34,7 +38,7 @@ export default async function CreateQuizPage() {
   const visibleSubjects = Array.from(
     new Set(
       (timetableRows ?? [])
-        .map((row: any) => (row.subject as string)?.toLowerCase?.())
+        .map((row: TimetableRow) => row.subject?.toLowerCase?.())
         .filter(Boolean)
     )
   )
@@ -53,7 +57,11 @@ export default async function CreateQuizPage() {
 
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl">
-            <QuizCreateForm userId={user.id} visibleSubjects={visibleSubjects} />
+            <QuizCreateForm
+              userId={user.id}
+              schoolId={roleData?.school_id ?? null}
+              visibleSubjects={visibleSubjects}
+            />
           </div>
         </main>
       </div>

@@ -6,6 +6,31 @@ import QuizList, { type Quiz } from './QuizList'
 import { CURRENT_TERM } from '@/lib/constants'
 import { resolveEffectiveRole } from '@/lib/school'
 
+type TimetableRow = {
+  class_num: number | string | null
+  subject: string | null
+}
+
+type QuizSummary = {
+  id: string
+  title: string
+  subject: string
+  time_limit: number
+  questions: unknown[] | null
+  status: string
+  created_at: string
+  max_attempts?: number | null
+  created_by?: string
+  class_num?: number | string | null
+}
+
+type QuizSubmissionSummary = {
+  id: string
+  quiz_id: string
+  score: number | null
+  submitted_at: string
+}
+
 export default async function QuizzesPage() {
   const supabase = await createClient()
 
@@ -17,7 +42,7 @@ export default async function QuizzesPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role, student_id')
+    .select('role, student_id, school_id')
     .eq('user_id', user.id)
     .single()
 
@@ -62,7 +87,7 @@ export default async function QuizzesPage() {
       ? Array.from(
           new Set(
             timetableRows
-              .map((row: any) => Number(row.class_num))
+              .map((row: TimetableRow) => Number(row.class_num))
               .filter((n: number) => !isNaN(n) && n > 0)
           )
         ).sort((a, b) => a - b)
@@ -72,13 +97,13 @@ export default async function QuizzesPage() {
       ? Array.from(
           new Set(
             timetableRows
-              .map((row: any) => (row.subject as string)?.toLowerCase?.())
+              .map((row: TimetableRow) => row.subject?.toLowerCase?.())
               .filter(Boolean)
           )
         )
       : []
 
-    const quizzes = (quizzesRes.data ?? []).filter((quiz: any) => {
+    const quizzes = ((quizzesRes.data ?? []) as QuizSummary[]).filter((quiz) => {
       if (!isTeacher) return true
 
       const subjectOk = visibleSubjects.includes((quiz.subject ?? '').toLowerCase())
@@ -150,7 +175,7 @@ export default async function QuizzesPage() {
 
     const { data: child } = await supabase
       .from('students')
-      .select('id, name, class_num')
+      .select('id, name, class_num, school_id')
       .eq('id', link.student_id)
       .eq('is_active', true)
       .single()
@@ -173,12 +198,18 @@ export default async function QuizzesPage() {
       )
     }
 
-    const { data: quizzes } = await supabase
+    let quizzesQuery = supabase
       .from('quizzes')
       .select('id, title, subject, time_limit, questions, status, created_at')
       .eq('status', 'active')
       .or(`class_num.eq.${child.class_num},class_num.is.null`)
       .order('created_at', { ascending: false })
+
+    if (child.school_id) {
+      quizzesQuery = quizzesQuery.eq('school_id', child.school_id)
+    }
+
+    const { data: quizzes } = await quizzesQuery
 
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -263,7 +294,7 @@ export default async function QuizzesPage() {
 
     const { data: student } = await supabase
       .from('students')
-      .select('id, class_num')
+      .select('id, class_num, school_id')
       .eq('id', roleData.student_id)
       .eq('is_active', true)
       .single()
@@ -287,7 +318,7 @@ export default async function QuizzesPage() {
       )
     }
 
-    const { data: quizzes } = await supabase
+    let quizzesQuery = supabase
       .from('quizzes')
       .select(
         'id, title, subject, time_limit, questions, status, created_at, max_attempts'
@@ -296,7 +327,13 @@ export default async function QuizzesPage() {
       .or(`class_num.eq.${student.class_num},class_num.is.null`)
       .order('created_at', { ascending: false })
 
-    const quizIds = (quizzes ?? []).map((q: any) => q.id)
+    if (student.school_id) {
+      quizzesQuery = quizzesQuery.eq('school_id', student.school_id)
+    }
+
+    const { data: quizzes } = await quizzesQuery
+
+    const quizIds = (quizzes ?? []).map((q: QuizSummary) => q.id)
 
     const { data: submissions } =
       quizIds.length > 0
@@ -306,11 +343,11 @@ export default async function QuizzesPage() {
             .in('quiz_id', quizIds)
             .eq('user_id', user.id)
             .order('submitted_at', { ascending: false })
-        : { data: [] as any[] }
+        : { data: [] as QuizSubmissionSummary[] }
 
-    const latestByQuizId: Record<string, any> = {}
+    const latestByQuizId: Record<string, QuizSubmissionSummary> = {}
     const submissionCountByQuizId: Record<string, number> = {}
-    ;(submissions ?? []).forEach((sub: any) => {
+    ;((submissions ?? []) as QuizSubmissionSummary[]).forEach((sub) => {
       submissionCountByQuizId[sub.quiz_id] =
         (submissionCountByQuizId[sub.quiz_id] ?? 0) + 1
       if (!latestByQuizId[sub.quiz_id]) {
@@ -339,7 +376,7 @@ export default async function QuizzesPage() {
                 </div>
 
                 {quizzes && quizzes.length > 0 ? (
-                  quizzes.map((quiz: any) => {
+                  (quizzes as QuizSummary[]).map((quiz) => {
                     const questionCount = Array.isArray(quiz.questions)
                       ? quiz.questions.length
                       : 0

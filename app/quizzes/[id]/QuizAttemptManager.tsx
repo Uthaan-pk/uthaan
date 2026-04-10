@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import QuizTaker from './QuizTaker'
 
 type Question = {
@@ -28,22 +27,12 @@ export default function QuizAttemptManager({
   initialAttemptNumber: number
   maxAttempts: number
 }) {
-  const [attemptNumber, setAttemptNumber] = useState(initialAttemptNumber)
-  const [retryKey, setRetryKey] = useState(0)
-
-  function handleRetry() {
-    setRetryKey((k) => k + 1)
-    setAttemptNumber((n) => n + 1)
-  }
-
   return (
     <QuizTaker
-      key={retryKey}
       quiz={quiz}
       userId={userId}
-      attemptNumber={attemptNumber}
+      attemptNumber={initialAttemptNumber}
       maxAttempts={maxAttempts}
-      onRetry={handleRetry}
     />
   )
 }

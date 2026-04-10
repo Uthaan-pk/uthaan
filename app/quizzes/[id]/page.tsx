@@ -19,6 +19,11 @@ type DBQuestion = {
   correct: string
 }
 
+type TimetableRow = {
+  class_num: number | string | null
+  subject: string | null
+}
+
 const optionLabels = ['A', 'B', 'C', 'D']
 
 function normalizeQuestion(q: DBQuestion): Question {
@@ -49,7 +54,7 @@ export default async function QuizPage({
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, student_id, school_id')
     .eq('user_id', user.id)
     .single()
 
@@ -60,6 +65,10 @@ export default async function QuizPage({
 
   if (effectiveRole === 'admin') {
     redirect('/dashboard')
+  }
+
+  if (role === 'parent') {
+    redirect('/quizzes')
   }
 
   const { data: quiz } = await supabase
@@ -105,7 +114,7 @@ export default async function QuizPage({
     const visibleClassNums = Array.from(
       new Set(
         (timetableRows ?? [])
-          .map((row: any) => Number(row.class_num))
+          .map((row: TimetableRow) => Number(row.class_num))
           .filter((n: number) => !isNaN(n) && n > 0)
       )
     )
@@ -113,7 +122,7 @@ export default async function QuizPage({
     const visibleSubjects = Array.from(
       new Set(
         (timetableRows ?? [])
-          .map((row: any) => (row.subject as string)?.toLowerCase?.())
+          .map((row: TimetableRow) => row.subject?.toLowerCase?.())
           .filter(Boolean)
       )
     )
@@ -195,6 +204,36 @@ export default async function QuizPage({
         </div>
       </div>
     )
+  }
+
+  if (role === 'student') {
+    if (!roleData?.student_id) {
+      redirect('/quizzes')
+    }
+
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, class_num, school_id')
+      .eq('id', roleData.student_id)
+      .eq('is_active', true)
+      .single()
+
+    if (!student) {
+      redirect('/quizzes')
+    }
+
+    const classAllowed =
+      quiz.class_num == null ||
+      Number(quiz.class_num) === Number(student.class_num)
+
+    const schoolAllowed =
+      !quiz.school_id ||
+      !student.school_id ||
+      quiz.school_id === student.school_id
+
+    if (!classAllowed || !schoolAllowed) {
+      redirect('/quizzes')
+    }
   }
 
   const { data: submissions } = await supabase

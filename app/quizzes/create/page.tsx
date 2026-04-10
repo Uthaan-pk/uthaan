@@ -9,6 +9,10 @@ type TimetableRow = {
   subject: string | null
 }
 
+function isNonEmptyString(value: string | null | undefined): value is string {
+  return typeof value === 'string' && value.length > 0
+}
+
 export default async function CreateQuizPage() {
   const supabase = await createClient()
   const {
@@ -39,7 +43,7 @@ export default async function CreateQuizPage() {
     new Set(
       (timetableRows ?? [])
         .map((row: TimetableRow) => row.subject?.toLowerCase?.())
-        .filter(Boolean)
+        .filter(isNonEmptyString)
     )
   )
 

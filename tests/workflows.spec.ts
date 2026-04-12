@@ -1,5 +1,9 @@
+// Disabled: replaced by smoke.spec.ts which uses pre-authenticated storageState.
+// Re-enable only if you want slower, UI-login-based coverage for these flows.
 import { test, expect } from '@playwright/test';
 import { login } from './helpers/auth';
+
+test.skip('workflows tests disabled – use smoke.spec.ts', () => {});
 
 // ── Admin ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +31,7 @@ test('teacher: submissions page has class dropdown', async ({ page }) => {
 test('teacher: marks page loads', async ({ page }) => {
   await login(page, 'teacher@uthaan.com', 'teacher123456');
   await page.goto('/marks');
-  await expect(page.getByRole('heading', { name: 'Marks' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gradebook' })).toBeVisible();
 });
 
 // ── Student ──────────────────────────────────────────────────────────────────

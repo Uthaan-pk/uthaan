@@ -88,6 +88,7 @@ export default async function AnnouncementsPage() {
     )
   }
 
+  // ── Parent ──────────────────────────────────────────────────────────────────
   if (role === 'parent') {
     const { data: link } = await supabase
       .from('parent_student')
@@ -164,6 +165,17 @@ export default async function AnnouncementsPage() {
       })
     }
 
+    const parentAcknowledgedIds = new Set<string>()
+    const announcementIds = (announcements ?? []).map(a => a.id)
+    if (announcementIds.length > 0) {
+      const { data: acks } = await supabase
+        .from('announcement_acknowledgements')
+        .select('announcement_id')
+        .eq('user_id', user.id)
+        .in('announcement_id', announcementIds)
+      acks?.forEach(a => parentAcknowledgedIds.add(a.announcement_id))
+    }
+
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role="parent" />
@@ -190,6 +202,7 @@ export default async function AnnouncementsPage() {
                   creatorRoleMap={creatorRoleMap}
                   currentUserId={user.id}
                   isStaff={false}
+                  acknowledgedIds={parentAcknowledgedIds}
                 />
               </div>
             </div>
@@ -271,6 +284,17 @@ export default async function AnnouncementsPage() {
       })
     }
 
+    const studentAcknowledgedIds = new Set<string>()
+    const announcementIds = (announcements ?? []).map(a => a.id)
+    if (announcementIds.length > 0) {
+      const { data: acks } = await supabase
+        .from('announcement_acknowledgements')
+        .select('announcement_id')
+        .eq('user_id', user.id)
+        .in('announcement_id', announcementIds)
+      acks?.forEach(a => studentAcknowledgedIds.add(a.announcement_id))
+    }
+
     return (
       <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
         <Sidebar email={user.email!} role={role ?? ''} />
@@ -297,6 +321,7 @@ export default async function AnnouncementsPage() {
                   creatorRoleMap={creatorRoleMap}
                   currentUserId={user.id}
                   isStaff={false}
+                  acknowledgedIds={studentAcknowledgedIds}
                 />
               </div>
             </div>

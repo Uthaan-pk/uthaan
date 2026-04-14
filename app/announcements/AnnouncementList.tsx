@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import AcknowledgeButton from '@/components/announcements/AcknowledgeButton'
+import AcknowledgementStatus from '@/components/announcements/AcknowledgementStatus'
 
 type Announcement = {
   id: string
@@ -32,12 +34,15 @@ export default function AnnouncementList({
   currentUserId,
   isStaff,
   currentUserRole,
+  acknowledgedIds,
 }: {
   announcements: Announcement[]
   creatorRoleMap: Record<string, string>
   currentUserId: string
   isStaff: boolean
   currentUserRole?: string
+  /** Set of announcement IDs the current user has already acknowledged (student/parent only) */
+  acknowledgedIds?: Set<string>
   // priorityBadge and priorityLabel are no longer needed as props
   priorityBadge?: Record<string, string>
   priorityLabel?: Record<string, string>
@@ -255,8 +260,18 @@ export default function AnnouncementList({
 
                 <div className="text-sm font-semibold text-gray-900">{a.title}</div>
                 <div className="text-sm text-gray-600 mt-1 leading-relaxed">{a.body}</div>
-                <div className="text-[10px] text-gray-300 mt-2 capitalize">
-                  Posted by {creatorRoleMap[a.created_by ?? ''] ?? 'staff'}
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[10px] text-gray-300 capitalize">
+                    Posted by {creatorRoleMap[a.created_by ?? ''] ?? 'staff'}
+                  </span>
+                  {isStaff ? (
+                    <AcknowledgementStatus announcementId={a.id} />
+                  ) : (
+                    <AcknowledgeButton
+                      announcementId={a.id}
+                      initialAcknowledged={acknowledgedIds?.has(a.id) ?? false}
+                    />
+                  )}
                 </div>
               </>
             )}

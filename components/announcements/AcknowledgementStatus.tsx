@@ -18,7 +18,11 @@ export default function AcknowledgementStatus({
   useEffect(() => {
     fetch(`/api/announcements/${announcementId}/acknowledgements`)
       .then((r) => r.json())
-      .then((d: AckData) => setData(d))
+      .then((d: AckData) => {
+        if (d && typeof d.count === 'number' && Array.isArray(d.names)) {
+          setData(d)
+        }
+      })
       .catch(() => {})
   }, [announcementId])
 

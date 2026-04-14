@@ -295,14 +295,6 @@ export default function Sidebar({
           )}
 
           <NavItem
-            label="Homework"
-            href="/homework"
-            active={pathname === '/homework'}
-            onClose={close}
-            isUrdu={isUrdu}
-          />
-
-          <NavItem
             label={t.gradebook}
             href="/marks"
             active={pathname === '/marks'}

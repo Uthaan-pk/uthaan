@@ -266,14 +266,6 @@ export default function Sidebar({
             isUrdu={isUrdu}
           />
 
-          <NavItem
-            label="Notes"
-            href="/notes"
-            active={pathname === '/notes'}
-            onClose={close}
-            isUrdu={isUrdu}
-          />
-
           <p
             className={`text-white/30 px-2 mt-4 mb-2 ${
               isUrdu

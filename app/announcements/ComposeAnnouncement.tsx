@@ -1,11 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { createAnnouncement } from './actions'
 
-export default function ComposeAnnouncement({ userId }: { userId: string }) {
+export default function ComposeAnnouncement() {
   const [open,      setOpen]     = useState(false)
   const [title,     setTitle]    = useState('')
   const [body,      setBody]     = useState('')
@@ -13,7 +13,6 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
   const [classNum,  setClassNum] = useState('all')
   const [loading,   setLoading]  = useState(false)
 
-  const supabase = useMemo(() => createClient(), [])
   const router   = useRouter()
 
   function reset() {
@@ -28,16 +27,15 @@ export default function ComposeAnnouncement({ userId }: { userId: string }) {
     if (!title.trim() || !body.trim()) return
 
     setLoading(true)
-    const { error } = await supabase.from('announcements').insert({
-      title:     title.trim(),
-      body:      body.trim(),
-      priority:  priority.toLowerCase(),
-      class_num: classNum === 'all' ? null : parseInt(classNum, 10),
-      created_by: userId,
+    const { error } = await createAnnouncement({
+      title,
+      body,
+      priority,
+      classNum,
     })
     setLoading(false)
 
-    if (error) { toast.error(error.message); return }
+    if (error) { toast.error(error); return }
 
     toast.success('Announcement posted!')
     reset()

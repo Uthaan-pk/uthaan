@@ -67,7 +67,7 @@ export default async function AnnouncementsPage() {
 
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-2xl">
-              <ComposeAnnouncement userId={user.id} />
+              <ComposeAnnouncement />
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
                   <h2 className="text-sm font-semibold text-gray-900">

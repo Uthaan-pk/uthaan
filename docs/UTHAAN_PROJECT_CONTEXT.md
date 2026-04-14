@@ -20,7 +20,7 @@ Uthaan is a multi-role school management platform built for real school workflow
 ## Main Modules
 - Dashboard
 - Students
-- Announcements
+- Announcements (+ acknowledgement receipts)
 - Assignments
 - Gradebook / Marks
 - Results / Report Cards
@@ -58,6 +58,35 @@ Uthaan is a multi-role school management platform built for real school workflow
 - Parent behavior depends on parent_student links
 - Student behavior may depend on linked student_id in user_roles
 - Teacher attendance and class views may depend on timetable relationships
+
+## Communication Philosophy
+- Uthaan is NOT a chat or messaging app
+- Communication is structured, workflow-attached, and async only
+- No open DMs, no real-time chat, no student-to-student or parent-to-parent messaging
+- The announcement module is the primary broadcast channel (admin/teacher → students/parents)
+- Acknowledgements are receipts, not social reactions
+
+## Announcement Acknowledgements
+- Table: announcement_acknowledgements (id, announcement_id, user_id, school_id, acknowledged_at)
+- Students and parents can mark an announcement as acknowledged (one row per user per announcement)
+- Admins and teachers can see acknowledgement counts and the list of who confirmed
+- Components: AcknowledgeButton (student/parent view), AcknowledgementStatus (admin/teacher view)
+- API routes: POST /api/announcements/[id]/acknowledge, GET /api/announcements/[id]/acknowledgements
+- No reactions, no threading, no social features on announcements
+
+## AI Features
+- Report card comment generator: built. Uses claude-haiku-4-5-20251001, reads marks + attendance_logs.
+  Route: /api/ai/report-comments/route.ts. Component: ReportCommentGenerator.
+- Attendance alert summary: built. Weekly cron (Mon 7am PKT), flags students with 3+ absences/late
+  in 7 days, generates parent alerts via Anthropic Batch API, saves to announcements table.
+  Routes: /api/ai/attendance-alerts/route.ts, /api/cron/attendance-alerts/route.ts.
+  Component: AttendanceAlertSummary. Cron: vercel.json schedule 0 2 * * 1.
+- Remaining AI features planned (in order):
+  2. Assignment feedback generator
+  3. Quiz generator from topic
+  4. Fee defaulter risk flag (nightly cron)
+  5. Student performance insight (uses claude-sonnet-4-6)
+  6. Announcement writer (bilingual EN + Urdu)
 
 ## Testing Philosophy
 - Prefer focused Playwright smoke tests, not broad fragile full-app tests

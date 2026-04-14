@@ -5,6 +5,7 @@ import ComposeAnnouncement from './ComposeAnnouncement'
 import { CURRENT_TERM } from '@/lib/constants'
 import AnnouncementList from './AnnouncementList'
 import { resolveEffectiveRole } from '@/lib/school'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 
 export default async function AnnouncementsPage() {
@@ -41,14 +42,14 @@ export default async function AnnouncementsPage() {
 
     const creatorRoleMap: Record<string, string> = {}
     if (creatorIds.length > 0) {
-      const { data: creatorRoles } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', creatorIds)
-
-      creatorRoles?.forEach(r => {
-        creatorRoleMap[r.user_id] = r.role
-      })
+      const adminClient = createAdminClient()
+      const { data: usersData } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+      const creatorSet = new Set(creatorIds)
+      usersData?.users
+        .filter(u => creatorSet.has(u.id))
+        .forEach(u => {
+          if (u.email) creatorRoleMap[u.id] = u.email.split('@')[0]
+        })
     }
 
     return (
@@ -155,14 +156,14 @@ export default async function AnnouncementsPage() {
 
     const creatorRoleMap: Record<string, string> = {}
     if (creatorIds.length > 0) {
-      const { data: creatorRoles } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', creatorIds)
-
-      creatorRoles?.forEach(r => {
-        creatorRoleMap[r.user_id] = r.role
-      })
+      const adminClient = createAdminClient()
+      const { data: usersData } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+      const creatorSet = new Set(creatorIds)
+      usersData?.users
+        .filter(u => creatorSet.has(u.id))
+        .forEach(u => {
+          if (u.email) creatorRoleMap[u.id] = u.email.split('@')[0]
+        })
     }
 
     const parentAcknowledgedIds = new Set<string>()
@@ -274,14 +275,14 @@ export default async function AnnouncementsPage() {
 
     const creatorRoleMap: Record<string, string> = {}
     if (creatorIds.length > 0) {
-      const { data: creatorRoles } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', creatorIds)
-
-      creatorRoles?.forEach(r => {
-        creatorRoleMap[r.user_id] = r.role
-      })
+      const adminClient = createAdminClient()
+      const { data: usersData } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+      const creatorSet = new Set(creatorIds)
+      usersData?.users
+        .filter(u => creatorSet.has(u.id))
+        .forEach(u => {
+          if (u.email) creatorRoleMap[u.id] = u.email.split('@')[0]
+        })
     }
 
     const studentAcknowledgedIds = new Set<string>()

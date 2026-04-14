@@ -266,6 +266,14 @@ export default function Sidebar({
             isUrdu={isUrdu}
           />
 
+          <NavItem
+            label="Notes"
+            href="/notes"
+            active={pathname === '/notes'}
+            onClose={close}
+            isUrdu={isUrdu}
+          />
+
           <p
             className={`text-white/30 px-2 mt-4 mb-2 ${
               isUrdu
@@ -285,6 +293,14 @@ export default function Sidebar({
               isUrdu={isUrdu}
             />
           )}
+
+          <NavItem
+            label="Homework"
+            href="/homework"
+            active={pathname === '/homework'}
+            onClose={close}
+            isUrdu={isUrdu}
+          />
 
           <NavItem
             label={t.gradebook}
@@ -373,31 +389,6 @@ export default function Sidebar({
               active={pathname === '/analytics'}
               onClose={close}
               isUrdu={isUrdu}
-            />
-          )}
-
-          {isTeacher && (
-            <NavItem
-              label={t.gradeSettings}
-              href="/grade-settings"
-              active={pathname === '/grade-settings'}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="7" cy="7" r="2" />
-                  <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" />
-                </svg>
-              }
             />
           )}
 

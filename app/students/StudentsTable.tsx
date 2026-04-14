@@ -56,6 +56,7 @@ export default function StudentsTable({
   const [drawerLoading, setDrawerLoading] = useState(false)
   const [archiveLoading, setArchiveLoading] = useState(false)
   const [archiveError, setArchiveError] = useState<string | null>(null)
+  const [confirmArchive, setConfirmArchive] = useState(false)
 
   const supabase = useMemo(() => createClient(), [])
   const router = useRouter()
@@ -84,6 +85,7 @@ export default function StudentsTable({
     setDrawerLoading(true)
     setDrawerData(null)
     setArchiveError(null)
+    setConfirmArchive(false)
 
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -115,12 +117,6 @@ export default function StudentsTable({
   async function archiveStudent() {
     if (!selectedStudent) return
 
-    const confirmed = window.confirm(
-      `Archive ${selectedStudent.name}? This will remove the student from active lists but keep historical records.`
-    )
-
-    if (!confirmed) return
-
     setArchiveLoading(true)
     setArchiveError(null)
 
@@ -141,6 +137,7 @@ export default function StudentsTable({
     setSelectedStudent(null)
     setDrawerData(null)
     setArchiveLoading(false)
+    setConfirmArchive(false)
 
     router.refresh()
   }
@@ -246,7 +243,7 @@ export default function StudentsTable({
       {selectedStudent && (
         <div
           className="fixed inset-0 bg-black/25 z-40"
-          onClick={() => setSelectedStudent(null)}
+          onClick={() => { setSelectedStudent(null); setConfirmArchive(false) }}
         />
       )}
 
@@ -272,7 +269,7 @@ export default function StudentsTable({
                 </div>
               </div>
               <button
-                onClick={() => setSelectedStudent(null)}
+                onClick={() => { setSelectedStudent(null); setConfirmArchive(false) }}
                 className="text-gray-300 hover:text-gray-500 text-xl leading-none flex-shrink-0 ml-2 mt-0.5"
               >
                 ×
@@ -422,16 +419,36 @@ export default function StudentsTable({
             </div>
 
             <div className="border-t border-gray-100 px-6 py-4 flex-shrink-0">
-              <button
-                onClick={archiveStudent}
-                disabled={archiveLoading}
-                className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {archiveLoading ? 'Archiving...' : 'Archive Student'}
-              </button>
-              <p className="mt-2 text-[11px] text-gray-400 text-center">
-                Archive removes the student from active lists but keeps history.
-              </p>
+              {confirmArchive ? (
+                <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
+                  <span className="text-xs text-red-700 flex-1">Are you sure?</span>
+                  <button
+                    onClick={archiveStudent}
+                    disabled={archiveLoading}
+                    className="text-xs font-medium text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 min-h-[32px]"
+                  >
+                    {archiveLoading ? 'Archiving…' : 'Confirm'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmArchive(false)}
+                    className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setConfirmArchive(true)}
+                    className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-100"
+                  >
+                    Archive Student
+                  </button>
+                  <p className="mt-2 text-[11px] text-gray-400 text-center">
+                    Archive removes the student from active lists but keeps history.
+                  </p>
+                </>
+              )}
             </div>
           </>
         )}

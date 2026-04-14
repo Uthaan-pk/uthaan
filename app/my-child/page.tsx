@@ -20,6 +20,8 @@ const statusStyles: Record<string, string> = {
   present: 'bg-green-50 text-green-700',
   absent: 'bg-red-50 text-red-600',
   late: 'bg-amber-50 text-amber-600',
+  excused: 'bg-sky-50 text-sky-700',
+  early_leave: 'bg-indigo-50 text-indigo-700',
 }
 
 export default async function MyChildPage() {

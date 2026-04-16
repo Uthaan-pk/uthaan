@@ -133,7 +133,7 @@ export default async function AssignmentsPage({
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="uthaan-page-content">
             <AssignmentsBoard
               assignments={assignments}
               submissions={submissions}
@@ -223,7 +223,7 @@ export default async function AssignmentsPage({
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="uthaan-page-content">
             <AssignmentsFeed
               assignments={assignmentsRes.data ?? []}
               submissions={submissionsRes.data ?? []}
@@ -311,7 +311,7 @@ export default async function AssignmentsPage({
           </span>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="uthaan-page-content">
           <AssignmentsFeed
             assignments={assignmentsRes.data ?? []}
             submissions={submissionsRes.data ?? []}

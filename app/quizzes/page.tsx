@@ -116,22 +116,22 @@ export default async function QuizzesPage() {
     })
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar
           email={user.email!}
           role={effectiveRole}
           isImpersonating={role === 'superadmin'}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Quizzes</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
               {CURRENT_TERM}
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="uthaan-page-content">
             <div className="max-w-3xl">
               <QuizList
                 quizzes={(quizzes as unknown as Quiz[]) ?? []}
@@ -157,9 +157,9 @@ export default async function QuizzesPage() {
 
     if (!link) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="parent" />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">
                 No child linked to your account
@@ -182,9 +182,9 @@ export default async function QuizzesPage() {
 
     if (!child) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="parent" />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">
                 Student record not found
@@ -212,17 +212,17 @@ export default async function QuizzesPage() {
     const { data: quizzes } = await quizzesQuery
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role="parent" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Quizzes</h1>
             <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
               Viewing as: {child.name}
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="uthaan-page-content">
             <div className="max-w-2xl">
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
@@ -275,9 +275,9 @@ export default async function QuizzesPage() {
   if (role === 'student') {
     if (!roleData?.student_id) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role={role} />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">
                 No student record found
@@ -301,9 +301,9 @@ export default async function QuizzesPage() {
 
     if (!student) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role={role} />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">
                 No student record found
@@ -356,17 +356,17 @@ export default async function QuizzesPage() {
     })
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role={role} />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Quizzes</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
               Class {student.class_num}
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="uthaan-page-content">
             <div className="max-w-3xl">
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
@@ -447,9 +447,9 @@ export default async function QuizzesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+    <div className="uthaan-page-shell">
       <Sidebar email={user.email!} role={role} />
-      <div className="flex-1 flex items-center justify-center">
+      <div className="uthaan-page-main items-center justify-center">
         <div className="text-sm text-gray-400">Unsupported account role.</div>
       </div>
     </div>

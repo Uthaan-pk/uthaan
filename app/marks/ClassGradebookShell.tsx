@@ -123,14 +123,14 @@ export default function ClassGradebookShell({
     return (
       <div>
         <div className="mb-5">
-          <h2 className="text-sm font-semibold text-gray-900">Select a Class</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h2 className="uthaan-section-title">Select a Class</h2>
+          <p className="uthaan-helper mt-1">
             {readOnlyGradesOnly
               ? 'Choose a class to review final grades.'
               : 'Choose a class to enter marks, review assignments, and see final grades.'}
           </p>
           {visibleSubjectList && (
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="uthaan-helper mt-1.5">
               Your assigned subject{visibleSubjects.length !== 1 ? 's' : ''}:{' '}
               <span className="capitalize">{visibleSubjectList}</span>
             </p>
@@ -138,11 +138,11 @@ export default function ClassGradebookShell({
         </div>
 
         {classNums.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
+          <div className="uthaan-card uthaan-empty">
             No classes are currently assigned to this account.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {classNums.map(classNum => {
               const studentCount = studentCountByClass[classNum] ?? 0
               const asgCount = assignmentCountByClass[classNum] ?? 0
@@ -152,7 +152,7 @@ export default function ClassGradebookShell({
                 <button
                   key={classNum}
                   onClick={() => setSelectedClass(classNum)}
-                  className="bg-white rounded-xl border border-gray-100 p-5 text-left hover:border-[#6fcf6f]/50 hover:shadow-sm transition-all group"
+                  className="uthaan-card group p-5 text-left transition-all hover:border-[#6fcf6f]/50 hover:shadow-sm"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-10 h-10 rounded-xl bg-[#1a2e1a]/[0.06] flex items-center justify-center flex-shrink-0">
@@ -176,16 +176,16 @@ export default function ClassGradebookShell({
                   <div className="text-sm font-semibold text-gray-900 mb-0.5">
                     Class {classNum}
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-sm text-gray-500">
                     {studentCount} student{studentCount !== 1 ? 's' : ''}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 mt-2.5">
-                    <span className="text-[11px] text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {asgCount} assignment{asgCount !== 1 ? 's' : ''}
                     </span>
                     {hasWeights && (
-                      <span className="text-[10px] bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/20 rounded px-1.5 py-0.5 font-medium">
+                      <span className="uthaan-badge bg-[#6fcf6f]/10 text-[#1a2e1a] border-[#6fcf6f]/20">
                         Grade weights set
                       </span>
                     )}
@@ -201,10 +201,10 @@ export default function ClassGradebookShell({
 
   return (
     <div>
-      <div className="flex items-center gap-2.5 mb-5">
+      <div className="mb-5 flex flex-wrap items-center gap-2.5">
         <button
           onClick={() => setSelectedClass(null)}
-          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors"
+          className="uthaan-button-secondary gap-1.5 text-xs"
         >
           <svg
             width="13"

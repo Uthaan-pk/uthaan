@@ -261,7 +261,7 @@ export default async function MarksPage() {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="uthaan-page-content">
             <ClassGradebookShell
               allStudents={allStudents}
               allMarks={allMarks}
@@ -338,7 +338,7 @@ export default async function MarksPage() {
               {child.name}
             </span>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="uthaan-page-content">
             <GradebookGrid students={[child]} marks={marksRes.data ?? []} readOnly />
           </main>
         </div>
@@ -397,7 +397,7 @@ export default async function MarksPage() {
               {student.name}
             </span>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="uthaan-page-content">
             <GradebookGrid students={[student]} marks={marksRes.data ?? []} readOnly />
           </main>
         </div>

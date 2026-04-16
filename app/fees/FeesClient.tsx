@@ -166,7 +166,7 @@ export default function FeesClient({
     <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* Standard page header */}
-      <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+      <header className="uthaan-page-header">
         <h1 className="text-sm font-semibold text-gray-900">Fees</h1>
         <button
           onClick={() => setShowModal(true)}
@@ -176,7 +176,7 @@ export default function FeesClient({
         </button>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+      <main className="uthaan-page-content space-y-4">
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

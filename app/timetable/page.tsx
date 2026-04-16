@@ -100,18 +100,18 @@ export default async function TimetablePage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+    <div className="uthaan-page-shell">
       <Sidebar email={user.email!} role={role ?? ''} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+      <div className="uthaan-page-main">
+        <header className="uthaan-page-header">
           <h1 className="text-sm font-semibold text-gray-900">Timetable</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
             {filterClassNum ? `Class ${filterClassNum}` : '{CURRENT_TERM}'}
           </span>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="uthaan-page-content">
           <TimetableGrid
             rows={(rows as unknown as TimetableRow[]) ?? []}
             teacherMap={teacherMap}

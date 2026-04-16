@@ -171,14 +171,14 @@ export default async function AttendancePage() {
     })
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar
           email={user.email!}
           role={effectiveRole}
           isImpersonating={role === 'superadmin'}
         />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Attendance</h1>
             <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
               {new Date().toLocaleDateString('en-GB', {
@@ -287,10 +287,10 @@ export default async function AttendancePage() {
       : 0
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role="parent" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Attendance</h1>
             <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
               Viewing as: {child.name}
@@ -423,10 +423,10 @@ export default async function AttendancePage() {
       : 0
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role={role} />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">
               My Attendance
             </h1>

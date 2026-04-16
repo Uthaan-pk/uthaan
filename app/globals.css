@@ -12,15 +12,91 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  min-height: 100%;
 }
 
 body {
   background: #f8f7f4;
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: #111827;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+@layer components {
+  .uthaan-page-shell {
+    @apply flex h-screen overflow-hidden bg-[#f8f7f4];
+  }
+
+  .uthaan-page-main {
+    @apply flex min-w-0 flex-1 flex-col overflow-hidden;
+  }
+
+  .uthaan-page-header {
+    @apply flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white py-3 pr-4 pl-16 md:px-6;
+  }
+
+  .uthaan-page-content {
+    @apply flex-1 overflow-y-auto p-4 md:p-6;
+  }
+
+  .uthaan-page-content > * {
+    width: 100%;
+    max-width: 88rem;
+    margin-inline: auto;
+  }
+
+  .uthaan-card {
+    @apply overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)];
+  }
+
+  .uthaan-section-title {
+    @apply text-base font-semibold text-gray-900;
+  }
+
+  .uthaan-helper {
+    @apply text-sm text-gray-500;
+  }
+
+  .uthaan-empty {
+    @apply px-5 py-10 text-center text-sm text-gray-500;
+  }
+
+  .uthaan-button-primary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1a2e1a] px-4 py-2.5 text-sm font-medium text-[#6fcf6f] transition-all hover:bg-[#243824] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .uthaan-button-secondary {
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .uthaan-pill {
+    @apply rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800;
+  }
+
+  .uthaan-pill-active {
+    @apply border-[#1a2e1a] bg-[#1a2e1a] text-[#6fcf6f];
+  }
+
+  .uthaan-badge {
+    @apply inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-xs font-medium;
+  }
+
+  .uthaan-input {
+    @apply w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f];
+  }
+}
+
+:where(.bg-white.rounded-xl.border.border-gray-100) {
+  border-color: rgb(229 231 235 / 0.9);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+:where(.text-xs.text-gray-400) {
+  color: #6b7280;
+}
+
+:where(.text-\[11px\].text-gray-400) {
+  color: #6b7280;
 }

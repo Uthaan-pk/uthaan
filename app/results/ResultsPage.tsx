@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import ReportCommentGenerator from '@/components/ReportCommentGenerator'
 import toast from 'react-hot-toast'
 import {
   computeSubjectFinalGrades,
@@ -491,23 +492,12 @@ function ReportCardPreview({ student }: { student: Student }) {
         </div>
 
         <div className="px-5 py-4 border-b border-gray-50">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">
-                Academic Performance
-              </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Final subject grades computed across recorded marks and class weights.
-              </p>
-            </div>
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] active:scale-[0.98] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px]"
-            >
-              {downloading ? 'Generating PDF…' : 'Download PDF'}
-            </button>
-          </div>
+          <h2 className="text-sm font-semibold text-gray-900">
+            Academic Performance
+          </h2>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Final subject grades computed across recorded marks and class weights.
+          </p>
         </div>
 
         <div className="overflow-x-auto border-b border-gray-50">
@@ -589,6 +579,18 @@ function ReportCardPreview({ student }: { student: Student }) {
           </table>
         </div>
 
+        <div className="px-5 py-4 border-b border-gray-50">
+          <div className="flex justify-end">
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] active:scale-[0.98] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px]"
+            >
+              {downloading ? 'Generating PDF…' : 'Download PDF'}
+            </button>
+          </div>
+        </div>
+
         <div className="px-5 py-4">
           <h3 className="text-sm font-semibold text-gray-900 mb-3">
             Attendance Summary
@@ -624,6 +626,68 @@ function StatCard({
         {label}
       </div>
       <div className="text-lg font-semibold text-gray-900">{value}</div>
+    </div>
+  )
+}
+
+function StaffReportCommentPanel({ student }: { student: Student }) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [report, setReport] = useState<ReportCardData | null>(null)
+
+  async function handleOpen() {
+    if (open) {
+      setOpen(false)
+      return
+    }
+
+    setOpen(true)
+
+    if (report || loading) return
+
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await loadReportCardData(student)
+      setReport(data)
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to load report card.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={handleOpen}
+        className="text-xs font-medium px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors min-h-[36px]"
+      >
+        {open ? 'Hide Comment Generator' : 'Open Comment Generator'}
+      </button>
+
+      {open && loading && (
+        <div className="mt-3 text-xs text-gray-400">Loading report data…</div>
+      )}
+
+      {open && error && (
+        <div className="mt-3 text-xs text-red-600">{error}</div>
+      )}
+
+      {open && report && (
+        <div className="mt-3 rounded-xl border border-gray-100 overflow-hidden bg-white">
+          <ReportCommentGenerator
+            studentName={student.name}
+            className={student.class_num}
+            subjectGrades={report.subjectGrades}
+            attendancePct={report.attendancePct}
+            presentCount={report.presentCount}
+            absentCount={report.absentCount}
+            totalDays={report.totalDays}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -855,34 +919,34 @@ export default function ResultsPage({
             {filteredStudents.map(s => {
               const isReleased = releaseMap[Number(s.class_num)]?.released === true
               return (
-                <div
-                  key={s.id}
-                  className="px-5 py-3.5 flex items-center justify-between gap-4"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{s.name}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">
-                      Roll {s.roll_no} · Class {s.class_num} · {s.stage ?? '—'}
+                <div key={s.id} className="px-5 py-3.5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{s.name}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        Roll {s.roll_no} · Class {s.class_num} · {s.stage ?? '—'}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span
+                        className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
+                          isReleased
+                            ? 'bg-green-50 text-green-700 border-green-100'
+                            : 'bg-gray-50 text-gray-500 border-gray-100'
+                        }`}
+                      >
+                        {isReleased ? 'Visible to family' : 'Hidden'}
+                      </span>
+                      <button
+                        onClick={() => handleGenerate(s)}
+                        disabled={loading === s.id}
+                        className="shrink-0 text-xs font-medium px-3.5 py-2 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243824] disabled:opacity-50 transition-colors min-h-[36px]"
+                      >
+                        {loading === s.id ? 'Generating…' : 'Download PDF'}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span
-                      className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
-                        isReleased
-                          ? 'bg-green-50 text-green-700 border-green-100'
-                          : 'bg-gray-50 text-gray-500 border-gray-100'
-                      }`}
-                    >
-                      {isReleased ? 'Visible to family' : 'Hidden'}
-                    </span>
-                    <button
-                      onClick={() => handleGenerate(s)}
-                      disabled={loading === s.id}
-                      className="shrink-0 text-xs font-medium px-3.5 py-2 rounded-lg bg-[#1a2e1a] text-[#6fcf6f] hover:bg-[#243824] disabled:opacity-50 transition-colors min-h-[36px]"
-                    >
-                      {loading === s.id ? 'Generating…' : 'Download PDF'}
-                    </button>
-                  </div>
+                  <StaffReportCommentPanel student={s} />
                 </div>
               )
             })}

@@ -13,15 +13,15 @@ export default function MarksTabShell({
 
   return (
     <div>
-      <div className="flex gap-1 mb-4">
+      <div className="mb-4 flex flex-wrap gap-2">
         {([['marks', 'Exam Marks'], ['gradebook', 'Gradebook']] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`uthaan-pill min-h-10 ${
               tab === key
-                ? 'bg-[#1a2e1a] text-[#6fcf6f]'
-                : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                ? 'uthaan-pill-active'
+                : ''
             }`}
           >
             {label}

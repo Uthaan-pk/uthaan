@@ -52,9 +52,9 @@ export default async function Page() {
 
     if (!link) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="parent" />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">
                 No child linked to your account
@@ -77,9 +77,9 @@ export default async function Page() {
 
     if (!child) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="parent" />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">
                 Student record not found
@@ -97,16 +97,16 @@ export default async function Page() {
 
     if (!released) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="parent" />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+          <div className="uthaan-page-main">
+            <header className="uthaan-page-header">
               <h1 className="text-sm font-semibold text-gray-900">Results</h1>
               <span className="text-xs bg-gray-50 text-gray-600 border border-gray-100 px-3 py-1 rounded-full font-medium">
                 Not released
               </span>
             </header>
-            <main className="flex-1 flex items-center justify-center p-6">
+            <main className="uthaan-page-content flex items-center justify-center">
               <div className="text-center max-w-sm">
                 <div className="text-sm font-medium text-gray-900 mb-1">
                   Report card not released yet
@@ -123,16 +123,16 @@ export default async function Page() {
     }
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role="parent" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Report Card</h1>
             <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
               {child.name}
             </span>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="uthaan-page-content">
             <ResultsPage students={[child]} releases={[]} role="parent" />
           </main>
         </div>
@@ -145,9 +145,9 @@ export default async function Page() {
 
     if (!studentId) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="student" />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-center">
               <div className="text-sm font-medium text-gray-900 mb-1">
                 No student record linked
@@ -170,9 +170,9 @@ export default async function Page() {
 
     if (!student) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="student" />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="uthaan-page-main items-center justify-center">
             <div className="text-sm text-gray-400">
               Student record not found.
             </div>
@@ -185,16 +185,16 @@ export default async function Page() {
 
     if (!released) {
       return (
-        <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+        <div className="uthaan-page-shell">
           <Sidebar email={user.email!} role="student" />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+          <div className="uthaan-page-main">
+            <header className="uthaan-page-header">
               <h1 className="text-sm font-semibold text-gray-900">Results</h1>
               <span className="text-xs bg-gray-50 text-gray-600 border border-gray-100 px-3 py-1 rounded-full font-medium">
                 Not released
               </span>
             </header>
-            <main className="flex-1 flex items-center justify-center p-6">
+            <main className="uthaan-page-content flex items-center justify-center">
               <div className="text-center max-w-sm">
                 <div className="text-sm font-medium text-gray-900 mb-1">
                   Report card not released yet
@@ -211,10 +211,10 @@ export default async function Page() {
     }
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role="student" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">
               My Report Card
             </h1>
@@ -222,7 +222,7 @@ export default async function Page() {
               Released
             </span>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="uthaan-page-content">
             <ResultsPage students={[student]} releases={[]} role="student" />
           </main>
         </div>
@@ -247,10 +247,10 @@ export default async function Page() {
   ])
 
   return (
-    <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+    <div className="uthaan-page-shell">
       <Sidebar email={user.email!} role={effectiveRole} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-100 pr-6 pl-16 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+      <div className="uthaan-page-main">
+        <header className="uthaan-page-header">
           <h1 className="text-sm font-semibold text-gray-900">
             Results &amp; Report Cards
           </h1>
@@ -258,7 +258,7 @@ export default async function Page() {
             Academic Year 2025–26
           </span>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="uthaan-page-content">
           <ResultsPage
             students={studentsRes.data ?? []}
             releases={releasesRes.data ?? []}

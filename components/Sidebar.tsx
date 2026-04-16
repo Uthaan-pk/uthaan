@@ -50,12 +50,12 @@ function NavItem({
     <Link
       href={href}
       onClick={onClose}
-      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors ${
+      className={`flex min-h-11 items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${
         isUrdu ? 'text-[15px] leading-7' : 'text-sm'
       } ${
         active
           ? 'bg-[#6fcf6f]/15 text-[#6fcf6f] font-medium'
-          : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+          : 'text-white/70 hover:text-white hover:bg-white/6'
       }`}
     >
       {icon}
@@ -74,23 +74,23 @@ function LangToggle() {
   }
 
   return (
-    <div className="flex gap-1 bg-white/10 rounded-lg p-1 mb-3">
+    <div className="mb-3 flex gap-1 rounded-xl bg-white/10 p-1">
       <button
         onClick={() => handleLangChange('en')}
-        className={`flex-1 py-1 rounded text-xs font-medium transition-colors ${
+        className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors ${
           lang === 'en'
             ? 'bg-[#6fcf6f] text-[#1a2e1a]'
-            : 'text-white/50 hover:text-white/80'
+            : 'text-white/60 hover:text-white/85'
         }`}
       >
         EN
       </button>
       <button
         onClick={() => handleLangChange('ur')}
-        className={`flex-1 py-1 rounded text-xs font-medium transition-colors ${
+        className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors ${
           lang === 'ur'
             ? 'bg-[#6fcf6f] text-[#1a2e1a]'
-            : 'text-white/50 hover:text-white/80'
+            : 'text-white/60 hover:text-white/85'
         }`}
       >
         اردو
@@ -129,7 +129,7 @@ export default function Sidebar({
     position: isMobile && open ? 'fixed' : undefined,
     inset: isMobile && open ? '0 auto 0 0' : undefined,
     zIndex: isMobile && open ? 50 : undefined,
-    width: '14rem',
+    width: isMobile ? '16rem' : '14rem',
   }
 
   const isTeacher = role === 'teacher'
@@ -184,7 +184,7 @@ export default function Sidebar({
 
       <aside
         style={asideDisplay}
-        className="flex-col flex-shrink-0 bg-[#1a2e1a]"
+        className="flex-col flex-shrink-0 bg-[#1a2e1a] shadow-xl shadow-black/10"
       >
         <div className="px-5 py-6 border-b border-white/10 flex items-center justify-between">
           <div>
@@ -195,7 +195,7 @@ export default function Sidebar({
               className={`text-white/30 mt-0.5 ${
                 isUrdu
                   ? 'text-xs tracking-normal'
-                  : 'text-[10px] uppercase tracking-widest'
+                : 'text-[11px] uppercase tracking-[0.18em]'
               }`}
             >
               {t.schoolManagement}
@@ -206,7 +206,7 @@ export default function Sidebar({
             <button
               onClick={close}
               aria-label="Close menu"
-              className="text-white/40 hover:text-white/70 p-1"
+              className="rounded-md p-2 text-white/40 hover:bg-white/5 hover:text-white/70"
             >
               <svg
                 width="16"
@@ -226,22 +226,22 @@ export default function Sidebar({
 
         {isImpersonating && (
           <div className="bg-amber-500/15 border-b border-amber-500/25 px-4 py-2 flex items-center justify-between gap-2">
-            <span className="text-[10px] text-amber-300 font-medium">Browsing school</span>
+            <span className="text-[11px] text-amber-300 font-medium">Browsing school</span>
             <a
               href="/auth/exit-school"
-              className="text-[10px] text-amber-300 hover:text-amber-100 underline underline-offset-2 transition-colors whitespace-nowrap"
+              className="text-[11px] text-amber-300 hover:text-amber-100 underline underline-offset-2 transition-colors whitespace-nowrap"
             >
               Exit ↗
             </a>
           </div>
         )}
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           <p
             className={`text-white/30 px-2 mb-2 ${
               isUrdu
                 ? 'text-xs tracking-normal'
-                : 'text-[10px] uppercase tracking-widest'
+                : 'text-[11px] uppercase tracking-[0.18em]'
             }`}
           >
             {t.main}

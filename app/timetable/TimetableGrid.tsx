@@ -102,6 +102,18 @@ export default function TimetableGrid({
     return map
   }, [rows, selectedClass])
 
+  const mobileDays = useMemo(
+    () =>
+      DAYS.map(day => ({
+        day,
+        rows: PERIODS.map(period => ({
+          period,
+          row: lookup[day]?.[period] ?? null,
+        })).filter(entry => entry.row),
+      })).filter(section => section.rows.length > 0),
+    [lookup]
+  )
+
   function openCell(day: string, period: number) {
     setEditCell({
       day,
@@ -625,7 +637,70 @@ export default function TimetableGrid({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="space-y-3 p-3 md:hidden">
+            {mobileDays.length > 0 ? (
+              mobileDays.map(section => (
+                <div
+                  key={section.day}
+                  className="overflow-hidden rounded-xl border border-gray-100 bg-[#fafcf9]"
+                >
+                  <div className="border-b border-gray-100 px-4 py-3">
+                    <div className="text-sm font-semibold text-gray-900">
+                      {section.day}
+                    </div>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {section.rows.map(({ period, row }) => {
+                      if (!row) return null
+                      const sty = subjectStyle(row.subject)
+                      const instructorLabel = getInstructorLabel(row)
+
+                      return (
+                        <div key={`${section.day}-${period}`} className="px-4 py-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                                Period {period}
+                              </div>
+                              <div
+                                className="mt-1 text-sm font-semibold leading-tight"
+                                style={{ color: sty.text }}
+                              >
+                                {row.subject}
+                              </div>
+                              <div className="mt-1 text-xs text-gray-500">
+                                {formatTime(row.start_time)} - {formatTime(row.end_time)}
+                              </div>
+                              {instructorLabel && (
+                                <div className="mt-1 text-xs text-gray-500">
+                                  {instructorLabel}
+                                </div>
+                              )}
+                            </div>
+
+                            {isStaff && (
+                              <button
+                                onClick={() => openCell(section.day, period)}
+                                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800"
+                              >
+                                Edit
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-gray-200 bg-[#fafcf9] px-4 py-8 text-center text-sm text-gray-500">
+                No timetable periods have been set for this class yet.
+              </div>
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table
               className="w-full border-collapse"
               style={{ minWidth: 700 }}

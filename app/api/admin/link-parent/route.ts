@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { z } from 'zod'
+import { parseBody } from '@/lib/api/validate'
 
-const adminSupabase = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const LinkParentSchema = z.object({
+  parent_email: z.string().email().max(254),
+  parent_name: z.string().max(150).optional().default(''),
+  student_id: z.string().uuid(),
+})
+
+const UnlinkSchema = z.object({
+  link_id: z.string().uuid(),
+})
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -16,7 +23,7 @@ async function requireAdmin() {
 
   if (!user) {
     return {
-      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+      error: NextResponse.json({ message: 'Unauthorized' }, { status: 401 }),
     }
   }
 
@@ -28,7 +35,7 @@ async function requireAdmin() {
 
   if (roleData?.role !== 'admin') {
     return {
-      error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),
+      error: NextResponse.json({ message: 'Forbidden' }, { status: 403 }),
     }
   }
 
@@ -39,23 +46,28 @@ export async function POST(request: Request) {
   const auth = await requireAdmin()
   if ('error' in auth) return auth.error
 
-  const body = await request.json()
-  const parent_email = String(body.parent_email ?? '').trim().toLowerCase()
-  const parent_name = String(body.parent_name ?? '').trim()
-  const student_id = String(body.student_id ?? '').trim()
-
-  if (!parent_email || !student_id) {
-    return NextResponse.json(
-      { error: 'Parent email and student ID are required.' },
-      { status: 400 }
-    )
+  let raw: unknown
+  try {
+    raw = await request.json()
+  } catch {
+    return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
   }
+
+  const parsed = parseBody(LinkParentSchema, raw)
+  if ('error' in parsed) return parsed.error
+  const { parent_email, parent_name, student_id } = parsed.data
+
+  const adminSupabase = createAdminClient()
 
   const { data: authUsers, error: usersError } =
     await adminSupabase.auth.admin.listUsers()
 
   if (usersError) {
-    return NextResponse.json({ error: usersError.message }, { status: 500 })
+    console.error('[link-parent] listUsers', usersError)
+    return NextResponse.json(
+      { message: 'Failed to look up user accounts' },
+      { status: 500 }
+    )
   }
 
   const parentUser = authUsers?.users?.find(
@@ -66,7 +78,7 @@ export async function POST(request: Request) {
   if (!parentUser) {
     return NextResponse.json(
       {
-        error: `No account found for ${parent_email}. Ask them to sign up first.`,
+        message: `No account found for ${parent_email}. Ask them to sign up first.`,
       },
       { status: 404 }
     )
@@ -82,7 +94,7 @@ export async function POST(request: Request) {
   if (parentRoleError || !parentRole) {
     return NextResponse.json(
       {
-        error: `${parent_email} did not select the Parent role when signing up.`,
+        message: `${parent_email} did not select the Parent role when signing up.`,
       },
       { status: 400 }
     )
@@ -97,7 +109,7 @@ export async function POST(request: Request) {
 
   if (studentError || !student) {
     return NextResponse.json(
-      { error: 'Student not found or inactive.' },
+      { message: 'Student not found or inactive.' },
       { status: 404 }
     )
   }
@@ -108,8 +120,9 @@ export async function POST(request: Request) {
     .eq('parent_id', parentUser.id)
 
   if (existingLinksError) {
+    console.error('[link-parent] existingLinks', existingLinksError)
     return NextResponse.json(
-      { error: existingLinksError.message },
+      { message: 'Failed to check existing links' },
       { status: 500 }
     )
   }
@@ -121,15 +134,17 @@ export async function POST(request: Request) {
   if (exactExisting) {
     const { data: updatedLink, error: updateError } = await adminSupabase
       .from('parent_student')
-      .update({
-        parent_name: parent_name || null,
-      })
+      .update({ parent_name: parent_name || null })
       .eq('id', exactExisting.id)
       .select()
       .single()
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      console.error('[link-parent] update', updateError)
+      return NextResponse.json(
+        { message: 'Failed to update link' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
@@ -145,8 +160,9 @@ export async function POST(request: Request) {
       .eq('parent_id', parentUser.id)
 
     if (deleteOldLinksError) {
+      console.error('[link-parent] deleteOld', deleteOldLinksError)
       return NextResponse.json(
-        { error: deleteOldLinksError.message },
+        { message: 'Failed to remove old links' },
         { status: 500 }
       )
     }
@@ -164,7 +180,11 @@ export async function POST(request: Request) {
     .single()
 
   if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 })
+    console.error('[link-parent] insert', insertError)
+    return NextResponse.json(
+      { message: 'Failed to link parent' },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({
@@ -177,22 +197,29 @@ export async function DELETE(request: Request) {
   const auth = await requireAdmin()
   if ('error' in auth) return auth.error
 
-  const { link_id } = await request.json()
-
-  if (!link_id) {
-    return NextResponse.json(
-      { error: 'Link ID is required.' },
-      { status: 400 }
-    )
+  let raw: unknown
+  try {
+    raw = await request.json()
+  } catch {
+    return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
   }
 
+  const parsed = parseBody(UnlinkSchema, raw)
+  if ('error' in parsed) return parsed.error
+  const { link_id } = parsed.data
+
+  const adminSupabase = createAdminClient()
   const { error } = await adminSupabase
     .from('parent_student')
     .delete()
     .eq('id', link_id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('[link-parent] delete', error)
+    return NextResponse.json(
+      { message: 'Failed to remove link' },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({

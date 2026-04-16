@@ -66,7 +66,7 @@ export default async function AnnouncementsPage() {
           </header>
 
           <main className="uthaan-page-content">
-            <div className="max-w-2xl">
+            <div className="max-w-4xl space-y-4">
               <ComposeAnnouncement />
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
@@ -191,7 +191,7 @@ export default async function AnnouncementsPage() {
           </header>
 
           <main className="uthaan-page-content">
-            <div className="max-w-2xl">
+            <div className="max-w-4xl">
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
                   <h2 className="text-sm font-semibold text-gray-900">
@@ -310,7 +310,7 @@ export default async function AnnouncementsPage() {
           </header>
 
           <main className="uthaan-page-content">
-            <div className="max-w-2xl">
+            <div className="max-w-4xl">
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
                   <h2 className="text-sm font-semibold text-gray-900">

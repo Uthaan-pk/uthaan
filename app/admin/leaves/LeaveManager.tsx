@@ -280,7 +280,7 @@ export default function LeaveManager({
             <button
               onClick={addLeave}
               disabled={savingLeave || students.length === 0}
-              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors"
+              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors w-full md:w-auto"
             >
               {savingLeave ? 'Saving…' : 'Approve leave'}
             </button>
@@ -342,7 +342,7 @@ export default function LeaveManager({
             <button
               onClick={addEarlyLeave}
               disabled={savingEarly || students.length === 0}
-              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors"
+              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors w-full md:w-auto"
             >
               {savingEarly ? 'Saving…' : 'Approve early leave'}
             </button>
@@ -365,7 +365,7 @@ export default function LeaveManager({
                 const student = studentMap[String(row.student_id)]
                 return (
                   <div key={id || `${row.student_id}-${fullDayRangeLabel(row)}`} className="px-5 py-3.5">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {student ? studentLabel(student) : String(row.student_id)}
@@ -406,7 +406,7 @@ export default function LeaveManager({
                 const student = studentMap[String(row.student_id)]
                 return (
                   <div key={id || `${row.student_id}-${earlyLeaveDateLabel(row)}`} className="px-5 py-3.5">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {student ? studentLabel(student) : String(row.student_id)}

@@ -500,8 +500,69 @@ function ReportCardPreview({ student }: { student: Student }) {
           </p>
         </div>
 
-        <div className="overflow-x-auto border-b border-gray-50">
-          <table className="w-full text-sm">
+        <div className="border-b border-gray-50">
+          <div className="sm:hidden px-5 py-4 space-y-3">
+            {report.subjectGrades.length > 0 ? (
+              <>
+                {report.subjectGrades.map((g) => (
+                  <div
+                    key={g.subject}
+                    className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {fmtSubject(g.subject)}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          Final score {g.overall}%
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center justify-center min-w-[2rem] rounded-md bg-gray-50 px-2 py-1 text-xs font-semibold text-gray-800">
+                        {g.letter}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <div className="text-xs text-gray-500">
+                        Result
+                      </div>
+                      <span
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                          g.overall >= 50
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-red-50 text-red-600'
+                        }`}
+                      >
+                        {g.overall >= 50 ? 'Pass' : 'Fail'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {report.overallPct !== null && (
+                  <div className="rounded-xl border border-green-100 bg-green-50/60 px-4 py-3">
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-[#1a2e1a]/70">
+                      Overall Average
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-3">
+                      <div className="text-lg font-semibold text-[#1a2e1a]">
+                        {report.overallPct}%
+                      </div>
+                      <div className="text-sm font-semibold text-[#1a2e1a]">
+                        {letterGrade(report.overallPct)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-8 text-center text-sm text-gray-500">
+                No marks recorded for this term.
+              </div>
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto sm:block">
+            <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50/70 border-b border-gray-100">
                 <th className="text-left px-5 py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
@@ -576,7 +637,8 @@ function ReportCardPreview({ student }: { student: Student }) {
                 </tr>
               </tfoot>
             )}
-          </table>
+            </table>
+          </div>
         </div>
 
         <div className="px-5 py-4 border-b border-gray-50">
@@ -831,7 +893,7 @@ export default function ResultsPage({
               return (
                 <div
                   key={classNum}
-                  className="px-5 py-3.5 flex items-center justify-between gap-4"
+                  className="px-5 py-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
                     <div className="text-sm font-medium text-gray-900">
@@ -841,7 +903,7 @@ export default function ResultsPage({
                       {CURRENT_TERM} · {CURRENT_YEAR}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span
                       className={`text-xs font-medium px-3 py-1 rounded-full border ${
                         isReleased
@@ -920,14 +982,14 @@ export default function ResultsPage({
               const isReleased = releaseMap[Number(s.class_num)]?.released === true
               return (
                 <div key={s.id} className="px-5 py-3.5">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{s.name}</div>
                       <div className="text-xs text-gray-400 mt-0.5">
                         Roll {s.roll_no} · Class {s.class_num} · {s.stage ?? '—'}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-3 sm:justify-end">
                       <span
                         className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
                           isReleased

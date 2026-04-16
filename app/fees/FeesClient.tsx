@@ -217,7 +217,7 @@ export default function FeesClient({
           </select>
 
           {filtered.length !== fees.length && (
-            <span className="self-center text-xs text-gray-400 ml-1">
+            <span className="self-center text-xs text-gray-500 ml-1">
               {filtered.length} of {fees.length}
             </span>
           )}
@@ -360,7 +360,7 @@ export default function FeesClient({
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-col gap-3">
                         <div>
                           <div className="text-base font-semibold text-gray-900">
                             PKR {pkr(Number(fee.amount))}
@@ -375,10 +375,10 @@ export default function FeesClient({
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           {fee.paid ? (
                             isConfirming ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <button
                                   onClick={() => handleMarkUnpaid(fee)}
                                   disabled={acting === fee.id}
@@ -414,7 +414,7 @@ export default function FeesClient({
                             href={`/fees/receipt/${fee.student_id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-gray-400 border border-gray-200 rounded-lg px-3 py-2 min-h-[40px] flex items-center hover:text-[#1a2e1a] hover:border-gray-300 transition-colors"
+                            className="text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-2 min-h-[40px] flex items-center hover:text-[#1a2e1a] hover:border-gray-300 transition-colors"
                           >
                             Receipt
                           </a>

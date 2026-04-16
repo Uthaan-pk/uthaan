@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/api/validate'
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+
+  if (!isValidUUID(id)) {
+    return NextResponse.json({ message: 'Invalid announcement ID' }, { status: 400 })
+  }
+
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   const { data: roleData } = await supabase
     .from('user_roles')
@@ -20,7 +26,7 @@ export async function GET(
     .single()
 
   if (!roleData?.school_id || !['admin', 'teacher'].includes(roleData.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
 
   const schoolId = roleData.school_id as string
@@ -32,7 +38,10 @@ export async function GET(
     .eq('announcement_id', id)
     .eq('school_id', schoolId)
 
-  if (acksError) return NextResponse.json({ error: acksError.message }, { status: 500 })
+  if (acksError) {
+    console.error('[acknowledgements]', acksError)
+    return NextResponse.json({ message: 'Failed to fetch acknowledgements' }, { status: 500 })
+  }
 
   // Resolve display names for acknowledged users
   const ackedUserIds = (acks ?? []).map((a) => a.user_id)

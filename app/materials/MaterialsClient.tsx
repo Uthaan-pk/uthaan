@@ -122,7 +122,7 @@ export default function MaterialsClient({
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-5xl space-y-6">
       {/* Upload form — teacher/admin only */}
       {isStaff && (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
@@ -130,7 +130,7 @@ export default function MaterialsClient({
             <h2 className="text-sm font-semibold text-gray-900">Upload material</h2>
           </div>
           <div className="px-5 py-5 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
                 <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">Title</label>
                 <input
@@ -151,7 +151,7 @@ export default function MaterialsClient({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
                 <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">Assign to class</label>
                 <select
@@ -203,7 +203,7 @@ export default function MaterialsClient({
         ) : (
           materials.map(material => (
             <div key={material.id} className="px-5 py-4 border-b border-gray-50 last:border-0">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-100">
@@ -220,12 +220,12 @@ export default function MaterialsClient({
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 lg:flex-shrink-0">
                   <a
                     href={material.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                    className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-3 py-2 rounded-lg transition-colors whitespace-nowrap min-h-[36px] inline-flex items-center"
                   >
                     Download
                   </a>
@@ -233,7 +233,7 @@ export default function MaterialsClient({
                     <button
                       onClick={() => handleDelete(material)}
                       disabled={deleting === material.id}
-                      className="text-[10px] text-gray-400 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded px-1.5 py-1 transition-colors disabled:opacity-50"
+                      className="text-[11px] text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-2 transition-colors disabled:opacity-50 min-h-[36px]"
                     >
                       {deleting === material.id ? '…' : 'Delete'}
                     </button>

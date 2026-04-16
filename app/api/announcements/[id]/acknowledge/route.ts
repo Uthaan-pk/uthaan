@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/api/validate'
 
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+
+  if (!isValidUUID(id)) {
+    return NextResponse.json({ message: 'Invalid announcement ID' }, { status: 400 })
+  }
+
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   const { data: roleData } = await supabase
     .from('user_roles')
@@ -20,7 +26,7 @@ export async function POST(
     .single()
 
   if (!roleData?.school_id || !['student', 'parent'].includes(roleData.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
 
   const { error } = await supabase.from('announcement_acknowledgements').insert({
@@ -31,7 +37,8 @@ export async function POST(
 
   // 23505 = unique_violation — already acknowledged, treat as success
   if (error && error.code !== '23505') {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('[acknowledge]', error)
+    return NextResponse.json({ message: 'Failed to acknowledge' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

@@ -14,6 +14,14 @@ import {
 import { CURRENT_YEAR, TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 
+function formatCompactDate(value: string) {
+  if (!value) return 'No date'
+  return new Date(value).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
 export default async function DashboardPage() {
   const cookieStore = await cookies()
   const cookieLang = cookieStore.get('uthaan_lang')?.value
@@ -119,10 +127,10 @@ export default async function DashboardPage() {
         : null
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role="parent" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">
               {t.dashboard}
             </h1>
@@ -131,56 +139,100 @@ export default async function DashboardPage() {
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="grid grid-cols-2 gap-3 max-w-2xl">
-              <Link
-                href="/my-child"
-                className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                  attRate !== null && attRate < 75
-                    ? 'bg-amber-50 border-amber-200'
-                    : 'bg-white border-gray-100'
-                }`}
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.attendance}
+          <main className="uthaan-page-content">
+            <div className="max-w-5xl space-y-6">
+              <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Parent overview
+                      </div>
+                      <div className="mt-2 text-2xl font-semibold text-gray-900">
+                        {child.name}
+                      </div>
+                      <div className="mt-1 text-sm text-gray-500">
+                        Class {child.class_num} · Roll {child.roll_no}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Attendance
+                        </div>
+                        <div className="mt-1 text-xl font-semibold text-gray-900">
+                          {attRate !== null ? `${attRate}%` : '—'}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Average
+                        </div>
+                        <div className="mt-1 text-xl font-semibold text-gray-900">
+                          {avgMark !== null ? `${avgMark}%` : '—'}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Due today
+                        </div>
+                        <div className="mt-1 text-xl font-semibold text-gray-900">
+                          {dueToday}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {attRate !== null ? `${attRate}%` : '—'}
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1">
-                  {t.overallRate}
-                </div>
-              </Link>
+              </div>
 
-              <Link
-                href="/marks"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.averageMark}
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <div className="text-sm font-semibold text-gray-900">
+                    Child summary
+                  </div>
+                  <div className="mt-2 text-sm text-gray-500">
+                    Keep track of attendance, grades, and daily school work for {child.name}.
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <Link href="/my-child" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 hover:border-gray-200 transition-colors">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Profile</div>
+                      <div className="mt-1 text-sm font-medium text-gray-900">View child record</div>
+                    </Link>
+                    <Link href="/results" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 hover:border-gray-200 transition-colors">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Results</div>
+                      <div className="mt-1 text-sm font-medium text-gray-900">See marks and report card</div>
+                    </Link>
+                    <Link href="/fees" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 hover:border-gray-200 transition-colors">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Fees</div>
+                      <div className="mt-1 text-sm font-medium text-gray-900">Review payment status</div>
+                    </Link>
+                  </div>
                 </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {avgMark !== null ? `${avgMark}%` : '—'}
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1">
-                  {t.acrossAllSubjects}
-                </div>
-              </Link>
 
-              <Link
-                href="/assignments"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors col-span-2"
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.dueToday}
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <div className="text-sm font-semibold text-gray-900">
+                    Quick links
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <Link href="/announcements" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                      <span>Announcements</span>
+                      <span className="text-gray-400">→</span>
+                    </Link>
+                    <Link href="/my-child" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                      <span>My Child</span>
+                      <span className="text-gray-400">→</span>
+                    </Link>
+                    <Link href="/results" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                      <span>Results</span>
+                      <span className="text-gray-400">→</span>
+                    </Link>
+                    <Link href="/fees" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                      <span>Fees</span>
+                      <span className="text-gray-400">→</span>
+                    </Link>
+                  </div>
                 </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {dueToday}
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1">
-                  {t.assignmentsFor} {child.name}
-                </div>
-              </Link>
+              </div>
             </div>
           </main>
         </div>
@@ -278,10 +330,10 @@ export default async function DashboardPage() {
     }
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role="student" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">
               {t.dashboard}
             </h1>
@@ -290,14 +342,55 @@ export default async function DashboardPage() {
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-2xl space-y-4">
-              {/* Today Overview */}
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
-                  {t.todayOverview}
+          <main className="uthaan-page-content">
+            <div className="max-w-5xl space-y-6">
+              <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        {t.todayOverview}
+                      </div>
+                      <div className="mt-2 text-2xl font-semibold text-gray-900">
+                        {todayName}
+                      </div>
+                      <div className="mt-1 text-sm text-gray-500">
+                        Keep up with today&apos;s schedule, homework, and active quizzes.
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Due today
+                        </div>
+                        <div className="mt-1 text-xl font-semibold text-gray-900">
+                          {dueToday}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Average
+                        </div>
+                        <div className="mt-1 text-xl font-semibold text-gray-900">
+                          {avgMark !== null ? `${avgMark}%` : '—'}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Quizzes
+                        </div>
+                        <div className="mt-1 text-xl font-semibold text-gray-900">
+                          {upcomingQuizzes.length}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mb-3">
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.95fr]">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {/* Attendance status */}
                   <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
@@ -347,11 +440,11 @@ export default async function DashboardPage() {
                       <div className="text-xs text-gray-400 mt-1">{t.noneActive}</div>
                     )}
                   </div>
-                </div>
+                  </div>
 
-                {/* Homework due today/tomorrow */}
-                {homeworkDue.length > 0 && (
-                  <div className="bg-white rounded-xl border border-l-4 border-l-amber-400 border-gray-100 p-4 mb-3">
+                  {/* Homework due today/tomorrow */}
+                  {homeworkDue.length > 0 && (
+                    <div className="bg-white rounded-xl border border-l-4 border-l-amber-400 border-gray-100 p-4">
                     <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
                       {t.homeworkDue}
                     </div>
@@ -372,106 +465,110 @@ export default async function DashboardPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {/* Today's timetable */}
-                <div className="bg-white rounded-xl border border-gray-100 p-4">
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
-                    {t.todaySchedule}
-                  </div>
-                  {todayPeriods.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {todayPeriods.map((p) => (
-                        <div key={p.period} className="flex items-center gap-3">
-                          <span className="text-[11px] text-gray-400 w-6 text-right flex-shrink-0">
-                            {p.period}
-                          </span>
-                          <span className="text-[11px] text-gray-400 flex-shrink-0">
-                            {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
-                          </span>
-                          <span className="text-xs font-medium text-gray-800 truncate">
-                            {p.subject}
-                          </span>
-                        </div>
-                      ))}
                     </div>
-                  ) : (
-                    <div className="text-xs text-gray-400">{t.noPeriods}</div>
                   )}
+
+                  <div className="bg-white rounded-xl border border-gray-100 p-4">
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
+                      {t.todaySchedule}
+                    </div>
+                    {todayPeriods.length > 0 ? (
+                      <div className="space-y-2">
+                        {todayPeriods.map((p) => (
+                          <div key={p.period} className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-[#fafcf9] px-3 py-3">
+                            <div className="min-w-0">
+                              <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                                Period {p.period}
+                              </div>
+                              <div className="mt-1 text-sm font-medium text-gray-900">
+                                {p.subject}
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500 text-right">
+                              {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-400">{t.noPeriods}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <Link
+                      href="/assignments"
+                      className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                        dueToday > 0
+                          ? 'border-l-4 border-l-amber-400 border-gray-100'
+                          : 'border-gray-100'
+                      }`}
+                    >
+                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                        {t.dueToday}
+                      </div>
+                      <div className="text-2xl font-semibold text-gray-900">
+                        {dueToday}
+                      </div>
+                      <div
+                        className={`text-[11px] mt-1 font-medium ${
+                          dueToday > 0 ? 'text-amber-600' : 'text-gray-400'
+                        }`}
+                      >
+                        {dueToday > 0 ? `${t.submitNow} →` : t.allClear}
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/marks"
+                      className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                    >
+                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                        {t.myAverage}
+                      </div>
+                      <div className="text-2xl font-semibold text-gray-900">
+                        {avgMark !== null ? `${avgMark}%` : '—'}
+                      </div>
+                      <div className="text-[11px] text-gray-400 mt-1">
+                        {t.viewGradebook} →
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/timetable"
+                      className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                    >
+                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                        {t.timetableView}
+                      </div>
+                      <div className="text-sm font-medium text-gray-700 mt-2">
+                        {t.viewSchedule} →
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/quizzes"
+                      className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                    >
+                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                        {t.quizzes}
+                      </div>
+                      <div className="text-sm font-medium text-gray-700 mt-2">
+                        {t.checkActive} →
+                      </div>
+                    </Link>
+                  </div>
+
+                  <AssignmentChecklist
+                    assignments={checklistAssignments}
+                    submissions={checklistSubmissions}
+                    manualChecks={manualChecks}
+                    studentId={studentId ?? ''}
+                  />
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/assignments"
-                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                    dueToday > 0
-                      ? 'border-l-4 border-l-amber-400 border-gray-100'
-                      : 'border-gray-100'
-                  }`}
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    {t.dueToday}
-                  </div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {dueToday}
-                  </div>
-                  <div
-                    className={`text-[11px] mt-1 font-medium ${
-                      dueToday > 0 ? 'text-amber-600' : 'text-gray-400'
-                    }`}
-                  >
-                    {dueToday > 0 ? `${t.submitNow} →` : t.allClear}
-                  </div>
-                </Link>
-
-                <Link
-                  href="/marks"
-                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    {t.myAverage}
-                  </div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {avgMark !== null ? `${avgMark}%` : '—'}
-                  </div>
-                  <div className="text-[11px] text-gray-400 mt-1">
-                    {t.viewGradebook} →
-                  </div>
-                </Link>
-
-                <Link
-                  href="/timetable"
-                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    {t.timetableView}
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-2">
-                    {t.viewSchedule} →
-                  </div>
-                </Link>
-
-                <Link
-                  href="/quizzes"
-                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    {t.quizzes}
-                  </div>
-                  <div className="text-sm font-medium text-gray-700 mt-2">
-                    {t.checkActive} →
-                  </div>
-                </Link>
-              </div>
-
-              <AssignmentChecklist
-                assignments={checklistAssignments}
-                submissions={checklistSubmissions}
-                manualChecks={manualChecks}
-                studentId={studentId ?? ''}
-              />
             </div>
           </main>
         </div>
@@ -541,14 +638,14 @@ export default async function DashboardPage() {
     }).length
 
     return (
-      <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+      <div className="uthaan-page-shell">
         <Sidebar
           email={user.email!}
           role="admin"
           isImpersonating={role === 'superadmin'}
         />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
+        <div className="uthaan-page-main">
+          <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">
               {t.dashboard}
             </h1>
@@ -557,142 +654,132 @@ export default async function DashboardPage() {
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-3xl space-y-5">
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/students"
-                  className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    {t.totalStudents}
+          <main className="uthaan-page-content">
+            <div className="max-w-6xl space-y-6">
+              <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Control centre
+                      </div>
+                      <div className="mt-2 text-2xl font-semibold text-gray-900">
+                        School dashboard
+                      </div>
+                      <div className="mt-1 text-sm text-gray-500">
+                        Review the issues that need attention first, then jump into the right workflow.
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Link href="/students" className="uthaan-button-secondary text-xs">Students</Link>
+                      <Link href="/attendance" className="uthaan-button-secondary text-xs">Attendance</Link>
+                      <Link href="/announcements" className="uthaan-button-secondary text-xs">Announcements</Link>
+                      <Link href="/marks" className="uthaan-button-secondary text-xs">Results</Link>
+                    </div>
                   </div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {totalStudents}
-                  </div>
-                  <div className="text-[11px] text-gray-400 mt-1">
-                    {t.viewAllStudents} →
-                  </div>
-                </Link>
-
-                <Link
-                  href="/fees"
-                  className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                    overdueFeeStudentIds.size > 0
-                      ? 'bg-red-50 border-red-200'
-                      : 'bg-white border-gray-100'
-                  }`}
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    Overdue Fees
-                  </div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {overdueFeeStudentIds.size}
-                  </div>
-                  <div className="text-[11px] text-gray-400 mt-1">
-                    Students with unpaid overdue fees →
-                  </div>
-                </Link>
-
-                <Link
-                  href="/attendance/low"
-                  className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                    studentsWithHighAbsences > 0
-                      ? 'bg-amber-50 border-amber-200'
-                      : 'bg-white border-gray-100'
-                  }`}
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    Low Attendance
-                  </div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {studentsWithHighAbsences}
-                  </div>
-                  <div className="text-[11px] text-gray-400 mt-1">
-                    Students below 75% attendance →
-                  </div>
-                </Link>
-
-                <Link
-                  href="/marks"
-                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                    studentsFailing > 0
-                      ? 'border-l-4 border-l-red-400 border-gray-100'
-                      : 'border-gray-100'
-                  }`}
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    Failing Students
-                  </div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {studentsFailing}
-                  </div>
-                  <div className="text-[11px] text-gray-400 mt-1">
-                    Students failing one or more subjects →
-                  </div>
-                </Link>
-              </div>
-
-              <div className="bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap items-center gap-x-8 gap-y-3">
-                <div>
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                    Admin tools
-                  </div>
-                  <div className="text-xl font-semibold text-gray-900 mt-0.5">
-                    Read-only academics
-                  </div>
-                </div>
-
-                <div className="w-px h-8 bg-gray-100 hidden sm:block" />
-
-                <div className="flex flex-wrap gap-3">
-                  <Link
-                    href="/admin"
-                    className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
-                  >
-                    {t.adminPanel} →
-                  </Link>
-                  <Link
-                    href="/admin/leaves"
-                    className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
-                  >
-                    Leave Management →
-                  </Link>
-                  <Link
-                    href="/marks"
-                    className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
-                  >
-                    Final grades →
-                  </Link>
                 </div>
               </div>
 
-              {recentAnnouncements.length > 0 && (
-                <div>
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
-                    {t.recentAnnouncements}
-                  </div>
-                  <div className="space-y-2">
-                    {recentAnnouncements.map((a) => (
-                      <div
-                        key={a.id}
-                        className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3"
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#6fcf6f] flex-shrink-0" />
-                        <div className="text-sm text-gray-900 flex-1">
-                          {a.title}
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_1fr]">
+                <div className="space-y-4">
+                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          Needs attention
                         </div>
-                        <div className="text-[11px] text-gray-400 flex-shrink-0">
-                          {new Date(a.created_at).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                          })}
+                        <div className="mt-1 text-sm text-gray-500">
+                          High-priority issues based on current school data.
                         </div>
                       </div>
-                    ))}
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <Link href="/fees" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${overdueFeeStudentIds.size > 0 ? 'bg-red-50 border-red-200' : 'bg-[#fafcf9] border-gray-100'}`}>
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Overdue fees</div>
+                        <div className="mt-1 text-2xl font-semibold text-gray-900">{overdueFeeStudentIds.size}</div>
+                        <div className="mt-1 text-xs text-gray-500">Students with overdue balances</div>
+                      </Link>
+                      <Link href="/attendance" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${studentsWithHighAbsences > 0 ? 'bg-amber-50 border-amber-200' : 'bg-[#fafcf9] border-gray-100'}`}>
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Low attendance</div>
+                        <div className="mt-1 text-2xl font-semibold text-gray-900">{studentsWithHighAbsences}</div>
+                        <div className="mt-1 text-xs text-gray-500">Below 75% attendance</div>
+                      </Link>
+                      <Link href="/marks" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${studentsFailing > 0 ? 'bg-red-50 border-red-200' : 'bg-[#fafcf9] border-gray-100'}`}>
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Failing students</div>
+                        <div className="mt-1 text-2xl font-semibold text-gray-900">{studentsFailing}</div>
+                        <div className="mt-1 text-xs text-gray-500">One or more subjects below pass</div>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                    <div className="text-sm font-semibold text-gray-900">
+                      Quick actions
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Link href="/admin" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">{t.adminPanel}</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">Manage students and parents</div>
+                      </Link>
+                      <Link href="/admin/leaves" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Leave management</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">Approve full-day and early leave</div>
+                      </Link>
+                      <Link href="/announcements" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Announcements</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">Post updates for families and staff</div>
+                      </Link>
+                      <Link href="/marks" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Results</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">Review final grades and report cards</div>
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              )}
+
+                <div className="space-y-4">
+                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                    <div className="text-sm font-semibold text-gray-900">Snapshot</div>
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">{t.totalStudents}</div>
+                        <div className="mt-1 text-2xl font-semibold text-gray-900">{totalStudents}</div>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Overdue fees</div>
+                        <div className="mt-1 text-2xl font-semibold text-gray-900">{overdueFeeStudentIds.size}</div>
+                      </div>
+                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Attendance watchlist</div>
+                        <div className="mt-1 text-2xl font-semibold text-gray-900">{studentsWithHighAbsences}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {recentAnnouncements.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                      <div className="px-5 py-4 border-b border-gray-50">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {t.recentAnnouncements}
+                        </div>
+                      </div>
+                      <div className="divide-y divide-gray-50">
+                        {recentAnnouncements.map((a) => (
+                          <div key={a.id} className="px-5 py-3.5 flex items-center gap-3">
+                            <div className="h-2 w-2 rounded-full bg-[#6fcf6f] flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium text-gray-900">{a.title}</div>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {formatCompactDate(a.created_at)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </main>
         </div>
@@ -765,14 +852,14 @@ export default async function DashboardPage() {
   const ungraded = pendingSubs.length
 
   return (
-    <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
+    <div className="uthaan-page-shell">
       <Sidebar
         email={user.email!}
         role={effectiveRole}
         isImpersonating={role === 'superadmin'}
       />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
+      <div className="uthaan-page-main">
+        <header className="uthaan-page-header">
           <h1 className="text-sm font-semibold text-gray-900">
             {t.dashboard}
           </h1>
@@ -781,60 +868,53 @@ export default async function DashboardPage() {
           </span>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <main className="uthaan-page-content">
+          <div className="max-w-5xl space-y-6">
 
-            {/* Section 1 — Today header */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">{todayDisplay}</span>
-              <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-                {t.springTerm2026}
-              </span>
+            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+              <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Morning briefing
+                    </div>
+                    <div className="mt-2 text-2xl font-semibold text-gray-900">
+                      {todayDisplay}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-500">
+                      Review classes, attendance follow-up, and grading work in one place.
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Classes today</div>
+                      <div className="mt-1 text-xl font-semibold text-gray-900">{classesTodayCount}</div>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Attendance</div>
+                      <div className="mt-1 text-xl font-semibold text-gray-900">{attendanceNotTakenCount}</div>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Need grading</div>
+                      <div className="mt-1 text-xl font-semibold text-gray-900">{ungraded}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Section 2 — Three stat cards */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-white rounded-xl border border-gray-100 p-4">
-                <div className="text-2xl font-semibold text-gray-900">{classesTodayCount}</div>
-                <div className="text-sm text-gray-500 mt-1">Classes today</div>
-              </div>
-
-              <Link
-                href="/attendance"
-                className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                  attendanceNotTakenCount > 0
-                    ? 'bg-amber-50 border-amber-200'
-                    : 'bg-white border-gray-100'
-                }`}
-              >
-                <div className="text-2xl font-semibold text-gray-900">{attendanceNotTakenCount}</div>
-                <div className="text-sm text-gray-500 mt-1">Attendance not taken</div>
-              </Link>
-
-              <Link
-                href="/marks"
-                className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                  ungraded > 0
-                    ? 'bg-blue-50 border-blue-200'
-                    : 'bg-white border-gray-100'
-                }`}
-              >
-                <div className="text-2xl font-semibold text-gray-900">{ungraded}</div>
-                <div className="text-sm text-gray-500 mt-1">Submissions pending grading</div>
-              </Link>
-            </div>
-
-            {/* Section 3 — My classes today */}
-            <div>
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
-                My classes today
-              </div>
-              {classesToday.length > 0 ? (
-                <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+              <div className="space-y-4">
+                <div>
+                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
+                    My classes today
+                  </div>
+                  {classesToday.length > 0 ? (
+                    <div className="space-y-2">
                   {classesToday.map((cls) => (
                     <div
                       key={`${cls.class_num}-${cls.period}`}
-                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3"
+                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center"
                     >
                       <span className="text-sm font-medium text-gray-900 flex-1">
                         {cls.subject}
@@ -856,24 +936,23 @@ export default async function DashboardPage() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="bg-white rounded-xl border border-gray-100 px-4 py-6 text-center text-sm text-gray-400">
-                  No classes scheduled for today
+                  ) : (
+                    <div className="bg-white rounded-xl border border-gray-100 px-4 py-6 text-center text-sm text-gray-400">
+                      No classes scheduled for today
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Section 4 — Needs grading */}
-            {needsGradingList.length > 0 && (
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
-                  Needs grading
-                </div>
-                <div className="space-y-2">
+                {needsGradingList.length > 0 && (
+                  <div>
+                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
+                      Needs grading
+                    </div>
+                    <div className="space-y-2">
                   {needsGradingList.map((item) => (
                     <div
                       key={item.title}
-                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3"
+                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center"
                     >
                       <span className="text-sm text-gray-900 flex-1">
                         {item.title}
@@ -887,37 +966,56 @@ export default async function DashboardPage() {
                       </Link>
                     </div>
                   ))}
-                </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Section 5 — Recent announcements */}
-            {recentAnnouncements.length > 0 && (
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
-                  {t.recentAnnouncements}
+              <div className="space-y-4">
+                <div className="bg-white rounded-xl border border-gray-100 p-5">
+                  <div className="text-sm font-semibold text-gray-900">
+                    Quick actions
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <Link href="/attendance" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                      <span>Mark attendance</span>
+                      <span className="text-gray-400">→</span>
+                    </Link>
+                    <Link href="/marks" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                      <span>Open gradebook</span>
+                      <span className="text-gray-400">→</span>
+                    </Link>
+                    <Link href="/announcements" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                      <span>School announcements</span>
+                      <span className="text-gray-400">→</span>
+                    </Link>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  {recentAnnouncements.map((a) => (
-                    <div
-                      key={a.id}
-                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#6fcf6f] flex-shrink-0" />
-                      <div className="text-sm text-gray-900 flex-1">
-                        {a.title}
-                      </div>
-                      <div className="text-[11px] text-gray-400 flex-shrink-0">
-                        {new Date(a.created_at).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
+
+                {recentAnnouncements.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-50">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {t.recentAnnouncements}
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="divide-y divide-gray-50">
+                      {recentAnnouncements.map((a) => (
+                        <div key={a.id} className="px-5 py-3.5 flex items-center gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#6fcf6f] flex-shrink-0" />
+                          <div className="text-sm text-gray-900 flex-1">
+                            {a.title}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {formatCompactDate(a.created_at)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </main>
       </div>

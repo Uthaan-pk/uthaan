@@ -142,20 +142,42 @@ export default async function MyChildPage() {
         </header>
 
         <main className="uthaan-page-content">
-          <div className="max-w-3xl space-y-6">
+          <div className="max-w-5xl space-y-6">
 
             {/* Student info card */}
-            <div className="bg-white rounded-xl border border-gray-100 p-5">
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Student profile</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <InfoField label="Name" value={child.name} />
-                <InfoField label="Roll No" value={child.roll_no} />
-                <InfoField label="Class" value={`${child.class_num}${child.stage ? ` · ${child.stage}` : ''}`} />
-                <InfoField label="Email" value={child.email ?? '—'} />
+            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+              <div className="border-b border-gray-100 bg-gradient-to-r from-[#f8fbf8] to-white px-5 py-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div>
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Student profile</h2>
+                    <div className="mt-2 text-2xl font-semibold text-gray-900">{child.name}</div>
+                    <div className="mt-1 text-sm text-gray-500">
+                      Roll {child.roll_no} · Class {child.class_num}{child.stage ? ` · ${child.stage}` : ''}
+                    </div>
+                  </div>
+                  {attRate !== null && (
+                    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
+                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Overall attendance</div>
+                      <div className={`mt-1 text-2xl font-semibold ${attRate >= 75 ? 'text-green-700' : 'text-red-600'}`}>
+                        {attRate}%
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              <div className="p-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <InfoField label="Name" value={child.name} />
+                  <InfoField label="Roll No" value={child.roll_no} />
+                  <InfoField label="Class" value={`${child.class_num}${child.stage ? ` · ${child.stage}` : ''}`} />
+                  <InfoField label="Email" value={child.email ?? '—'} />
+                </div>
+              </div>
+
               {attRate !== null && (
-                <div className="mt-4 pt-4 border-t border-gray-50">
-                  <div className="flex items-center gap-3">
+                <div className="border-t border-gray-50 px-5 py-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="text-[11px] text-gray-400 uppercase tracking-wide">Overall attendance</div>
                     <div className="flex items-center gap-2">
                       <div className="w-24 bg-gray-100 rounded-full h-1.5">

@@ -208,7 +208,7 @@ export default function AttendanceMarker({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {classNums.length > 1 && (
           <div className="flex flex-wrap gap-1.5">
             <button
@@ -238,11 +238,24 @@ export default function AttendanceMarker({
           </div>
         )}
 
-        <div className="flex items-center gap-3 ml-auto">
-          <p className="text-xs text-gray-400 whitespace-nowrap">
-            {presentCount} present · {lateCount} late · {excusedCount} excused · {earlyLeaveCount} early leave · {markedCount} /{' '}
-            {visibleStudents.length} marked
-          </p>
+        <div className="flex flex-col gap-3 lg:ml-auto lg:items-end">
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-green-100 bg-green-50 px-2.5 py-1 font-medium text-green-700">
+              {presentCount} present
+            </span>
+            <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+              {lateCount} late
+            </span>
+            <span className="rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 font-medium text-sky-700">
+              {excusedCount} excused
+            </span>
+            <span className="rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1 font-medium text-indigo-700">
+              {earlyLeaveCount} early leave
+            </span>
+            <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 font-medium text-gray-600">
+              {markedCount} / {visibleStudents.length} marked
+            </span>
+          </div>
 
           {!readOnly && (
             <button
@@ -297,7 +310,7 @@ export default function AttendanceMarker({
             return (
               <div
                 key={student.id}
-                className={`px-4 py-3 flex items-center gap-3 ${
+                className={`px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center ${
                   i < visibleStudents.length - 1 ? 'border-b border-gray-50' : ''
                 }`}
               >
@@ -324,7 +337,7 @@ export default function AttendanceMarker({
                   )}
                 </div>
 
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-shrink-0">
                   {locked ? (
                     <span className={`text-xs font-semibold px-3 py-2 rounded-lg border min-h-[40px] inline-flex items-center ${
                       current === 'excused'
@@ -362,7 +375,7 @@ export default function AttendanceMarker({
                       <button
                         onClick={() => setStudentStatus(student.id, 'absent')}
                         disabled={readOnly}
-                        className={`text-xs font-semibold px-3 py-2 rounded-lg border min-h-[40px] transition-colors ${
+                        className={`col-span-2 text-xs font-semibold px-3 py-2 rounded-lg border min-h-[40px] transition-colors sm:col-span-1 ${
                           current === 'absent'
                             ? 'bg-red-50 text-red-700 border-red-200'
                             : 'bg-white text-gray-500 border-gray-200 hover:border-red-200 hover:text-red-700'

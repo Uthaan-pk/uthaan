@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { z } from 'zod'
+import { parseBody } from '@/lib/api/validate'
 
-const adminSupabase = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const DeleteStudentSchema = z.object({
+  student_id: z.string().uuid(),
+})
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
   const { data: roleData } = await supabase
@@ -25,25 +26,32 @@ export async function POST(request: Request) {
     .single()
 
   if (roleData?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
 
-  const { student_id } = await request.json()
-
-  if (!student_id) {
-    return NextResponse.json(
-      { error: 'student_id required' },
-      { status: 400 }
-    )
+  let raw: unknown
+  try {
+    raw = await request.json()
+  } catch {
+    return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
   }
 
+  const parsed = parseBody(DeleteStudentSchema, raw)
+  if ('error' in parsed) return parsed.error
+  const { student_id } = parsed.data
+
+  const adminSupabase = createAdminClient()
   const { error } = await adminSupabase
     .from('students')
     .update({ is_active: false })
     .eq('id', student_id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('[delete-student]', error)
+    return NextResponse.json(
+      { message: 'Failed to archive student' },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json({ success: true, archived: true })

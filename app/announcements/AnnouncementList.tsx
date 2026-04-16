@@ -191,36 +191,49 @@ export default function AnnouncementList({
             ) : (
               /* ── Read view ── */
               <>
-                {/* Top row: badges + date + actions */}
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {a.priority && a.priority !== 'normal' && (
-                      <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                        PRIORITY_BADGE[a.priority] ?? 'bg-gray-50 text-gray-600 border border-gray-100'
-                      }`}>
-                        {PRIORITY_LABEL[a.priority] ?? a.priority}
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {a.priority && a.priority !== 'normal' && (
+                        <span className={`inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                          PRIORITY_BADGE[a.priority] ?? 'bg-gray-50 text-gray-600 border border-gray-100'
+                        }`}>
+                          {PRIORITY_LABEL[a.priority] ?? a.priority}
+                        </span>
+                      )}
+                      {a.class_num != null && (
+                        <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25">
+                          Class {a.class_num}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-gray-500">
+                        {new Date(a.created_at).toLocaleDateString('en-GB', {
+                          day: 'numeric', month: 'short', year: 'numeric',
+                        })}
                       </span>
-                    )}
-                    {a.class_num != null && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25">
-                        Class {a.class_num}
+                    </div>
+
+                    <div className="mt-3 text-base font-semibold leading-tight text-gray-900">
+                      {a.title}
+                    </div>
+                    <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
+                      {a.body}
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500 capitalize">
+                      Posted by{' '}
+                      <span className="font-medium text-gray-700">
+                        {creatorRoleMap[a.created_by ?? ''] ?? 'staff'}
                       </span>
-                    )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-[10px] text-gray-300">
-                      {new Date(a.created_at).toLocaleDateString('en-GB', {
-                        day: 'numeric', month: 'short', year: 'numeric',
-                      })}
-                    </span>
-
+                  <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[170px] lg:items-end">
                     {(canEdit || canDelete) && !isConfirming && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                         {canEdit && (
                           <button
                             onClick={() => startEdit(a)}
-                            className="text-xs text-gray-400 hover:text-[#1a2e1a] transition-colors py-1 px-1"
+                            className="text-xs text-gray-500 hover:text-[#1a2e1a] transition-colors py-1 px-1"
                           >
                             Edit
                           </button>
@@ -228,51 +241,45 @@ export default function AnnouncementList({
                         {canDelete && (
                           <button
                             onClick={() => setConfirmDeleteId(a.id)}
-                            className="text-xs text-gray-400 hover:text-red-500 transition-colors py-1 px-1"
+                            className="text-xs text-gray-500 hover:text-red-500 transition-colors py-1 px-1"
                           >
                             Delete
                           </button>
                         )}
                       </div>
                     )}
+
+                    {isStaff ? (
+                      <AcknowledgementStatus announcementId={a.id} />
+                    ) : (
+                      <AcknowledgeButton
+                        announcementId={a.id}
+                        initialAcknowledged={acknowledgedIds?.has(a.id) ?? false}
+                      />
+                    )}
                   </div>
                 </div>
 
-                {/* Inline delete confirmation */}
                 {isConfirming && canDelete && (
-                  <div className="mb-3 flex items-center gap-3 bg-red-50 border border-red-100 rounded-lg px-3 py-2.5">
-                    <span className="text-xs text-red-700 flex-1">Delete this announcement?</span>
-                    <button
-                      onClick={() => deleteAnnouncement(a.id)}
-                      disabled={deletingId === a.id}
-                      className="text-xs font-medium text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 min-h-[32px]"
-                    >
-                      {deletingId === a.id ? 'Deleting…' : 'Delete'}
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(null)}
-                      className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5"
-                    >
-                      Cancel
-                    </button>
+                  <div className="mt-4 flex flex-col gap-3 rounded-lg border border-red-100 bg-red-50 px-3 py-3 sm:flex-row sm:items-center">
+                    <span className="flex-1 text-xs text-red-700">Delete this announcement?</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => deleteAnnouncement(a.id)}
+                        disabled={deletingId === a.id}
+                        className="text-xs font-medium text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-md transition-colors disabled:opacity-50 min-h-[36px]"
+                      >
+                        {deletingId === a.id ? 'Deleting…' : 'Delete'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="text-xs text-gray-500 hover:text-gray-700 px-2 py-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 )}
-
-                <div className="text-sm font-semibold text-gray-900">{a.title}</div>
-                <div className="text-sm text-gray-600 mt-1 leading-relaxed">{a.body}</div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-[10px] text-gray-300 capitalize">
-                    Posted by {creatorRoleMap[a.created_by ?? ''] ?? 'staff'}
-                  </span>
-                  {isStaff ? (
-                    <AcknowledgementStatus announcementId={a.id} />
-                  ) : (
-                    <AcknowledgeButton
-                      announcementId={a.id}
-                      initialAcknowledged={acknowledgedIds?.has(a.id) ?? false}
-                    />
-                  )}
-                </div>
               </>
             )}
           </div>

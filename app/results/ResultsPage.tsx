@@ -702,10 +702,12 @@ export default function ResultsPage({
   students,
   releases: initialReleases,
   role = 'teacher',
+  canUseAiReportComments = false,
 }: {
   students: Student[]
   releases: ReleaseRow[]
   role?: string
+  canUseAiReportComments?: boolean
 }) {
   const supabase = useMemo(() => createClient(), [])
   const [loading, setLoading] = useState<string | null>(null)
@@ -825,35 +827,6 @@ export default function ResultsPage({
     }
   }
 
-  async function generateCommentFromReport(
-    student: Student,
-    report: ReportCardData
-  ) {
-    const response = await fetch('/api/ai/report-comments', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        studentName: student.name,
-        className: student.class_num,
-        subjectGrades: report.subjectGrades,
-        attendancePct: report.attendancePct,
-        presentCount: report.presentCount,
-        absentCount: report.absentCount,
-        totalDays: report.totalDays,
-      }),
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data?.error ?? data?.message ?? 'Failed to generate comment')
-    }
-
-    return data.comment ?? ''
-  }
-
   async function handleBulkGenerate() {
     setBulkReviewOpen(true)
     setBulkCommentError(null)
@@ -870,39 +843,56 @@ export default function ResultsPage({
 
     setBulkGenerating(true)
 
-    const nextEntries: Record<string, BulkCommentEntry> = {}
-    let failedCount = 0
+    try {
+      const reports = await Promise.all(reviewStudents.map((student) => loadReportCardData(student)))
 
-    for (const student of reviewStudents) {
-      try {
-        const report = await loadReportCardData(student)
-        const comment = await generateCommentFromReport(student, report)
-        nextEntries[student.id] = {
-          report,
-          comment,
-          error: null,
-        }
-      } catch (err: any) {
-        failedCount += 1
-        nextEntries[student.id] = {
-          report: null,
-          comment: '',
-          error: err?.message ?? 'Failed to generate comment.',
-        }
+      const response = await fetch('/api/ai/report-comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          className: reviewStudents[0]?.class_num ?? classFilter,
+          students: reviewStudents.map((student, index) => ({
+            studentId: student.id,
+            studentName: student.name,
+            subjectGrades: reports[index].subjectGrades,
+            attendancePct: reports[index].attendancePct,
+            presentCount: reports[index].presentCount,
+            absentCount: reports[index].absentCount,
+            totalDays: reports[index].totalDays,
+          })),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? data?.message ?? 'Failed to generate comments.')
       }
+
+      const commentMap = new Map<string, string>()
+      for (const item of data?.comments ?? []) {
+        if (item?.studentId) commentMap.set(item.studentId, item.comment ?? '')
+      }
+
+      const nextEntries: Record<string, BulkCommentEntry> = {}
+      reviewStudents.forEach((student, index) => {
+        nextEntries[student.id] = {
+          report: reports[index],
+          comment: commentMap.get(student.id) ?? '',
+          error: commentMap.get(student.id) ? null : 'No comment returned.',
+        }
+      })
+
+      setBulkComments(nextEntries)
+      toast.success(`Generated comments for Class ${reviewStudents[0]?.class_num}.`)
+    } catch (err: any) {
+      setBulkComments({})
+      setBulkCommentError(err?.message ?? 'Failed to generate comments.')
+    } finally {
+      setBulkGenerating(false)
     }
-
-    setBulkComments(nextEntries)
-    setBulkGenerating(false)
-
-    if (failedCount > 0) {
-      setBulkCommentError(
-        `Generated ${reviewStudents.length - failedCount} of ${reviewStudents.length} comments.`
-      )
-      return
-    }
-
-    toast.success(`Generated comments for Class ${reviewStudents[0]?.class_num}.`)
   }
 
   return (
@@ -982,13 +972,15 @@ export default function ResultsPage({
           </div>
 
           <div className="flex flex-col items-start gap-3 sm:items-end">
-            <button
-              onClick={handleBulkGenerate}
-              disabled={bulkGenerating || (classFilter === 'all' && classNums.length > 1)}
-              className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
-            >
-              {bulkGenerating ? 'Generating comments...' : 'Generate comments for class'}
-            </button>
+            {canUseAiReportComments && (
+              <button
+                onClick={handleBulkGenerate}
+                disabled={bulkGenerating || (classFilter === 'all' && classNums.length > 1)}
+                className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+              >
+                {bulkGenerating ? 'Generating comments...' : 'Generate comments for class'}
+              </button>
+            )}
 
             {classNums.length > 1 && (
               <div className="flex flex-wrap gap-1.5">
@@ -1018,7 +1010,7 @@ export default function ResultsPage({
               </div>
             )}
 
-            {classFilter === 'all' && classNums.length > 1 && (
+            {canUseAiReportComments && classFilter === 'all' && classNums.length > 1 && (
               <div className="text-xs text-gray-500">
                 Select a class to bulk generate comments.
               </div>
@@ -1026,7 +1018,7 @@ export default function ResultsPage({
           </div>
         </div>
 
-        {bulkReviewOpen && (
+        {canUseAiReportComments && bulkReviewOpen && (
           <div className="border-b border-gray-50 bg-[#fafcf9] px-5 py-4">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>

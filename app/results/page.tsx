@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import Sidebar from '@/components/Sidebar'
 import ResultsPage from './ResultsPage'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
-import { resolveEffectiveRole } from '@/lib/school'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 
 async function isReleasedForClass(
   supabase: any,
@@ -38,6 +39,7 @@ export default async function Page() {
 
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
+  const schoolContext = await getSchoolContext(supabase, user.id)
 
   if (role === 'parent') {
     const { data: link } = await supabase
@@ -242,6 +244,19 @@ export default async function Page() {
       .order('class_num', { ascending: true }),
   ])
 
+  let canUseAiReportComments = false
+  if (schoolContext?.schoolId && ['teacher', 'admin'].includes(effectiveRole)) {
+    const admin = createAdminClient()
+    const { data: feature } = await admin
+      .from('school_features')
+      .select('enabled')
+      .eq('school_id', schoolContext.schoolId)
+      .eq('feature_key', 'ai_report_comments')
+      .maybeSingle()
+
+    canUseAiReportComments = feature?.enabled === true
+  }
+
   return (
     <div className="uthaan-page-shell">
       <Sidebar email={user.email!} role={effectiveRole} />
@@ -259,6 +274,7 @@ export default async function Page() {
             students={studentsRes.data ?? []}
             releases={releasesRes.data ?? []}
             role={effectiveRole || 'teacher'}
+            canUseAiReportComments={canUseAiReportComments}
           />
         </main>
       </div>

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildDefaultSchoolFeatures } from '@/lib/aiFeatures'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,10 @@ export async function onboardSchool(
   const schoolId: string = school.id
   const password = generatePassword()
 
+  await admin.from('school_features').upsert(buildDefaultSchoolFeatures(schoolId), {
+    onConflict: 'school_id,feature_key',
+  })
+
   // Step 2: Create auth user (email already confirmed)
   const { data: authData, error: authErr } = await admin.auth.admin.createUser({
     email,
@@ -178,6 +183,53 @@ export async function stopImpersonating() {
 
   const cookieStore = await cookies()
   cookieStore.delete('impersonate_school_id')
+
+  redirect('/superadmin')
+}
+
+export async function updateSchoolFeature(formData: FormData) {
+  await assertSuperadmin()
+
+  const schoolId = String(formData.get('school_id') ?? '')
+  const featureKey = String(formData.get('feature_key') ?? '')
+  const enabled = formData.get('enabled') === 'on'
+  const monthlyLimitRaw = String(formData.get('monthly_limit') ?? '').trim()
+
+  if (!schoolId || !featureKey) redirect('/superadmin')
+
+  const monthlyLimit =
+    monthlyLimitRaw === '' ? null : Math.max(0, parseInt(monthlyLimitRaw, 10) || 0)
+
+  const admin = createAdminClient()
+  await admin
+    .from('school_features')
+    .upsert(
+      {
+        school_id: schoolId,
+        feature_key: featureKey,
+        enabled,
+        monthly_limit: monthlyLimit,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'school_id,feature_key' }
+    )
+
+  redirect('/superadmin')
+}
+
+export async function resetSchoolFeatureUsage(schoolId: string, featureKey: string) {
+  await assertSuperadmin()
+
+  const admin = createAdminClient()
+  await admin
+    .from('school_features')
+    .update({
+      used_this_month: 0,
+      last_reset_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('school_id', schoolId)
+    .eq('feature_key', featureKey)
 
   redirect('/superadmin')
 }

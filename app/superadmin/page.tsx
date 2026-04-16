@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { Fragment } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
@@ -7,11 +8,14 @@ import {
   deleteSchool,
   impersonateSchool,
   stopImpersonating,
+  updateSchoolFeature,
+  resetSchoolFeatureUsage,
 } from './actions'
 import OnboardSchoolForm from './OnboardSchoolForm'
 import UsageTable, { type UsageRow } from './UsageTable'
 import { TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
+import { AI_FEATURES, type SchoolFeatureRow } from '@/lib/aiFeatures'
 
 type SchoolRow = {
   id: string
@@ -43,13 +47,14 @@ export default async function SuperadminPage() {
   // ── Data ───────────────────────────────────────────────────────────────
   const admin = createAdminClient()
 
-  const [schoolsRes, studentsRes, usersRes, quizzesRes, assignmentsRes, attLogsRes] = await Promise.all([
+  const [schoolsRes, studentsRes, usersRes, quizzesRes, assignmentsRes, attLogsRes, featuresRes] = await Promise.all([
     admin.from('schools').select('id, name, slug, is_active, created_at').order('created_at'),
     admin.from('students').select('id, school_id, is_active'),
     admin.from('user_roles').select('user_id, school_id, role'),
     admin.from('quizzes').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
     admin.from('assignments').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
     admin.from('attendance_logs').select('student_id, status, school_id').gte('day', TERM_START_DATE),
+    admin.from('school_features').select('id, school_id, feature_key, enabled, monthly_limit, used_this_month, last_reset_at, created_at, updated_at'),
   ])
 
   const schools: SchoolRow[] = (schoolsRes.data ?? []).map((s: any) => ({
@@ -106,6 +111,12 @@ export default async function SuperadminPage() {
   const impersonatingSchool = impersonatingId
     ? schools.find((s) => s.id === impersonatingId)
     : null
+
+  const featureMap = new Map<string, Record<string, SchoolFeatureRow>>()
+  for (const row of (featuresRes.data ?? []) as SchoolFeatureRow[]) {
+    if (!featureMap.has(row.school_id)) featureMap.set(row.school_id, {})
+    featureMap.get(row.school_id)![row.feature_key] = row
+  }
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
@@ -195,9 +206,10 @@ export default async function SuperadminPage() {
                 </thead>
                 <tbody>
                   {schools.map((school, i) => (
+                    <Fragment key={school.id}>
                     <tr
                       key={school.id}
-                      className={i < schools.length - 1 ? 'border-b border-gray-50' : ''}
+                      className="border-b border-gray-50"
                     >
                       <td className="px-5 py-3.5 font-medium text-gray-900">{school.name}</td>
                       <td className="px-5 py-3.5 text-gray-400 font-mono text-xs">{school.slug}</td>
@@ -258,6 +270,29 @@ export default async function SuperadminPage() {
                         </div>
                       </td>
                     </tr>
+                    <tr className={i < schools.length - 1 ? 'border-b border-gray-50' : ''}>
+                      <td colSpan={7} className="bg-[#fafcf9] px-5 py-4">
+                        <div className="mb-3">
+                          <h3 className="text-sm font-semibold text-gray-900">Features &amp; Limits</h3>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            Superadmin-managed feature access and monthly AI usage controls for {school.name}.
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                          {AI_FEATURES.map((feature) => (
+                            <FeatureCard
+                              key={`${school.id}-${feature.key}`}
+                              schoolId={school.id}
+                              featureKey={feature.key}
+                              label={feature.label}
+                              description={feature.description}
+                              feature={featureMap.get(school.id)?.[feature.key] ?? null}
+                            />
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
@@ -265,6 +300,95 @@ export default async function SuperadminPage() {
           )}
         </section>
       </main>
+    </div>
+  )
+}
+
+function FeatureCard({
+  schoolId,
+  featureKey,
+  label,
+  description,
+  feature,
+}: {
+  schoolId: string
+  featureKey: string
+  label: string
+  description: string
+  feature: SchoolFeatureRow | null
+}) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-white p-4">
+      <div className="mb-3">
+        <div className="text-sm font-semibold text-gray-900">{label}</div>
+        <div className="text-xs text-gray-500 mt-0.5">{description}</div>
+      </div>
+
+      <form action={updateSchoolFeature} className="space-y-3">
+        <input type="hidden" name="school_id" value={schoolId} />
+        <input type="hidden" name="feature_key" value={featureKey} />
+
+        <label className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-[#fafcf9] px-3 py-2.5">
+          <span className="text-sm font-medium text-gray-800">Enabled</span>
+          <input
+            type="checkbox"
+            name="enabled"
+            defaultChecked={feature?.enabled ?? false}
+            className="h-4 w-4 rounded border-gray-300 text-[#1a2e1a] focus:ring-[#6fcf6f]/40"
+          />
+        </label>
+
+        <div>
+          <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">
+            Monthly limit
+          </label>
+          <input
+            type="number"
+            name="monthly_limit"
+            min="0"
+            defaultValue={feature?.monthly_limit ?? ''}
+            placeholder="Unlimited"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-[#fafcf9] px-3 py-2.5">
+          <div>
+            <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+              Used this month
+            </div>
+            <div className="mt-1 text-lg font-semibold text-gray-900">
+              {feature?.used_this_month ?? 0}
+            </div>
+          </div>
+          <div className="text-right text-[11px] text-gray-500">
+            {feature?.last_reset_at
+              ? `Reset ${new Date(feature.last_reset_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}`
+              : 'Not reset yet'}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="submit"
+            formAction={resetSchoolFeatureUsage.bind(null, schoolId, featureKey)}
+            className="text-xs font-medium px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors"
+          >
+            Reset usage
+          </button>
+
+          <button
+            type="submit"
+            className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2.5 rounded-lg transition-colors"
+          >
+            Save feature settings
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

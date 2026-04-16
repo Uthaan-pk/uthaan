@@ -136,7 +136,7 @@ export default function Sidebar({
   const isAdmin = role === 'admin'
   const isStaff = isTeacher || isAdmin
   const isParent = role === 'parent'
-  const canSeeResults = isTeacher || role === 'student' || isParent
+  const canSeeResults = isTeacher || isAdmin || role === 'student' || isParent
 
   return (
     <>

@@ -11,7 +11,7 @@ export function parseBody<T>(
 ): { data: T } | { error: NextResponse } {
   const result = schema.safeParse(data)
   if (!result.success) {
-    const message = result.error.errors[0]?.message ?? 'Invalid request'
+    const message = result.error.issues[0]?.message ?? 'Invalid request'
     return { error: NextResponse.json({ message }, { status: 400 }) }
   }
   return { data: result.data as T }

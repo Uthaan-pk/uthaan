@@ -692,66 +692,10 @@ function StatCard({
   )
 }
 
-function StaffReportCommentPanel({ student }: { student: Student }) {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [report, setReport] = useState<ReportCardData | null>(null)
-
-  async function handleOpen() {
-    if (open) {
-      setOpen(false)
-      return
-    }
-
-    setOpen(true)
-
-    if (report || loading) return
-
-    try {
-      setLoading(true)
-      setError(null)
-      const data = await loadReportCardData(student)
-      setReport(data)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load report card.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="mt-3">
-      <button
-        onClick={handleOpen}
-        className="text-xs font-medium px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors min-h-[36px]"
-      >
-        {open ? 'Hide Comment Generator' : 'Open Comment Generator'}
-      </button>
-
-      {open && loading && (
-        <div className="mt-3 text-xs text-gray-400">Loading report data…</div>
-      )}
-
-      {open && error && (
-        <div className="mt-3 text-xs text-red-600">{error}</div>
-      )}
-
-      {open && report && (
-        <div className="mt-3 rounded-xl border border-gray-100 overflow-hidden bg-white">
-          <ReportCommentGenerator
-            studentName={student.name}
-            className={student.class_num}
-            subjectGrades={report.subjectGrades}
-            attendancePct={report.attendancePct}
-            presentCount={report.presentCount}
-            absentCount={report.absentCount}
-            totalDays={report.totalDays}
-          />
-        </div>
-      )}
-    </div>
-  )
+type BulkCommentEntry = {
+  report: ReportCardData | null
+  comment: string
+  error: string | null
 }
 
 export default function ResultsPage({
@@ -768,6 +712,10 @@ export default function ResultsPage({
   const [releaseLoading, setReleaseLoading] = useState<number | null>(null)
   const [releases, setReleases] = useState(initialReleases)
   const [classFilter, setClassFilter] = useState<number | 'all'>('all')
+  const [bulkGenerating, setBulkGenerating] = useState(false)
+  const [bulkReviewOpen, setBulkReviewOpen] = useState(false)
+  const [bulkCommentError, setBulkCommentError] = useState<string | null>(null)
+  const [bulkComments, setBulkComments] = useState<Record<string, BulkCommentEntry>>({})
 
   const activeStudents = useMemo(
     () => students.filter(s => s.is_active !== false),
@@ -807,6 +755,16 @@ export default function ResultsPage({
     if (classFilter === 'all') return activeStudents
     return activeStudents.filter(s => Number(s.class_num) === classFilter)
   }, [activeStudents, classFilter])
+
+  const reviewStudents = useMemo(() => {
+    if (classFilter !== 'all') {
+      return activeStudents.filter(s => Number(s.class_num) === classFilter)
+    }
+
+    if (classNums.length === 1) return activeStudents
+
+    return []
+  }, [activeStudents, classFilter, classNums])
 
   async function handleGenerate(student: Student) {
     setLoading(student.id)
@@ -865,6 +823,86 @@ export default function ResultsPage({
     if (data) {
       setReleases(prev => [...prev, data])
     }
+  }
+
+  async function generateCommentFromReport(
+    student: Student,
+    report: ReportCardData
+  ) {
+    const response = await fetch('/api/ai/report-comments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        studentName: student.name,
+        className: student.class_num,
+        subjectGrades: report.subjectGrades,
+        attendancePct: report.attendancePct,
+        presentCount: report.presentCount,
+        absentCount: report.absentCount,
+        totalDays: report.totalDays,
+      }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data?.error ?? data?.message ?? 'Failed to generate comment')
+    }
+
+    return data.comment ?? ''
+  }
+
+  async function handleBulkGenerate() {
+    setBulkReviewOpen(true)
+    setBulkCommentError(null)
+
+    if (classFilter === 'all' && classNums.length > 1) {
+      setBulkCommentError('Select a class first to generate comments in bulk.')
+      return
+    }
+
+    if (reviewStudents.length === 0) {
+      setBulkCommentError('No students found for the current class.')
+      return
+    }
+
+    setBulkGenerating(true)
+
+    const nextEntries: Record<string, BulkCommentEntry> = {}
+    let failedCount = 0
+
+    for (const student of reviewStudents) {
+      try {
+        const report = await loadReportCardData(student)
+        const comment = await generateCommentFromReport(student, report)
+        nextEntries[student.id] = {
+          report,
+          comment,
+          error: null,
+        }
+      } catch (err: any) {
+        failedCount += 1
+        nextEntries[student.id] = {
+          report: null,
+          comment: '',
+          error: err?.message ?? 'Failed to generate comment.',
+        }
+      }
+    }
+
+    setBulkComments(nextEntries)
+    setBulkGenerating(false)
+
+    if (failedCount > 0) {
+      setBulkCommentError(
+        `Generated ${reviewStudents.length - failedCount} of ${reviewStudents.length} comments.`
+      )
+      return
+    }
+
+    toast.success(`Generated comments for Class ${reviewStudents[0]?.class_num}.`)
   }
 
   return (
@@ -943,34 +981,126 @@ export default function ResultsPage({
             </p>
           </div>
 
-          {classNums.length > 1 && (
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => setClassFilter('all')}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                  classFilter === 'all'
-                    ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                All
-              </button>
-              {classNums.map(n => (
+          <div className="flex flex-col items-start gap-3 sm:items-end">
+            <button
+              onClick={handleBulkGenerate}
+              disabled={bulkGenerating || (classFilter === 'all' && classNums.length > 1)}
+              className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+            >
+              {bulkGenerating ? 'Generating comments...' : 'Generate comments for class'}
+            </button>
+
+            {classNums.length > 1 && (
+              <div className="flex flex-wrap gap-1.5">
                 <button
-                  key={n}
-                  onClick={() => setClassFilter(n)}
+                  onClick={() => setClassFilter('all')}
                   className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                    classFilter === n
+                    classFilter === 'all'
                       ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]'
                       : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  Class {n}
+                  All
                 </button>
-              ))}
-            </div>
-          )}
+                {classNums.map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setClassFilter(n)}
+                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                      classFilter === n
+                        ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    Class {n}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {classFilter === 'all' && classNums.length > 1 && (
+              <div className="text-xs text-gray-500">
+                Select a class to bulk generate comments.
+              </div>
+            )}
+          </div>
         </div>
+
+        {bulkReviewOpen && (
+          <div className="border-b border-gray-50 bg-[#fafcf9] px-5 py-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">
+                  Comment Review
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Review, edit, regenerate, copy, or print comments for the selected class.
+                </p>
+              </div>
+              <button
+                onClick={() => setBulkReviewOpen(false)}
+                className="text-xs font-medium px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:text-gray-800 hover:border-gray-300 transition-colors min-h-[36px]"
+              >
+                Hide review
+              </button>
+            </div>
+
+            {bulkCommentError && (
+              <div className="mt-3 text-xs text-red-600">{bulkCommentError}</div>
+            )}
+
+            {bulkGenerating && (
+              <div className="mt-3 text-xs text-gray-500">
+                Generating comments for {reviewStudents.length} students...
+              </div>
+            )}
+
+            {!bulkGenerating && reviewStudents.length > 0 && Object.keys(bulkComments).length > 0 && (
+              <div className="mt-4 space-y-4">
+                {reviewStudents.map((student) => {
+                  const entry = bulkComments[student.id]
+
+                  if (!entry) return null
+
+                  return (
+                    <div
+                      key={student.id}
+                      className="rounded-xl border border-gray-100 bg-white px-4 py-4"
+                    >
+                      <div className="mb-3">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {student.name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          Roll {student.roll_no} · Class {student.class_num} · {student.stage ?? '—'}
+                        </div>
+                      </div>
+
+                      {entry.error || !entry.report ? (
+                        <div className="text-xs text-red-600">
+                          {entry.error ?? 'Failed to load report data.'}
+                        </div>
+                      ) : (
+                        <ReportCommentGenerator
+                          studentName={student.name}
+                          className={student.class_num}
+                          subjectGrades={entry.report.subjectGrades}
+                          attendancePct={entry.report.attendancePct}
+                          presentCount={entry.report.presentCount}
+                          absentCount={entry.report.absentCount}
+                          totalDays={entry.report.totalDays}
+                          initialComment={entry.comment}
+                          generateLabel="Regenerate"
+                          showHeader={false}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {filteredStudents.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-gray-400">
@@ -1008,7 +1138,6 @@ export default function ResultsPage({
                       </button>
                     </div>
                   </div>
-                  <StaffReportCommentPanel student={s} />
                 </div>
               )
             })}

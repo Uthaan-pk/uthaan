@@ -7,7 +7,7 @@ import { parseBody } from '@/lib/api/validate'
 // Simple in-memory rate limiter: max 10 requests per user per minute.
 // Resets on cold starts — acceptable for lightweight spam prevention.
 const rateLimitMap = new Map<string, number[]>()
-const RATE_LIMIT = 10
+const RATE_LIMIT = 120
 const RATE_WINDOW_MS = 60_000
 
 function isRateLimited(userId: string): boolean {

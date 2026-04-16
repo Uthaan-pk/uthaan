@@ -388,10 +388,52 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {/* Attendance status */}
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.95fr]">
+                <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {t.todaySchedule}
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        Today&apos;s classes and timings.
+                      </div>
+                    </div>
+                    <Link
+                      href="/timetable"
+                      className="text-xs font-medium text-[#1a2e1a] hover:underline"
+                    >
+                      {t.viewSchedule} →
+                    </Link>
+                  </div>
+                  <div className="mt-4">
+                    {todayPeriods.length > 0 ? (
+                      <div className="space-y-2">
+                        {todayPeriods.map((p) => (
+                          <div key={p.period} className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-[#fafcf9] px-3 py-3">
+                            <div className="min-w-0">
+                              <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                                Period {p.period}
+                              </div>
+                              <div className="mt-1 text-sm font-medium text-gray-900">
+                                {p.subject}
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500 text-right">
+                              {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-8 text-center text-sm text-gray-500">
+                        {t.noPeriods}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
                   <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
                       {t.attendanceStatus}
@@ -419,7 +461,6 @@ export default async function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Upcoming quizzes */}
                   <div className={`rounded-xl border p-4 ${upcomingQuizzes.length > 0 ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
                     <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
                       {t.upcomingQuizzes}
@@ -440,60 +481,42 @@ export default async function DashboardPage() {
                       <div className="text-xs text-gray-400 mt-1">{t.noneActive}</div>
                     )}
                   </div>
-                  </div>
+                </div>
+              </div>
 
-                  {/* Homework due today/tomorrow */}
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.9fr]">
+                <div className="space-y-4">
                   {homeworkDue.length > 0 && (
                     <div className="bg-white rounded-xl border border-l-4 border-l-amber-400 border-gray-100 p-4">
-                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
-                      {t.homeworkDue}
-                    </div>
-                    <div className="space-y-1.5">
-                      {homeworkDue.slice(0, 4).map((a) => (
-                        <div key={a.id} className="flex items-center justify-between gap-3">
-                          <div className="text-xs text-gray-700 truncate">
-                            <span className="text-gray-400 mr-1">{a.subject}</span>
-                            {a.title}
-                          </div>
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
-                            a.due_date === today
-                              ? 'bg-red-50 text-red-600'
-                              : 'bg-amber-50 text-amber-600'
-                          }`}>
-                            {a.due_date === today ? t.dueToday : t.dueTomorrow}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    </div>
-                  )}
-
-                  <div className="bg-white rounded-xl border border-gray-100 p-4">
-                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
-                      {t.todaySchedule}
-                    </div>
-                    {todayPeriods.length > 0 ? (
-                      <div className="space-y-2">
-                        {todayPeriods.map((p) => (
-                          <div key={p.period} className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-[#fafcf9] px-3 py-3">
-                            <div className="min-w-0">
-                              <div className="text-[11px] uppercase tracking-wide text-gray-500">
-                                Period {p.period}
-                              </div>
-                              <div className="mt-1 text-sm font-medium text-gray-900">
-                                {p.subject}
-                              </div>
+                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
+                        {t.homeworkDue}
+                      </div>
+                      <div className="space-y-1.5">
+                        {homeworkDue.slice(0, 4).map((a) => (
+                          <div key={a.id} className="flex items-center justify-between gap-3">
+                            <div className="text-xs text-gray-700 truncate">
+                              <span className="text-gray-400 mr-1">{a.subject}</span>
+                              {a.title}
                             </div>
-                            <div className="text-xs text-gray-500 text-right">
-                              {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
-                            </div>
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
+                              a.due_date === today
+                                ? 'bg-red-50 text-red-600'
+                                : 'bg-amber-50 text-amber-600'
+                            }`}>
+                              {a.due_date === today ? t.dueToday : t.dueTomorrow}
+                            </span>
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <div className="text-xs text-gray-400">{t.noPeriods}</div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  <AssignmentChecklist
+                    assignments={checklistAssignments}
+                    submissions={checklistSubmissions}
+                    manualChecks={manualChecks}
+                    studentId={studentId ?? ''}
+                  />
                 </div>
 
                 <div className="space-y-4">
@@ -560,13 +583,6 @@ export default async function DashboardPage() {
                       </div>
                     </Link>
                   </div>
-
-                  <AssignmentChecklist
-                    assignments={checklistAssignments}
-                    submissions={checklistSubmissions}
-                    manualChecks={manualChecks}
-                    studentId={studentId ?? ''}
-                  />
                 </div>
               </div>
             </div>

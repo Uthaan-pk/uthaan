@@ -33,12 +33,12 @@ export default async function FeesPage() {
           'id, student_id, amount, due_date, paid, paid_at, term, created_at, student:students!inner(name, class_num)'
         )
         .order('created_at', { ascending: false })
-        .limit(500),
+        .limit(2000),
       supabase
         .from('students')
         .select('id, name, class_num')
         .order('name')
-        .limit(500),
+        .limit(2000),
     ])
 
     return (

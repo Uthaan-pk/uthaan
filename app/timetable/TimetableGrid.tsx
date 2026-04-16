@@ -553,12 +553,12 @@ export default function TimetableGrid({
   return (
     <div>
       {isStaff && classNums.length > 0 && (
-        <div className="mb-5 flex flex-wrap items-center gap-2">
+        <div className="mb-5 flex flex-wrap items-center gap-2 overflow-x-auto pb-1">
           {classNums.map(cn => (
             <button
               key={cn}
               onClick={() => setSelectedClass(cn)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 selectedClass === cn
                   ? 'bg-[#1a2e1a] text-[#6fcf6f]'
                   : 'border border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -570,7 +570,7 @@ export default function TimetableGrid({
 
           <button
             onClick={handlePrint}
-            className="ml-auto rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800"
+            className="ml-auto flex-shrink-0 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800"
           >
             Print timetable
           </button>
@@ -584,7 +584,7 @@ export default function TimetableGrid({
                 defaultClassNum: selectedClass,
               })
             }
-            className="rounded-lg bg-[#1a2e1a] px-3 py-1.5 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
+            className="flex-shrink-0 rounded-lg bg-[#1a2e1a] px-3 py-1.5 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
           >
             + Add period
           </button>

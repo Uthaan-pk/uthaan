@@ -20,7 +20,9 @@ import {
   Shield,
   UserPlus,
   CalendarOff,
+  ScrollText,
 } from 'lucide-react'
+import { SUPPORT_WHATSAPP_NUMBER } from '@/lib/constants'
 
 function getInitials(name: string) {
   return name
@@ -430,6 +432,15 @@ export default function Sidebar({
               />
 
               <NavItem
+                label="Audit Log"
+                href="/admin/audit"
+                active={pathname === '/admin/audit'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<ScrollText className={`w-4 h-4 shrink-0 ${pathname === '/admin/audit' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
                 label={t.gradeSettings}
                 href="/grade-settings"
                 active={pathname === '/grade-settings'}
@@ -467,7 +478,7 @@ export default function Sidebar({
           </div>
 
           <a
-            href="https://wa.me/+19496858657"
+            href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}`}
             target="_blank"
             rel="noopener noreferrer"
             className={`flex items-center gap-2 px-2 py-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/5 transition-colors mb-1 ${

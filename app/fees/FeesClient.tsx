@@ -51,6 +51,7 @@ const selectCls =
 const labelCls = 'block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5'
 
 const emptyForm = { student_id: '', amount: '', due_date: '', term: '' }
+const PAGE_SIZE = 50
 
 function pkr(n: number) {
   return n.toLocaleString('en-PK', { maximumFractionDigits: 0 })
@@ -72,6 +73,9 @@ export default function FeesClient({
   const [filterClass,  setFilterClass]  = useState('all')
   const [filterTerm,   setFilterTerm]   = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+
+  // Pagination
+  const [page, setPage] = useState(1)
 
   // Modal
   const [showModal,   setShowModal]   = useState(false)
@@ -96,17 +100,25 @@ export default function FeesClient({
   }, [fees])
 
   // ── Filtered rows ─────────────────────────────────────────────────────────────
-  const filtered = useMemo(() => fees.filter(f => {
-    if (filterClass  !== 'all' && String(f.student?.class_num) !== filterClass) return false
-    if (filterTerm   !== 'all' && f.term !== filterTerm)                         return false
-    if (filterStatus !== 'all') {
-      const s = statusOf(f)
-      if (filterStatus === 'paid'    && s !== 'paid')    return false
-      if (filterStatus === 'unpaid'  && s === 'paid')    return false
-      if (filterStatus === 'overdue' && s !== 'overdue') return false
-    }
-    return true
-  }), [fees, filterClass, filterTerm, filterStatus])
+  const filtered = useMemo(() => {
+    setPage(1)
+    return fees.filter(f => {
+      if (filterClass  !== 'all' && String(f.student?.class_num) !== filterClass) return false
+      if (filterTerm   !== 'all' && f.term !== filterTerm)                         return false
+      if (filterStatus !== 'all') {
+        const s = statusOf(f)
+        if (filterStatus === 'paid'    && s !== 'paid')    return false
+        if (filterStatus === 'unpaid'  && s === 'paid')    return false
+        if (filterStatus === 'overdue' && s !== 'overdue') return false
+      }
+      return true
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fees, filterClass, filterTerm, filterStatus])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage   = Math.min(page, totalPages)
+  const pageRows   = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   // ── Actions ───────────────────────────────────────────────────────────────────
   async function handleMarkPaid(fee: Fee) {
@@ -163,7 +175,7 @@ export default function FeesClient({
 
   // ── Render ─────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="uthaan-page-main">
 
       {/* Standard page header */}
       <header className="uthaan-page-header">
@@ -260,7 +272,7 @@ export default function FeesClient({
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map(fee => {
+                    {pageRows.map(fee => {
                       const status = statusOf(fee)
                       const isConfirming = confirmUnpaidId === fee.id
                       return (
@@ -340,7 +352,7 @@ export default function FeesClient({
 
               {/* Mobile card list — visible only on small screens */}
               <div className="sm:hidden divide-y divide-gray-50">
-                {filtered.map(fee => {
+                {pageRows.map(fee => {
                   const status      = statusOf(fee)
                   const isConfirming = confirmUnpaidId === fee.id
                   return (
@@ -425,6 +437,32 @@ export default function FeesClient({
                 })}
               </div>
             </>
+          )}
+
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-50 bg-white rounded-b-xl">
+              <span className="text-xs text-gray-400">
+                {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  className="px-2.5 py-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  ← Prev
+                </button>
+                <span className="px-3 text-xs text-gray-500">{safePage} / {totalPages}</span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  className="px-2.5 py-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </main>

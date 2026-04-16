@@ -123,9 +123,8 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-[#1a2e1a] font-medium hover:underline">
-              Create account
+            <Link href="/forgot-password" className="text-[#1a2e1a] font-medium hover:underline">
+              Forgot password?
             </Link>
           </p>
 

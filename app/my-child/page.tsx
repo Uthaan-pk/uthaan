@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
+import Link from 'next/link'
 
 const SUBJECT_COLORS: Record<string, string> = {
   math: 'bg-blue-50 text-blue-700 border-blue-100',
@@ -94,7 +95,7 @@ export default async function MyChildPage() {
       .eq('student_id', child.id)
       .order('exam')
       .order('subject')
-      .limit(10),
+      .limit(5),
     supabase
       .from('attendance_logs')
       .select('day, status')
@@ -199,14 +200,19 @@ export default async function MyChildPage() {
 
               {/* Recent marks */}
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-50">
+                <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-gray-900">Recent marks</h2>
+                  {marks.length > 0 && (
+                    <Link href="/results" className="text-xs text-[#1a2e1a] hover:underline font-medium">
+                      See all →
+                    </Link>
+                  )}
                 </div>
                 {marks.length === 0 ? (
                   <div className="px-5 py-8 text-center text-sm text-gray-400">No marks recorded</div>
                 ) : (
-                  marks.slice(0, 5).map((m, i) => (
-                    <div key={i} className={`px-5 py-3 flex items-center justify-between ${i < Math.min(marks.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
+                  marks.map((m, i) => (
+                    <div key={i} className={`px-5 py-3 flex items-center justify-between ${i < marks.length - 1 ? 'border-b border-gray-50' : ''}`}>
                       <div>
                         <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border mr-2 ${subjectColor(m.subject)}`}>
                           {m.subject.charAt(0).toUpperCase() + m.subject.slice(1)}

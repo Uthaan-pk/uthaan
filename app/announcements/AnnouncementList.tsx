@@ -1,11 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import AcknowledgeButton from '@/components/announcements/AcknowledgeButton'
-import AcknowledgementStatus from '@/components/announcements/AcknowledgementStatus'
 
 type Announcement = {
   id: string
@@ -49,6 +48,18 @@ export default function AnnouncementList({
 }) {
   const supabase = useMemo(() => createClient(), [])
   const router   = useRouter()
+
+  // Batch-fetch acknowledgement counts for all announcements (staff only)
+  const [ackMap, setAckMap] = useState<Record<string, { count: number; total: number }>>({})
+  useEffect(() => {
+    if (!isStaff || announcements.length === 0) return
+    const ids = announcements.map(a => a.id).join(',')
+    fetch(`/api/announcements/acknowledgements?ids=${ids}`)
+      .then(r => r.json())
+      .then((data: Record<string, { count: number; total: number }>) => setAckMap(data))
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStaff, announcements.map(a => a.id).join(',')])
 
   const [editingId,    setEditingId]    = useState<string | null>(null)
   const [editTitle,    setEditTitle]    = useState('')
@@ -250,7 +261,12 @@ export default function AnnouncementList({
                     )}
 
                     {isStaff ? (
-                      <AcknowledgementStatus announcementId={a.id} />
+                      <span className="text-[10px] text-gray-400">
+                        {ackMap[a.id]
+                          ? `${ackMap[a.id].count} of ${ackMap[a.id].total} acknowledged`
+                          : <span className="text-gray-300">Loading…</span>
+                        }
+                      </span>
                     ) : (
                       <AcknowledgeButton
                         announcementId={a.id}

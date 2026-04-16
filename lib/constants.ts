@@ -4,6 +4,9 @@
  */
 
 export const CURRENT_TERM = 'Spring Term 2026'
+
+/** Support WhatsApp number — update here to propagate to sidebar */
+export const SUPPORT_WHATSAPP_NUMBER = '+19496858657'
 export const CURRENT_YEAR = '2025-2026'
 
 /** Attendance date range for the current term (used in report card PDF) */

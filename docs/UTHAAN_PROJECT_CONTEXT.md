@@ -55,6 +55,7 @@ Uthaan is a multi-role school management platform built for real school workflow
 - Attendance statuses include: present, absent, late, excused, early_leave
 - Leave system supports approved full-day leave and approved early leave
 - Results/report cards exist in-app and support PDF download
+- Bulk AI report comment generation is class-level, not global, and counts as 1 usage event per successful class generation
 - user_roles.school_id is required (NOT NULL)
 - superadmin rows in user_roles must also include a valid school_id in this database
 - Parent behavior depends on parent_student links
@@ -88,18 +89,49 @@ Uthaan is a multi-role school management platform built for real school workflow
 - No reactions, no threading, no social features on announcements
 
 ## AI Features
-- Report card comment generator: built. Uses claude-haiku-4-5-20251001, reads marks + attendance_logs.
+- Report card comment generator: built. Uses claude-haiku-4-5-20251001, reads marks + attendance logs,
+  supports class-level bulk generation, and is teacher/admin only.
   Route: /api/ai/report-comments/route.ts. Component: ReportCommentGenerator.
 - Attendance alert summary: built. Weekly cron (Mon 7am PKT), flags students with 3+ absences/late
   in 7 days, generates parent alerts via Anthropic Batch API, saves to announcements table.
   Routes: /api/ai/attendance-alerts/route.ts, /api/cron/attendance-alerts/route.ts.
   Component: AttendanceAlertSummary. Cron: vercel.json schedule 0 2 * * 1.
+- AI feature gating is implemented via school_features and is active per school.
+  Teacher/admin can use enabled AI features; student/parent must never see AI controls.
 - Remaining AI features planned (in order):
   2. Assignment feedback generator
   3. Quiz generator from topic
   4. Fee defaulter risk flag (nightly cron)
   5. Student performance insight (uses claude-sonnet-4-6)
   6. Announcement writer (bilingual EN + Urdu)
+
+## Feature Control System
+- Table: school_features
+- Columns in active use:
+  - school_id
+  - feature_key
+  - enabled
+  - monthly_limit
+  - used_this_month
+  - last_reset_at
+- Seeded feature keys:
+  - ai_report_comments
+  - ai_assignment_feedback
+  - ai_quiz_generator
+  - ai_attendance_alerts
+- Current implementation status:
+  - Report comments route enforces teacher/admin-only access, school-aware feature lookup,
+    enabled checks, monthly limit checks, monthly reset, and post-success usage increment.
+  - Superadmin can manage feature toggles and limits for all schools, and reset usage safely.
+  - Missing school_features rows are handled safely in the current control flow.
+
+## Results / Report Cards AI UX
+- Bulk comment generation is class-level, not global.
+- Staff UI explains unavailable states explicitly:
+  - feature disabled
+  - quota reached
+  - class selection required
+- The review panel opens only after successful generation.
 
 ## Testing Philosophy
 - Prefer focused Playwright smoke tests, not broad fragile full-app tests

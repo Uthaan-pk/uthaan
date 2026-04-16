@@ -42,6 +42,8 @@ function attBadgeClass(pct: number | null | undefined): string {
   return 'bg-green-50 text-green-700'
 }
 
+const PAGE_SIZE = 50
+
 export default function StudentsTable({
   students,
   attendanceMap = {},
@@ -50,6 +52,7 @@ export default function StudentsTable({
   attendanceMap?: Record<string, number | null>
 }) {
   const [search, setSearch] = useState('')
+  const [page, setPage]     = useState(1)
   const [studentList, setStudentList] = useState<Student[]>(students)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [drawerData, setDrawerData] = useState<DrawerData | null>(null)
@@ -70,6 +73,10 @@ export default function StudentsTable({
         s.name.toLowerCase().includes(search.toLowerCase())
       )
     : studentList
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage   = Math.min(page, totalPages)
+  const pageRows   = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -154,7 +161,7 @@ export default function StudentsTable({
       <div className="mb-4">
         <input
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
           placeholder="Search students..."
           className="w-full max-w-sm bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#1a2e1a] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40 focus:border-[#6fcf6f]"
         />
@@ -183,13 +190,13 @@ export default function StudentsTable({
               </tr>
             </thead>
             <tbody>
-              {filtered.length > 0 ? (
-                filtered.map((student, i) => (
+              {pageRows.length > 0 ? (
+                pageRows.map((student, i) => (
                   <tr
                     key={student.id}
                     onClick={() => openDrawer(student)}
                     className={`cursor-pointer hover:bg-gray-50 transition-colors ${
-                      i < filtered.length - 1 ? 'border-b border-gray-50' : ''
+                      i < pageRows.length - 1 ? 'border-b border-gray-50' : ''
                     }`}
                   >
                     <td className="px-5 py-3.5">
@@ -238,6 +245,32 @@ export default function StudentsTable({
             </tbody>
           </table>
         </div>
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-50">
+            <span className="text-xs text-gray-400">
+              {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="px-2.5 py-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                ← Prev
+              </button>
+              <span className="px-3 text-xs text-gray-500">{safePage} / {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="px-2.5 py-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg hover:text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {selectedStudent && (

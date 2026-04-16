@@ -1,26 +1,31 @@
 # Uthaan Current State
 
 ## Current Priorities
-- stabilize Playwright CI
-- reduce manual testing burden
-- preserve role restrictions
 - improve product polish and reliability
-- make the app feel more differentiated than generic classroom tools
+- make the app feel differentiated from generic classroom tools
+- maintain role restrictions and RLS integrity
+- expand Playwright smoke coverage (RLS regression tests next)
+- start AI feature roadmap — assignment feedback generator is next
 
 ## Recent Work
-- admin has been restricted from some teacher-only academic actions
-- superadmin impersonation exit flow has been added/fixed
-- quiz submission flow had RLS-related issues and was being stabilized
-- report cards/results exist and can be downloaded as PDFs
-- announcement acknowledgements added (student/parent mark as read, admin sees receipt counts)
-- AI feature 1 (attendance alert summary) built: cron + admin-trigger + component
-- UI audit completed — 24 issues identified across 4 severity levels
+- admin restricted from teacher-only academic actions
+- superadmin impersonation exit flow fixed
+- quiz submission flow stabilized (RLS issues resolved)
+- report cards exist and download as PDF
+- announcement acknowledgements added
+- UI audit completed — 24 issues identified
 - Critical UI fixes applied: duplicate Grade Settings link, window.confirm() archive, unreachable Homework/Notes pages, "Posted by teacher" label, excused/early_leave missing styles
+- Sidebar icons added via lucide-react across all nav items
+- Stat cards now use color tinting to signal attendance/fee/quiz status
+- Teacher dashboard redesigned as morning briefing layout
+- Admin sidebar cleaned up: Audit Log removed from nav, "Admin Panel" renamed to "Student management", "School Signups" renamed to "Onboarding"
+- Urdu translations patched: 'marked' fixed to 'نشان زد', 'homeworkDue' fixed to 'ہوم ورک باقی'
+- Playwright smoke suite hardened: admin attendance test de-brittled, quiz href parsing fixed, role permission test added (teacher vs admin), student nav visibility test added
 
 ## AI Features Status
-- [x] Report card comment generator — done
-- [x] Attendance alert summary — done (cron Mon 7am PKT, Batch API, saves to announcements)
-- [ ] Assignment feedback generator — next
+- [ ] Report card comment generator — not started
+- [ ] Attendance alert summary — not started
+- [ ] Assignment feedback generator — next up
 - [ ] Quiz generator from topic
 - [ ] Fee defaulter risk flag (nightly cron)
 - [ ] Student performance insight (claude-sonnet-4-6)
@@ -66,6 +71,8 @@ Critical issues fixed. Remaining items below for future sprints.
 - parent tests may require a parent_student link
 - teacher workflows may depend on timetable/class assignment data
 - some smoke tests may skip if no real school/quiz data exists
+- Sidebar label renames are display-only — routes unchanged
+- Audit Log page exists at its route but has no sidebar entry
 
 ## Current Risk Areas
 - auth and RLS mismatches

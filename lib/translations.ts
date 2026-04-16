@@ -67,6 +67,7 @@ export type TranslationKeys =
   | 'todayOverview'
   | 'homeworkDue'
   | 'analytics'
+  | 'studentManagement'
 
 export const translations: Record<Language, Record<TranslationKeys, string>> = {
   en: {
@@ -136,6 +137,7 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     todayOverview: 'Today',
     homeworkDue: 'Homework Due',
     analytics: 'Analytics',
+    studentManagement: 'Student management',
   },
   ur: {
     dashboard: 'ڈیش بورڈ',
@@ -164,7 +166,7 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     view: 'دیکھیں',
     liveQuizzes: 'لائیو کوئزز',
     studentsActiveNow: 'طلبہ اس وقت فعال ہیں',
-    marked: 'حاضر',
+    marked: 'نشان زد',
     viewRecords: 'ریکارڈ دیکھیں',
     totalStudents: 'کل طلبہ',
     postAnnouncement: 'اعلان پوسٹ کریں',
@@ -202,7 +204,8 @@ export const translations: Record<Language, Record<TranslationKeys, string>> = {
     late: 'دیر سے آئے',
     notRecorded: 'ابھی درج نہیں',
     todayOverview: 'آج',
-    homeworkDue: 'ہوم ورک',
+    homeworkDue: 'ہوم ورک باقی',
     analytics: 'تجزیہ',
+    studentManagement: 'طلبہ انتظام',
   },
 }

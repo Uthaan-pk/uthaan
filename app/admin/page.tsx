@@ -94,7 +94,7 @@ export default async function AdminPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
           <h1 className="text-sm font-semibold text-gray-900">
-            Admin Panel
+            Student management
           </h1>
 
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">

@@ -4,6 +4,23 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/context/LanguageContext'
+import {
+  LayoutDashboard,
+  Users,
+  Megaphone,
+  ClipboardList,
+  BookOpen,
+  FileText,
+  CalendarCheck,
+  HelpCircle,
+  Clock,
+  FolderOpen,
+  CreditCard,
+  BarChart2,
+  Shield,
+  UserPlus,
+  CalendarOff,
+} from 'lucide-react'
 
 function getInitials(name: string) {
   return name
@@ -236,6 +253,7 @@ export default function Sidebar({
             active={pathname === '/dashboard'}
             onClose={close}
             isUrdu={isUrdu}
+            icon={<LayoutDashboard className={`w-4 h-4 shrink-0 ${pathname === '/dashboard' ? '' : 'opacity-60'}`} />}
           />
 
           {isStaff && (
@@ -245,6 +263,7 @@ export default function Sidebar({
               active={pathname === '/students'}
               onClose={close}
               isUrdu={isUrdu}
+              icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/students' ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -255,6 +274,7 @@ export default function Sidebar({
               active={pathname === '/my-child'}
               onClose={close}
               isUrdu={isUrdu}
+              icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/my-child' ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -264,6 +284,7 @@ export default function Sidebar({
             active={pathname === '/announcements'}
             onClose={close}
             isUrdu={isUrdu}
+            icon={<Megaphone className={`w-4 h-4 shrink-0 ${pathname === '/announcements' ? '' : 'opacity-60'}`} />}
           />
 
           <p
@@ -283,6 +304,7 @@ export default function Sidebar({
               active={pathname.startsWith('/assignments')}
               onClose={close}
               isUrdu={isUrdu}
+              icon={<ClipboardList className={`w-4 h-4 shrink-0 ${pathname.startsWith('/assignments') ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -292,6 +314,7 @@ export default function Sidebar({
             active={pathname === '/marks'}
             onClose={close}
             isUrdu={isUrdu}
+            icon={<BookOpen className={`w-4 h-4 shrink-0 ${pathname === '/marks' ? '' : 'opacity-60'}`} />}
           />
 
           {canSeeResults && (
@@ -301,6 +324,7 @@ export default function Sidebar({
               active={pathname === '/results'}
               onClose={close}
               isUrdu={isUrdu}
+              icon={<FileText className={`w-4 h-4 shrink-0 ${pathname === '/results' ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -310,6 +334,7 @@ export default function Sidebar({
             active={pathname === '/attendance'}
             onClose={close}
             isUrdu={isUrdu}
+            icon={<CalendarCheck className={`w-4 h-4 shrink-0 ${pathname === '/attendance' ? '' : 'opacity-60'}`} />}
           />
 
           {(isTeacher || role === 'student' || isParent) && (
@@ -319,6 +344,7 @@ export default function Sidebar({
               active={pathname.startsWith('/quizzes')}
               onClose={close}
               isUrdu={isUrdu}
+              icon={<HelpCircle className={`w-4 h-4 shrink-0 ${pathname.startsWith('/quizzes') ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -328,6 +354,7 @@ export default function Sidebar({
             active={pathname === '/timetable'}
             onClose={close}
             isUrdu={isUrdu}
+            icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
           />
 
           {(isTeacher || role === 'student' || isParent) && (
@@ -337,6 +364,7 @@ export default function Sidebar({
               active={pathname === '/materials'}
               onClose={close}
               isUrdu={isUrdu}
+              icon={<FolderOpen className={`w-4 h-4 shrink-0 ${pathname === '/materials' ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -347,22 +375,7 @@ export default function Sidebar({
               active={pathname === '/fees'}
               onClose={close}
               isUrdu={isUrdu}
-              icon={
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="20" height="14" x="2" y="5" rx="2" />
-                  <line x1="2" y1="10" x2="22" y2="10" />
-                </svg>
-              }
+              icon={<CreditCard className={`w-4 h-4 shrink-0 ${pathname === '/fees' ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -373,6 +386,7 @@ export default function Sidebar({
               active={pathname === '/analytics'}
               onClose={close}
               isUrdu={isUrdu}
+              icon={<BarChart2 className={`w-4 h-4 shrink-0 ${pathname === '/analytics' ? '' : 'opacity-60'}`} />}
             />
           )}
 
@@ -389,19 +403,21 @@ export default function Sidebar({
               </p>
 
               <NavItem
-                label={t.adminPanel}
+                label={t.studentManagement}
                 href="/admin"
                 active={pathname === '/admin'}
                 onClose={close}
                 isUrdu={isUrdu}
+                icon={<Shield className={`w-4 h-4 shrink-0 ${pathname === '/admin' ? '' : 'opacity-60'}`} />}
               />
 
               <NavItem
-                label={t.schoolSignups}
+                label="Onboarding"
                 href="/admin/signups"
                 active={pathname === '/admin/signups'}
                 onClose={close}
                 isUrdu={isUrdu}
+                icon={<UserPlus className={`w-4 h-4 shrink-0 ${pathname === '/admin/signups' ? '' : 'opacity-60'}`} />}
               />
 
               <NavItem
@@ -410,14 +426,7 @@ export default function Sidebar({
                 active={pathname === '/admin/leaves'}
                 onClose={close}
                 isUrdu={isUrdu}
-              />
-
-              <NavItem
-                label="Audit Log"
-                href="/admin/audit"
-                active={pathname === '/admin/audit'}
-                onClose={close}
-                isUrdu={isUrdu}
+                icon={<CalendarOff className={`w-4 h-4 shrink-0 ${pathname === '/admin/leaves' ? '' : 'opacity-60'}`} />}
               />
 
               <NavItem

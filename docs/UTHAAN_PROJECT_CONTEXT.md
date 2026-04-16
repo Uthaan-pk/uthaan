@@ -29,8 +29,10 @@ Uthaan is a multi-role school management platform built for real school workflow
 - Timetable
 - Materials
 - Fees
-- Admin panel
+- Student management (UI label; was "Admin panel")
+- Onboarding (UI label; was "School Signups")
 - Leave management
+- Audit Log (page exists but has no sidebar entry — unreachable from nav)
 
 ## Role Behavior
 - Teachers handle most academic workflows like attendance, marks, quizzes, and assignments
@@ -65,6 +67,17 @@ Uthaan is a multi-role school management platform built for real school workflow
 - No open DMs, no real-time chat, no student-to-student or parent-to-parent messaging
 - The announcement module is the primary broadcast channel (admin/teacher → students/parents)
 - Acknowledgements are receipts, not social reactions
+
+## UI Conventions
+- Icons: lucide-react is used for all sidebar nav icons
+- Sidebar nav items always render icon + label in a flex row with gap-2.5
+- Active nav item: icon at full opacity, inactive at opacity-60
+- Stat cards use conditional color tinting to signal status:
+  - Attendance < 75%: bg-amber-50 border-amber-200
+  - Fees outstanding/overdue: bg-red-50 border-red-200
+  - Active quizzes: bg-green-50 border-green-200
+- Teacher dashboard is a morning briefing layout: today's classes, attendance pending, pending grading, needs grading list, then announcements
+- Do not add dark backgrounds to sidebar without strong reason — the current green sidebar has good character, preserve it
 
 ## Announcement Acknowledgements
 - Table: announcement_acknowledgements (id, announcement_id, user_id, school_id, acknowledged_at)

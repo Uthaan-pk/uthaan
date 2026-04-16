@@ -135,7 +135,11 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-2 gap-3 max-w-2xl">
               <Link
                 href="/my-child"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                  attRate !== null && attRate < 75
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-white border-gray-100'
+                }`}
               >
                 <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
                   {t.attendance}
@@ -323,7 +327,7 @@ export default async function DashboardPage() {
                   </div>
 
                   {/* Upcoming quizzes */}
-                  <div className="bg-white rounded-xl border border-gray-100 p-4">
+                  <div className={`rounded-xl border p-4 ${upcomingQuizzes.length > 0 ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
                     <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
                       {t.upcomingQuizzes}
                     </div>
@@ -573,10 +577,10 @@ export default async function DashboardPage() {
 
                 <Link
                   href="/fees"
-                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                  className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
                     overdueFeeStudentIds.size > 0
-                      ? 'border-l-4 border-l-red-400 border-gray-100'
-                      : 'border-gray-100'
+                      ? 'bg-red-50 border-red-200'
+                      : 'bg-white border-gray-100'
                   }`}
                 >
                   <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
@@ -592,10 +596,10 @@ export default async function DashboardPage() {
 
                 <Link
                   href="/attendance/low"
-                  className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                  className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
                     studentsWithHighAbsences > 0
-                      ? 'border-l-4 border-l-amber-400 border-gray-100'
-                      : 'border-gray-100'
+                      ? 'bg-amber-50 border-amber-200'
+                      : 'bg-white border-gray-100'
                   }`}
                 >
                   <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
@@ -696,38 +700,69 @@ export default async function DashboardPage() {
     )
   }
 
+  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+  const todayDisplay = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+
+  type TimetableEntry = { class_num: number; subject: string; start_time: string; end_time: string; period: number }
+  type AssignmentRef = { id: string; title: string; class_num: number }
+  // Supabase returns the joined record as an array or single object depending on FK direction
+  type PendingSubmission = { assignment_id: string; assignment: AssignmentRef | AssignmentRef[] | null }
+
   const [
     studentsRes,
-    assignmentsRes,
     submissionsRes,
-    quizzesRes,
     announcementsRes,
     attendanceRes,
+    teacherTimetableRes,
   ] = await Promise.all([
     supabase.from('students').select('id').eq('is_active', true),
-    supabase.from('assignments').select('id, due_date'),
     supabase
       .from('assignment_submissions')
-      .select('id, reviewed')
-      .eq('reviewed', false),
-    supabase.from('quizzes').select('id').eq('status', 'active'),
+      .select('assignment_id, assignment:assignments(id, title, class_num)')
+      .eq('reviewed', false)
+      .limit(100),
     supabase
       .from('announcements')
       .select('id, title, created_at')
       .order('created_at', { ascending: false })
       .limit(3),
     supabase.from('attendance_logs').select('id').eq('day', today),
+    supabase
+      .from('timetable')
+      .select('class_num, subject, start_time, end_time, period')
+      .eq('teacher_id', user.id)
+      .eq('day', todayName)
+      .order('period', { ascending: true }),
   ])
 
   const totalStudents = (studentsRes.data ?? []).length
-  const ungraded = (submissionsRes.data ?? []).length
-  const dueToday = (assignmentsRes.data ?? []).filter(
-    (a) => a.due_date === today
-  ).length
-  const activeQuizzes = (quizzesRes.data ?? []).length
   const todayLogCount = (attendanceRes.data ?? []).length
   const attendanceMarked = totalStudents > 0 && todayLogCount >= totalStudents
   const recentAnnouncements = announcementsRes.data ?? []
+
+  const classesToday = (teacherTimetableRes.data ?? []) as TimetableEntry[]
+  const classesTodayCount = classesToday.length
+  const attendanceNotTakenCount = attendanceMarked ? 0 : classesTodayCount
+
+  // Group unreviewed submissions by assignment, pick top 5
+  const pendingSubs = (submissionsRes.data ?? []) as unknown as PendingSubmission[]
+  const submissionsByAssignment = new Map<string, { title: string; class_num: number; count: number }>()
+  for (const sub of pendingSubs) {
+    if (!sub.assignment) continue
+    // Supabase may return single object or array depending on FK direction
+    const asgn: AssignmentRef = Array.isArray(sub.assignment) ? sub.assignment[0] : sub.assignment
+    if (!asgn) continue
+    if (!submissionsByAssignment.has(asgn.id)) {
+      submissionsByAssignment.set(asgn.id, { title: asgn.title, class_num: asgn.class_num, count: 0 })
+    }
+    submissionsByAssignment.get(asgn.id)!.count++
+  }
+  const needsGradingList = Array.from(submissionsByAssignment.values()).slice(0, 5)
+  const ungraded = pendingSubs.length
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
@@ -747,122 +782,116 @@ export default async function DashboardPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-3xl space-y-5">
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                href="/assignments"
-                className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                  ungraded > 0
-                    ? 'border-l-4 border-l-amber-400 border-gray-100'
-                    : 'border-gray-100'
-                }`}
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.toGrade}
-                </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {ungraded}
-                </div>
-                <div
-                  className={`text-[11px] mt-1 font-medium ${
-                    ungraded > 0 ? 'text-amber-600' : 'text-gray-400'
-                  }`}
-                >
-                  {ungraded > 0 ? `${t.gradeNow} →` : t.allCaughtUp}
-                </div>
-              </Link>
+          <div className="max-w-4xl mx-auto space-y-6">
+
+            {/* Section 1 — Today header */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">{todayDisplay}</span>
+              <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+                {t.springTerm2026}
+              </span>
+            </div>
+
+            {/* Section 2 — Three stat cards */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white rounded-xl border border-gray-100 p-4">
+                <div className="text-2xl font-semibold text-gray-900">{classesTodayCount}</div>
+                <div className="text-sm text-gray-500 mt-1">Classes today</div>
+              </div>
 
               <Link
                 href="/attendance"
-                className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                  !attendanceMarked
-                    ? 'border-l-4 border-l-red-400 border-gray-100'
-                    : 'border-gray-100'
+                className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                  attendanceNotTakenCount > 0
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-white border-gray-100'
                 }`}
               >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.attendance}
-                </div>
-                <div className="text-sm font-semibold text-gray-900 mt-1">
-                  {attendanceMarked ? `${t.marked} ✓` : t.notMarkedToday}
-                </div>
-                <div
-                  className={`text-[11px] mt-1 font-medium ${
-                    !attendanceMarked ? 'text-red-500' : 'text-green-700'
-                  }`}
-                >
-                  {attendanceMarked ? `${t.viewRecords} →` : `${t.markNow} →`}
-                </div>
+                <div className="text-2xl font-semibold text-gray-900">{attendanceNotTakenCount}</div>
+                <div className="text-sm text-gray-500 mt-1">Attendance not taken</div>
               </Link>
 
               <Link
-                href="/assignments"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+                href="/marks"
+                className={`rounded-xl border p-4 hover:border-gray-200 transition-colors ${
+                  ungraded > 0
+                    ? 'bg-blue-50 border-blue-200'
+                    : 'bg-white border-gray-100'
+                }`}
               >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.dueToday}
-                </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {dueToday}
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1">
-                  {t.assignment}
-                  {dueToday !== 1 && lang === 'en' ? 's' : ''} · {t.view} →
-                </div>
-              </Link>
-
-              <Link
-                href="/quizzes"
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-              >
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                  {t.liveQuizzes}
-                </div>
-                <div className="text-2xl font-semibold text-gray-900">
-                  {activeQuizzes}
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1">
-                  {activeQuizzes > 0
-                    ? `${t.studentsActiveNow} →`
-                    : t.noneActive}
-                </div>
+                <div className="text-2xl font-semibold text-gray-900">{ungraded}</div>
+                <div className="text-sm text-gray-500 mt-1">Submissions pending grading</div>
               </Link>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 px-5 py-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+            {/* Section 3 — My classes today */}
+            <div>
+              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
+                My classes today
+              </div>
+              {classesToday.length > 0 ? (
+                <div className="space-y-2">
+                  {classesToday.map((cls) => (
+                    <div
+                      key={`${cls.class_num}-${cls.period}`}
+                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3"
+                    >
+                      <span className="text-sm font-medium text-gray-900 flex-1">
+                        {cls.subject}
+                        <span className="text-gray-400 font-normal"> · Class {cls.class_num}</span>
+                        <span className="text-gray-400 font-normal"> · {cls.start_time?.slice(0, 5)}–{cls.end_time?.slice(0, 5)}</span>
+                      </span>
+                      {attendanceMarked ? (
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
+                          Done
+                        </span>
+                      ) : (
+                        <Link
+                          href="/attendance"
+                          className="text-[11px] font-medium px-3 py-1 rounded-lg bg-[#1a2e1a] text-white hover:bg-[#2a3e2a] transition-colors"
+                        >
+                          Mark attendance
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-gray-100 px-4 py-6 text-center text-sm text-gray-400">
+                  No classes scheduled for today
+                </div>
+              )}
+            </div>
+
+            {/* Section 4 — Needs grading */}
+            {needsGradingList.length > 0 && (
               <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                  {t.totalStudents}
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
+                  Needs grading
                 </div>
-                <div className="text-xl font-semibold text-gray-900 mt-0.5">
-                  {totalStudents}
+                <div className="space-y-2">
+                  {needsGradingList.map((item) => (
+                    <div
+                      key={item.title}
+                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3"
+                    >
+                      <span className="text-sm text-gray-900 flex-1">
+                        {item.title}
+                        <span className="text-gray-400"> · Class {item.class_num} · {item.count} submission{item.count !== 1 ? 's' : ''} pending</span>
+                      </span>
+                      <Link
+                        href="/marks"
+                        className="text-[11px] font-medium text-[#1a2e1a] hover:underline flex-shrink-0"
+                      >
+                        Gradebook →
+                      </Link>
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              <div className="w-px h-8 bg-gray-100 hidden sm:block" />
-
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/announcements"
-                  className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
-                >
-                  {t.postAnnouncement} →
-                </Link>
-                <Link
-                  href="/fees"
-                  className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
-                >
-                  Assign fee →
-                </Link>
-                <Link
-                  href="/students"
-                  className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
-                >
-                  {t.viewAllStudents} →
-                </Link>
-              </div>
-            </div>
-
+            {/* Section 5 — Recent announcements */}
             {recentAnnouncements.length > 0 && (
               <div>
                 <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">

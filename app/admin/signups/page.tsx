@@ -12,7 +12,7 @@ type SignupFilter = 'pending' | 'approved' | 'rejected' | 'all'
 const pageText = {
   en: {
     admin: 'Admin',
-    schoolSignups: 'School Signups',
+    schoolSignups: 'Onboarding',
     pending: 'pending',
     approved: 'approved',
     rejected: 'rejected',

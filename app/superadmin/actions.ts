@@ -4,7 +4,11 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { buildDefaultSchoolFeatures } from '@/lib/aiFeatures'
+import {
+  buildDefaultSchoolFeature,
+  buildDefaultSchoolFeatures,
+  type AiFeatureKey,
+} from '@/lib/aiFeatures'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -191,7 +195,7 @@ export async function updateSchoolFeature(formData: FormData) {
   await assertSuperadmin()
 
   const schoolId = String(formData.get('school_id') ?? '')
-  const featureKey = String(formData.get('feature_key') ?? '')
+  const featureKey = String(formData.get('feature_key') ?? '') as AiFeatureKey
   const enabled = formData.get('enabled') === 'on'
   const monthlyLimitRaw = String(formData.get('monthly_limit') ?? '').trim()
 
@@ -217,16 +221,30 @@ export async function updateSchoolFeature(formData: FormData) {
   redirect('/superadmin')
 }
 
-export async function resetSchoolFeatureUsage(schoolId: string, featureKey: string) {
+export async function resetSchoolFeatureUsage(schoolId: string, featureKey: AiFeatureKey) {
   await assertSuperadmin()
 
   const admin = createAdminClient()
+  const resetAt = new Date().toISOString()
+
+  await admin
+    .from('school_features')
+    .upsert(
+      {
+        ...buildDefaultSchoolFeature(schoolId, featureKey),
+        used_this_month: 0,
+        last_reset_at: resetAt,
+        updated_at: resetAt,
+      },
+      { onConflict: 'school_id,feature_key' }
+    )
+
   await admin
     .from('school_features')
     .update({
       used_this_month: 0,
-      last_reset_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      last_reset_at: resetAt,
+      updated_at: resetAt,
     })
     .eq('school_id', schoolId)
     .eq('feature_key', featureKey)

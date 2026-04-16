@@ -15,7 +15,7 @@ import OnboardSchoolForm from './OnboardSchoolForm'
 import UsageTable, { type UsageRow } from './UsageTable'
 import { TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
-import { AI_FEATURES, type SchoolFeatureRow } from '@/lib/aiFeatures'
+import { AI_FEATURES, type AiFeatureKey, type SchoolFeatureRow } from '@/lib/aiFeatures'
 
 type SchoolRow = {
   id: string
@@ -312,7 +312,7 @@ function FeatureCard({
   feature,
 }: {
   schoolId: string
-  featureKey: string
+  featureKey: AiFeatureKey
   label: string
   description: string
   feature: SchoolFeatureRow | null

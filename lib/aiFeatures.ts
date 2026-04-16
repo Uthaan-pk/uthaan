@@ -39,15 +39,28 @@ export type SchoolFeatureRow = {
   updated_at?: string | null
 }
 
-export function buildDefaultSchoolFeatures(schoolId: string) {
-  return AI_FEATURES.map((feature) => ({
+export function getAiFeatureDefinition(featureKey: AiFeatureKey) {
+  return AI_FEATURES.find((feature) => feature.key === featureKey) ?? null
+}
+
+export function buildDefaultSchoolFeature(
+  schoolId: string,
+  featureKey: AiFeatureKey
+) {
+  const feature = getAiFeatureDefinition(featureKey)
+
+  return {
     school_id: schoolId,
-    feature_key: feature.key,
-    enabled: feature.defaultEnabled,
+    feature_key: featureKey,
+    enabled: feature?.defaultEnabled ?? false,
     monthly_limit: null as number | null,
     used_this_month: 0,
     last_reset_at: new Date().toISOString(),
-  }))
+  }
+}
+
+export function buildDefaultSchoolFeatures(schoolId: string) {
+  return AI_FEATURES.map((feature) => buildDefaultSchoolFeature(schoolId, feature.key))
 }
 
 export function isNewUsageMonth(lastResetAt: string | null | undefined) {
@@ -61,4 +74,3 @@ export function isNewUsageMonth(lastResetAt: string | null | undefined) {
     now.getUTCMonth() !== last.getUTCMonth()
   )
 }
-

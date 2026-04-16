@@ -698,16 +698,28 @@ type BulkCommentEntry = {
   error: string | null
 }
 
+type AiReportCommentsState = {
+  enabled: boolean
+  monthlyLimit: number | null
+  usedThisMonth: number
+  quotaReached: boolean
+}
+
 export default function ResultsPage({
   students,
   releases: initialReleases,
   role = 'teacher',
-  canUseAiReportComments = false,
+  aiReportCommentsState = {
+    enabled: false,
+    monthlyLimit: null,
+    usedThisMonth: 0,
+    quotaReached: false,
+  },
 }: {
   students: Student[]
   releases: ReleaseRow[]
   role?: string
-  canUseAiReportComments?: boolean
+  aiReportCommentsState?: AiReportCommentsState
 }) {
   const supabase = useMemo(() => createClient(), [])
   const [loading, setLoading] = useState<string | null>(null)
@@ -767,6 +779,24 @@ export default function ResultsPage({
 
     return []
   }, [activeStudents, classFilter, classNums])
+
+  const aiRequiresClassSelection = classFilter === 'all' && classNums.length > 1
+  const canUseAiReportComments = aiReportCommentsState.enabled
+  const canGenerateBulkComments =
+    canUseAiReportComments &&
+    !aiReportCommentsState.quotaReached &&
+    !aiRequiresClassSelection &&
+    reviewStudents.length > 0
+
+  const bulkAiStatusMessage = !canUseAiReportComments
+    ? 'AI report comments are disabled for this school.'
+    : aiReportCommentsState.quotaReached
+      ? aiReportCommentsState.monthlyLimit === null
+        ? 'AI report comments are temporarily unavailable.'
+        : `Monthly AI comment limit reached (${aiReportCommentsState.usedThisMonth}/${aiReportCommentsState.monthlyLimit}).`
+      : aiRequiresClassSelection
+        ? 'Select one class to generate comments in bulk.'
+        : null
 
   async function handleGenerate(student: Student) {
     setLoading(student.id)
@@ -828,10 +858,24 @@ export default function ResultsPage({
   }
 
   async function handleBulkGenerate() {
-    setBulkReviewOpen(true)
     setBulkCommentError(null)
+    setBulkComments({})
 
-    if (classFilter === 'all' && classNums.length > 1) {
+    if (!canUseAiReportComments) {
+      setBulkCommentError('AI report comments are disabled for this school.')
+      return
+    }
+
+    if (aiReportCommentsState.quotaReached) {
+      setBulkCommentError(
+        aiReportCommentsState.monthlyLimit === null
+          ? 'AI report comments are temporarily unavailable.'
+          : `Monthly AI comment limit reached (${aiReportCommentsState.usedThisMonth}/${aiReportCommentsState.monthlyLimit}).`
+      )
+      return
+    }
+
+    if (aiRequiresClassSelection) {
       setBulkCommentError('Select a class first to generate comments in bulk.')
       return
     }
@@ -885,6 +929,7 @@ export default function ResultsPage({
         }
       })
 
+      setBulkReviewOpen(true)
       setBulkComments(nextEntries)
       toast.success(`Generated comments for Class ${reviewStudents[0]?.class_num}.`)
     } catch (err: any) {
@@ -972,15 +1017,13 @@ export default function ResultsPage({
           </div>
 
           <div className="flex flex-col items-start gap-3 sm:items-end">
-            {canUseAiReportComments && (
-              <button
-                onClick={handleBulkGenerate}
-                disabled={bulkGenerating || (classFilter === 'all' && classNums.length > 1)}
-                className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
-              >
-                {bulkGenerating ? 'Generating comments...' : 'Generate comments for class'}
-              </button>
-            )}
+            <button
+              onClick={handleBulkGenerate}
+              disabled={bulkGenerating || !canGenerateBulkComments}
+              className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+            >
+              {bulkGenerating ? 'Generating comments...' : 'Generate comments for class'}
+            </button>
 
             {classNums.length > 1 && (
               <div className="flex flex-wrap gap-1.5">
@@ -1010,11 +1053,24 @@ export default function ResultsPage({
               </div>
             )}
 
-            {canUseAiReportComments && classFilter === 'all' && classNums.length > 1 && (
-              <div className="text-xs text-gray-500">
-                Select a class to bulk generate comments.
+            {bulkAiStatusMessage && (
+              <div
+                className={`max-w-xs text-xs ${
+                  canUseAiReportComments ? 'text-gray-500' : 'text-amber-700'
+                }`}
+              >
+                {bulkAiStatusMessage}
               </div>
             )}
+
+            {canUseAiReportComments &&
+              !aiReportCommentsState.quotaReached &&
+              aiReportCommentsState.monthlyLimit !== null && (
+                <div className="text-xs text-gray-500">
+                  Usage this month: {aiReportCommentsState.usedThisMonth}/
+                  {aiReportCommentsState.monthlyLimit}
+                </div>
+              )}
           </div>
         </div>
 

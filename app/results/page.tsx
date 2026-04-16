@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar'
 import ResultsPage from './ResultsPage'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
 import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
+import { getAiFeatureDefinition, isNewUsageMonth } from '@/lib/aiFeatures'
 
 async function isReleasedForClass(
   supabase: any,
@@ -244,17 +245,33 @@ export default async function Page() {
       .order('class_num', { ascending: true }),
   ])
 
-  let canUseAiReportComments = false
+  const aiFeatureDefinition = getAiFeatureDefinition('ai_report_comments')
+  let aiReportCommentsState = {
+    enabled: aiFeatureDefinition?.defaultEnabled ?? false,
+    monthlyLimit: null as number | null,
+    usedThisMonth: 0,
+    quotaReached: false,
+  }
   if (schoolContext?.schoolId && ['teacher', 'admin'].includes(effectiveRole)) {
     const admin = createAdminClient()
     const { data: feature } = await admin
       .from('school_features')
-      .select('enabled')
+      .select('enabled, monthly_limit, used_this_month, last_reset_at')
       .eq('school_id', schoolContext.schoolId)
       .eq('feature_key', 'ai_report_comments')
       .maybeSingle()
 
-    canUseAiReportComments = feature?.enabled === true
+    const lastResetAt = feature?.last_reset_at ?? null
+    const usedThisMonth =
+      feature && !isNewUsageMonth(lastResetAt) ? feature.used_this_month ?? 0 : 0
+    const monthlyLimit = feature?.monthly_limit ?? null
+
+    aiReportCommentsState = {
+      enabled: feature?.enabled ?? aiReportCommentsState.enabled,
+      monthlyLimit,
+      usedThisMonth,
+      quotaReached: monthlyLimit !== null && usedThisMonth >= monthlyLimit,
+    }
   }
 
   return (
@@ -274,7 +291,7 @@ export default async function Page() {
             students={studentsRes.data ?? []}
             releases={releasesRes.data ?? []}
             role={effectiveRole || 'teacher'}
-            canUseAiReportComments={canUseAiReportComments}
+            aiReportCommentsState={aiReportCommentsState}
           />
         </main>
       </div>

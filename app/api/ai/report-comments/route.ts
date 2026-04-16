@@ -5,7 +5,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parseBody } from '@/lib/api/validate'
 import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
-import { isNewUsageMonth, type SchoolFeatureRow } from '@/lib/aiFeatures'
+import {
+  buildDefaultSchoolFeature,
+  isNewUsageMonth,
+  type SchoolFeatureRow,
+} from '@/lib/aiFeatures'
 
 const rateLimitMap = new Map<string, number[]>()
 const RATE_LIMIT = 120
@@ -100,21 +104,37 @@ async function loadFeatureRow(schoolId: string) {
   return { admin, row: data as SchoolFeatureRow | null }
 }
 
+async function ensureFeatureRow(
+  admin: ReturnType<typeof createAdminClient>,
+  schoolId: string
+) {
+  const { data } = await admin
+    .from('school_features')
+    .upsert(buildDefaultSchoolFeature(schoolId, 'ai_report_comments'), {
+      onConflict: 'school_id,feature_key',
+    })
+    .select('id, school_id, feature_key, enabled, monthly_limit, used_this_month, last_reset_at, created_at, updated_at')
+    .eq('feature_key', 'ai_report_comments')
+    .single()
+
+  return data as SchoolFeatureRow
+}
+
 async function ensureFeatureAvailable(schoolId: string) {
   const { admin, row } = await loadFeatureRow(schoolId)
+  const fallbackRow = row ?? (await ensureFeatureRow(admin, schoolId))
+  let feature = fallbackRow
 
-  if (!row || !row.enabled) {
+  if (!feature.enabled) {
     return {
       admin,
-      row,
+      row: feature,
       error: NextResponse.json(
         { error: 'AI report comments are not enabled for this school' },
         { status: 403 }
       ),
     }
   }
-
-  let feature = row
 
   if (isNewUsageMonth(feature.last_reset_at)) {
     const resetAt = new Date().toISOString()
@@ -155,11 +175,31 @@ async function ensureFeatureAvailable(schoolId: string) {
   return { admin, row: feature, error: null }
 }
 
-async function incrementFeatureUsage(
-  admin: ReturnType<typeof createAdminClient>,
-  schoolId: string,
-  usedThisMonth: number
-) {
+async function incrementFeatureUsage(admin: ReturnType<typeof createAdminClient>, schoolId: string) {
+  const { data } = await admin
+    .from('school_features')
+    .select('id, school_id, feature_key, enabled, monthly_limit, used_this_month, last_reset_at, created_at, updated_at')
+    .eq('school_id', schoolId)
+    .eq('feature_key', 'ai_report_comments')
+    .maybeSingle()
+
+  const feature = (data as SchoolFeatureRow | null) ?? (await ensureFeatureRow(admin, schoolId))
+  let usedThisMonth = feature.used_this_month
+
+  if (isNewUsageMonth(feature.last_reset_at)) {
+    usedThisMonth = 0
+    const resetAt = new Date().toISOString()
+    await admin
+      .from('school_features')
+      .update({
+        used_this_month: 0,
+        last_reset_at: resetAt,
+        updated_at: resetAt,
+      })
+      .eq('school_id', schoolId)
+      .eq('feature_key', 'ai_report_comments')
+  }
+
   await admin
     .from('school_features')
     .update({
@@ -265,11 +305,7 @@ ${studentSummaries}`,
         throw new Error('AI response did not include comments for every student.')
       }
 
-      await incrementFeatureUsage(
-        featureResult.admin,
-        schoolContext.schoolId,
-        featureResult.row!.used_this_month
-      )
+      await incrementFeatureUsage(featureResult.admin, schoolContext.schoolId)
 
       return NextResponse.json({ comments }, { status: 200 })
     }
@@ -317,11 +353,7 @@ Write a comment that reflects academic performance honestly, mentions attendance
 
     const comment = readTextContent(response)
 
-    await incrementFeatureUsage(
-      featureResult.admin,
-      schoolContext.schoolId,
-      featureResult.row!.used_this_month
-    )
+    await incrementFeatureUsage(featureResult.admin, schoolContext.schoolId)
 
     return NextResponse.json({ comment }, { status: 200 })
   } catch (error) {

@@ -84,17 +84,23 @@ export default async function TimetablePage() {
   let staffList: { user_id: string; role: string }[] = []
 
   if (isStaff) {
-    const { data: classData } = await supabase
-      .from('students')
-      .select('class_num')
-      .eq('is_active', true)
-      .not('class_num', 'is', null)
+    if (!isTeacher) {
+      // Admins: show tabs for every class that has active students
+      const { data: classData } = await supabase
+        .from('students')
+        .select('class_num')
+        .eq('is_active', true)
+        .not('class_num', 'is', null)
 
-    const uniqueClasses = [
-      ...new Set((classData ?? []).map((s: any) => s.class_num as number)),
-    ]
+      const uniqueClasses = [
+        ...new Set((classData ?? []).map((s: any) => s.class_num as number)),
+      ]
 
-    availableClasses = uniqueClasses.sort((a, b) => a - b)
+      availableClasses = uniqueClasses.sort((a, b) => a - b)
+    }
+    // Teachers: availableClasses stays [] — TimetableGrid derives tabs from
+    // their own rows (already filtered by teacher_id above), so only classes
+    // they are actually assigned to appear as tabs.
 
     const { data: sl } = await supabase
       .from('user_roles')

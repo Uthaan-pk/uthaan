@@ -25,10 +25,39 @@ export default async function MaterialsPage() {
   const isStaff = effectiveRole === 'teacher'
 
   if (isStaff) {
-    const { data: materials } = await supabase
+    // Derive the teacher's assigned classes and subjects from their timetable
+    const { data: ttRows } = await supabase
+      .from('timetable')
+      .select('class_num, subject')
+      .eq('teacher_id', user.id)
+      .limit(200)
+
+    const teacherClassNums = new Set<number>(
+      (ttRows ?? []).map(r => r.class_num).filter((n): n is number => n != null)
+    )
+    const teacherSubjects = new Set<string>(
+      (ttRows ?? []).map(r => (r.subject ?? '').toLowerCase()).filter(Boolean)
+    )
+
+    const { data: allMaterials } = await supabase
       .from('materials')
       .select('*')
       .order('created_at', { ascending: false })
+
+    // If the teacher has timetable entries, filter to their classes AND subjects.
+    // class_num=null materials are school-wide and always included when subject matches.
+    // Falls back to all materials if no timetable is set up yet.
+    const materials =
+      teacherClassNums.size > 0
+        ? (allMaterials ?? []).filter(m => {
+            const classMatch =
+              m.class_num == null || teacherClassNums.has(m.class_num)
+            const subjectMatch =
+              teacherSubjects.size === 0 ||
+              teacherSubjects.has((m.subject ?? '').toLowerCase())
+            return classMatch && subjectMatch
+          })
+        : (allMaterials ?? [])
 
     return (
       <div className="uthaan-page-shell">

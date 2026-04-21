@@ -1019,7 +1019,7 @@ export default function ResultsPage({
           <div className="flex flex-col items-start gap-3 sm:items-end">
             <button
               onClick={handleBulkGenerate}
-              disabled={bulkGenerating || !canGenerateBulkComments}
+              disabled={bulkGenerating || activeStudents.length === 0}
               className="shrink-0 bg-[#1a2e1a] hover:bg-[#243824] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
             >
               {bulkGenerating ? 'Generating comments...' : 'Generate comments for class'}

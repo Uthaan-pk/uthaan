@@ -724,7 +724,7 @@ export default async function DashboardPage() {
                         <div className="mt-1 text-2xl font-semibold text-gray-900">{overdueFeeStudentIds.size}</div>
                         <div className="mt-1 text-xs text-gray-500">Students with overdue balances</div>
                       </Link>
-                      <Link href="/attendance" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${studentsWithHighAbsences > 0 ? 'bg-amber-50 border-amber-200' : 'bg-[#fafcf9] border-gray-100'}`}>
+                      <Link href="/attendance/low" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${studentsWithHighAbsences > 0 ? 'bg-amber-50 border-amber-200' : 'bg-[#fafcf9] border-gray-100'}`}>
                         <div className="text-[11px] uppercase tracking-wide text-gray-500">Low attendance</div>
                         <div className="mt-1 text-2xl font-semibold text-gray-900">{studentsWithHighAbsences}</div>
                         <div className="mt-1 text-xs text-gray-500">Below 75% attendance</div>

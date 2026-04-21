@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { z } from 'zod'
 import { parseBody } from '@/lib/api/validate'
+import { writeAuditLog } from '@/lib/audit'
 
 const VALID_ROLES = ['student', 'teacher', 'parent'] as const
 
@@ -41,5 +42,14 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
+
+  await writeAuditLog(supabase, {
+    actor_user_id: user.id,
+    action: 'insert',
+    entity_type: 'user_role',
+    entity_id: user.id,
+    new_value: { role },
+  })
+
   return NextResponse.json({ success: true })
 }

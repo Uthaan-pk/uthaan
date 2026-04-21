@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import type { LeaveStatus } from '@/lib/attendanceLeaves'
+import { writeAuditLog } from '@/lib/audit'
 
 export type Student = {
   id: string
@@ -189,6 +190,18 @@ export default function AttendanceMarker({
       toast.error(error.message || 'Failed to save attendance. Please try again.')
       return
     }
+
+    await writeAuditLog(supabase, {
+      actor_user_id: myUserIdRef.current,
+      action: 'update',
+      entity_type: 'attendance',
+      entity_id: today,
+      new_value: {
+        date: today,
+        count: rows.length,
+        class: classFilter !== 'all' ? classFilter : 'all',
+      },
+    })
 
     toast.success('Attendance saved!')
   }

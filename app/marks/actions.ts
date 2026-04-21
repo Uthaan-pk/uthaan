@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { writeAuditLog } from '@/lib/audit'
 
 export type ImportResult = {
   imported: number
@@ -101,6 +102,14 @@ export async function importMarksFromCSV(
     skipped.push({ row: 0, reason: `DB error: ${error.message}` })
     return { imported: 0, skipped }
   }
+
+  await writeAuditLog(supabase, {
+    actor_user_id: user.id,
+    action: 'insert',
+    entity_type: 'marks',
+    entity_id: schoolId,
+    new_value: { source: 'csv_import', count: toUpsert.length },
+  })
 
   return { imported: toUpsert.length, skipped }
 }

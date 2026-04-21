@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { writeAuditLog } from '@/lib/audit'
 
 type Student = {
   id: string
@@ -65,6 +66,14 @@ export default function FeesClient({
   students: Student[]
 }) {
   const supabase = useMemo(() => createClient(), [])
+  const userIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      userIdRef.current = data.user?.id ?? null
+    })
+  }, [supabase])
+
   const [fees, setFees]     = useState(initialFees)
   const [acting, setActing] = useState<string | null>(null)
   const [confirmUnpaidId, setConfirmUnpaidId] = useState<string | null>(null)
@@ -131,6 +140,14 @@ export default function FeesClient({
     setActing(null)
     if (error) { toast.error(error.message); return }
     setFees(prev => prev.map(f => f.id === fee.id ? { ...f, paid: true, paid_at: paidAt } : f))
+    await writeAuditLog(supabase, {
+      actor_user_id: userIdRef.current,
+      action: 'update',
+      entity_type: 'fee',
+      entity_id: fee.id,
+      old_value: { paid: false },
+      new_value: { paid: true, paid_at: paidAt },
+    })
     toast.success('Marked as paid.')
   }
 
@@ -144,6 +161,14 @@ export default function FeesClient({
     if (error) { toast.error(error.message); return }
     setFees(prev => prev.map(f => f.id === fee.id ? { ...f, paid: false, paid_at: null } : f))
     setConfirmUnpaidId(null)
+    await writeAuditLog(supabase, {
+      actor_user_id: userIdRef.current,
+      action: 'update',
+      entity_type: 'fee',
+      entity_id: fee.id,
+      old_value: { paid: true },
+      new_value: { paid: false, paid_at: null },
+    })
     toast.success('Marked as unpaid.')
   }
 
@@ -170,6 +195,18 @@ export default function FeesClient({
     setFees(prev => [data, ...prev])
     setShowModal(false)
     setForm(emptyForm)
+    await writeAuditLog(supabase, {
+      actor_user_id: userIdRef.current,
+      action: 'insert',
+      entity_type: 'fee',
+      entity_id: data.id,
+      new_value: {
+        student_id: form.student_id,
+        amount: parseFloat(form.amount),
+        due_date: form.due_date,
+        term: form.term.trim(),
+      },
+    })
     toast.success('Fee assigned.')
   }
 

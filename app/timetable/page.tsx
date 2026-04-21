@@ -21,6 +21,7 @@ export default async function TimetablePage() {
     .single()
 
   const role = roleData?.role
+  const isTeacher = role === 'teacher'
   const isStaff = role === 'teacher' || role === 'admin'
 
   let filterClassNum: number | null = null
@@ -42,6 +43,10 @@ export default async function TimetablePage() {
     .order('class_num', { ascending: true })
     .order('day', { ascending: true })
     .order('period', { ascending: true })
+
+  if (isTeacher) {
+    query = query.eq('teacher_id', user.id)
+  }
 
   if (!isStaff && filterClassNum !== null) {
     query = query.eq('class_num', filterClassNum)
@@ -107,7 +112,7 @@ export default async function TimetablePage() {
         <header className="uthaan-page-header">
           <h1 className="text-sm font-semibold text-gray-900">Timetable</h1>
           <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            {filterClassNum ? `Class ${filterClassNum}` : '{CURRENT_TERM}'}
+            {filterClassNum ? `Class ${filterClassNum}` : CURRENT_TERM}
           </span>
         </header>
 

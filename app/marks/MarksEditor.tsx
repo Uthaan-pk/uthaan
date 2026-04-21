@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { writeAuditLog } from '@/lib/audit'
 import { letterGrade } from '@/lib/calculateGrade'
 import { CURRENT_TERM } from '@/lib/constants'
 import {
@@ -153,6 +154,13 @@ export default function MarksEditor({
   readOnlyGradesOnly?: boolean
 }) {
   const supabase = useMemo(() => createClient(), [])
+  const userIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      userIdRef.current = data.user?.id ?? null
+    })
+  }, [supabase])
 
   const [examTypes, setExamTypes] = useState<ExamType[]>(
     examTypesProp.length > 0 ? examTypesProp : DEFAULT_EXAM_TYPES
@@ -269,6 +277,14 @@ export default function MarksEditor({
         return
       }
     }
+
+    await writeAuditLog(supabase, {
+      actor_user_id: userIdRef.current,
+      action: 'update',
+      entity_type: 'marks',
+      entity_id: schoolId ?? 'unknown',
+      new_value: { exam: selectedExam, count: filledRows.length },
+    })
 
     setSaving(false)
     toast.success('Marks saved!')

@@ -14,11 +14,15 @@ export async function POST(req: NextRequest) {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
   if (roleData?.role !== 'admin')
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+
+  const schoolId = roleData?.school_id as string | null
+  if (!schoolId)
+    return NextResponse.json({ message: 'No school linked to your account' }, { status: 400 })
 
   let body: unknown
   try {
@@ -37,7 +41,8 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     )
 
-  // Use the admin client — the user client cannot call auth.admin.listUsers()
+  // Use the admin client for all DB writes — the user client is blocked by RLS
+  // on the students table (same pattern as create-student/route.ts).
   const adminSupabase = createAdminClient()
 
   let added = 0,
@@ -65,7 +70,7 @@ export async function POST(req: NextRequest) {
       continue
     }
 
-    const { data: existing } = await supabase
+    const { data: existing } = await adminSupabase
       .from('students')
       .select('id')
       .eq('roll_no', rollStr)
@@ -78,15 +83,17 @@ export async function POST(req: NextRequest) {
     const emailStr =
       typeof email === 'string' && email.trim() ? email.trim() : null
 
-    const { data: newStudent, error: insertErr } = await supabase
+    const insertPayload = {
+      name: nameStr,
+      roll_no: rollStr,
+      email: emailStr,
+      class_num: classVal,
+      stage: typeof stage === 'string' && stage.trim() ? stage.trim() : 'matric',
+      school_id: schoolId,
+    }
+    const { data: newStudent, error: insertErr } = await adminSupabase
       .from('students')
-      .insert({
-        name: nameStr,
-        roll_no: rollStr,
-        email: emailStr,
-        class_num: classVal,
-        stage: typeof stage === 'string' && stage.trim() ? stage.trim() : 'matric',
-      })
+      .insert(insertPayload)
       .select('id')
       .single()
 

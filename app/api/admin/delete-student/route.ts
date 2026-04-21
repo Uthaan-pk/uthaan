@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { z } from 'zod'
 import { parseBody } from '@/lib/api/validate'
+import { writeAuditLog } from '@/lib/audit'
 
 const DeleteStudentSchema = z.object({
   student_id: z.string().uuid(),
@@ -53,6 +54,15 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
+
+  await writeAuditLog(supabase, {
+    actor_user_id: user.id,
+    action: 'delete',
+    entity_type: 'student',
+    entity_id: student_id,
+    old_value: { is_active: true },
+    new_value: { is_active: false },
+  })
 
   return NextResponse.json({ success: true, archived: true })
 }

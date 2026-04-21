@@ -22,11 +22,13 @@ export async function POST(request: Request) {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
   if (roleData?.role !== 'admin')
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+
+  const schoolId = roleData?.school_id as string | null
 
   let raw: unknown
   try {
@@ -60,6 +62,7 @@ export async function POST(request: Request) {
       email: email || null,
       stage,
       class_num: class_num || null,
+      school_id: schoolId,
     })
     .select()
     .single()

@@ -14,12 +14,21 @@ import {
 import { CURRENT_YEAR, TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 
+const SCHOOL_TIME_ZONE = 'Asia/Karachi'
+
 function formatCompactDate(value: string) {
   if (!value) return 'No date'
   return new Date(value).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
   })
+}
+
+function getSchoolWeekdayName(now = new Date()) {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    timeZone: SCHOOL_TIME_ZONE,
+  }).format(now)
 }
 
 export default async function DashboardPage() {
@@ -244,7 +253,7 @@ export default async function DashboardPage() {
     const studentId = roleData?.student_id
     const today = new Date().toISOString().split('T')[0]
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
-    const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+    const todayName = getSchoolWeekdayName()
 
     let dueToday = 0
     let avgMark: number | null = null
@@ -803,17 +812,28 @@ export default async function DashboardPage() {
     )
   }
 
-  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+  const todayName = getSchoolWeekdayName()
   const todayDisplay = new Date().toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   })
+  const isTeacher = role === 'teacher'
 
   type TimetableEntry = { class_num: number; subject: string; start_time: string; end_time: string; period: number }
   type AssignmentRef = { id: string; title: string; class_num: number }
   // Supabase returns the joined record as an array or single object depending on FK direction
   type PendingSubmission = { assignment_id: string; assignment: AssignmentRef | AssignmentRef[] | null }
+
+  let teacherTimetableQuery = supabase
+    .from('timetable')
+    .select('class_num, subject, start_time, end_time, period')
+    .eq('day', todayName)
+    .order('period', { ascending: true })
+
+  if (isTeacher) {
+    teacherTimetableQuery = teacherTimetableQuery.eq('teacher_id', user.id)
+  }
 
   const [
     studentsRes,
@@ -834,12 +854,7 @@ export default async function DashboardPage() {
       .order('created_at', { ascending: false })
       .limit(3),
     supabase.from('attendance_logs').select('id').eq('day', today),
-    supabase
-      .from('timetable')
-      .select('class_num, subject, start_time, end_time, period')
-      .eq('teacher_id', user.id)
-      .eq('day', todayName)
-      .order('period', { ascending: true }),
+    teacherTimetableQuery,
   ])
 
   const totalStudents = (studentsRes.data ?? []).length

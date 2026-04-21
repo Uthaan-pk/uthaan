@@ -78,6 +78,7 @@ export default function TimetableGrid({
   staffList: { user_id: string; role: string }[]
   availableClasses: number[]
 }) {
+  const isAdmin = currentRole === 'admin'
   const isStaff = currentRole === 'teacher' || currentRole === 'admin'
   const router = useRouter()
   const [editCell, setEditCell] = useState<EditCell | null>(null)
@@ -88,7 +89,27 @@ export default function TimetableGrid({
   }, [rows, availableClasses])
 
   const [selectedClass, setSelectedClass] = useState<number | null>(
-    classNums[0] ?? null
+    isAdmin ? null : classNums[0] ?? null
+  )
+
+  const classSummaries = useMemo(
+    () =>
+      classNums.map(classNum => {
+        const classRows = rows.filter(r => r.class_num === classNum)
+        const assignedCount = classRows.filter(
+          r => !!r.teacher_id || !!r.instructor_name?.trim()
+        ).length
+        const daysCovered = new Set(classRows.map(r => r.day)).size
+
+        return {
+          classNum,
+          periodCount: classRows.length,
+          assignedCount,
+          unassignedCount: classRows.length - assignedCount,
+          daysCovered,
+        }
+      }),
+    [classNums, rows]
   )
 
   const lookup = useMemo(() => {
@@ -541,6 +562,8 @@ export default function TimetableGrid({
   }
 
   function handlePrint() {
+    if (isAdmin && selectedClass === null) return
+
     const printWindow = window.open('', '_blank', 'width=1280,height=900')
     if (!printWindow) return
 
@@ -552,8 +575,85 @@ export default function TimetableGrid({
 
   return (
     <div>
+      {isAdmin && classSummaries.length > 0 && selectedClass === null && (
+        <div className="mb-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm md:p-5">
+          <div className="flex flex-col gap-2 border-b border-gray-100 pb-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="text-sm font-semibold text-gray-900">
+                School timetable overview
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                Review timetable coverage across all classes, then open any class for the full weekly grid.
+              </div>
+            </div>
+            <div className="text-xs text-gray-500">
+              {classSummaries.length} classes with timetable periods
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {classSummaries.map(summary => (
+              <button
+                key={summary.classNum}
+                onClick={() => setSelectedClass(summary.classNum)}
+                className="rounded-xl border border-gray-100 bg-[#fafcf9] p-4 text-left transition-colors hover:border-gray-200 hover:bg-white"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      Class {summary.classNum}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      {summary.daysCovered} school day{summary.daysCovered === 1 ? '' : 's'} covered
+                    </div>
+                  </div>
+                  <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-600">
+                    {summary.periodCount} periods
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-lg border border-green-100 bg-green-50 px-3 py-2">
+                    <div className="text-[10px] uppercase tracking-wide text-green-700/80">
+                      Assigned
+                    </div>
+                    <div className="mt-1 font-semibold text-green-800">
+                      {summary.assignedCount}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2">
+                    <div className="text-[10px] uppercase tracking-wide text-amber-700/80">
+                      Unassigned
+                    </div>
+                    <div className="mt-1 font-semibold text-amber-800">
+                      {summary.unassignedCount}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 text-xs font-medium text-[#1a2e1a]">
+                  Open class timetable →
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isStaff && classNums.length > 0 && (
         <div className="mb-5 flex flex-wrap items-center gap-2 overflow-x-auto pb-1">
+          {isAdmin && (
+            <button
+              onClick={() => setSelectedClass(null)}
+              className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                selectedClass === null
+                  ? 'bg-[#1a2e1a] text-[#6fcf6f]'
+                  : 'border border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              All classes
+            </button>
+          )}
           {classNums.map(cn => (
             <button
               key={cn}
@@ -570,7 +670,8 @@ export default function TimetableGrid({
 
           <button
             onClick={handlePrint}
-            className="ml-auto flex-shrink-0 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800"
+            disabled={isAdmin && selectedClass === null}
+            className="ml-auto flex-shrink-0 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Print timetable
           </button>

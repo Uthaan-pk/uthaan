@@ -190,7 +190,7 @@ export default async function AttendancePage() {
           </header>
 
           <main className="uthaan-page-content">
-            <div className="max-w-2xl space-y-4">
+            <div className="max-w-7xl space-y-5">
               {isAdmin && belowThresholdCount > 0 && (
                 <div className="bg-white rounded-xl border border-l-4 border-l-red-400 border-gray-100 px-5 py-4 flex items-center justify-between">
                   <div>
@@ -298,7 +298,7 @@ export default async function AttendancePage() {
           </header>
 
           <main className="uthaan-page-content">
-            <div className="max-w-2xl">
+            <div className="max-w-6xl">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <StatCard
                   label="Days present"
@@ -436,7 +436,7 @@ export default async function AttendancePage() {
           </header>
 
           <main className="uthaan-page-content">
-            <div className="max-w-2xl">
+            <div className="max-w-6xl">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <StatCard
                   label="Days present"

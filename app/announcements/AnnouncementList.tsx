@@ -141,7 +141,7 @@ export default function AnnouncementList({
         const isConfirming = confirmDeleteId === a.id
 
         return (
-          <div key={a.id} className="px-5 py-4 border-b border-gray-50 last:border-0">
+          <div key={a.id} className="px-5 py-5 border-b border-gray-50 last:border-0">
             {isEditing ? (
               /* ── Edit form ── */
               <div className="space-y-3">
@@ -202,7 +202,7 @@ export default function AnnouncementList({
             ) : (
               /* ── Read view ── */
               <>
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_220px] xl:items-start xl:gap-6">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       {a.priority && a.priority !== 'normal' && (
@@ -227,7 +227,7 @@ export default function AnnouncementList({
                     <div className="mt-3 text-base font-semibold leading-tight text-gray-900">
                       {a.title}
                     </div>
-                    <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
+                    <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-gray-700">
                       {a.body}
                     </div>
                     <div className="mt-3 text-xs text-gray-500 capitalize">
@@ -238,9 +238,9 @@ export default function AnnouncementList({
                     </div>
                   </div>
 
-                  <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[170px] lg:items-end">
+                  <div className="flex w-full flex-col gap-3 xl:min-w-[220px] xl:items-end">
                     {(canEdit || canDelete) && !isConfirming && (
-                      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                      <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                         {canEdit && (
                           <button
                             onClick={() => startEdit(a)}
@@ -261,7 +261,7 @@ export default function AnnouncementList({
                     )}
 
                     {isStaff ? (
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-gray-400 xl:text-right">
                         {ackMap[a.id]
                           ? `${ackMap[a.id].count} of ${ackMap[a.id].total} acknowledged`
                           : <span className="text-gray-300">Loading…</span>

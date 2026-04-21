@@ -439,7 +439,7 @@ function ReportCardPreview({ student }: { student: Student }) {
 
   if (loading) {
     return (
-      <div className="max-w-3xl">
+      <div className="max-w-5xl">
         <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
           Loading report card…
         </div>
@@ -449,7 +449,7 @@ function ReportCardPreview({ student }: { student: Student }) {
 
   if (error || !report) {
     return (
-      <div className="max-w-3xl">
+      <div className="max-w-5xl">
         <div className="bg-white rounded-xl border border-red-100 px-5 py-12 text-center text-sm text-red-600">
           {error ?? 'Failed to load report card.'}
         </div>
@@ -458,7 +458,7 @@ function ReportCardPreview({ student }: { student: Student }) {
   }
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-5xl space-y-5">
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="bg-[#1a2e1a] px-5 py-5">
           <div className="text-center">
@@ -782,11 +782,6 @@ export default function ResultsPage({
 
   const aiRequiresClassSelection = classFilter === 'all' && classNums.length > 1
   const canUseAiReportComments = aiReportCommentsState.enabled
-  const canGenerateBulkComments =
-    canUseAiReportComments &&
-    !aiReportCommentsState.quotaReached &&
-    !aiRequiresClassSelection &&
-    reviewStudents.length > 0
 
   const bulkAiStatusMessage = !canUseAiReportComments
     ? 'AI report comments are disabled for this school.'
@@ -941,7 +936,7 @@ export default function ResultsPage({
   }
 
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="max-w-7xl space-y-5">
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50">
           <h2 className="text-sm font-semibold text-gray-900">
@@ -958,7 +953,19 @@ export default function ResultsPage({
             No classes found
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div>
+            <div className="hidden bg-gray-50/80 px-5 py-3 md:grid md:grid-cols-[minmax(0,1fr)_160px_150px] md:items-center md:gap-4">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                Class
+              </div>
+              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                Status
+              </div>
+              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400 md:text-right">
+                Action
+              </div>
+            </div>
+            <div className="divide-y divide-gray-50">
             {classNums.map(classNum => {
               const release = releaseMap[classNum]
               const isReleased = release?.released === true
@@ -966,7 +973,7 @@ export default function ResultsPage({
               return (
                 <div
                   key={classNum}
-                  className="px-5 py-3.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="px-5 py-4 md:grid md:grid-cols-[minmax(0,1fr)_160px_150px] md:items-center md:gap-4"
                 >
                   <div>
                     <div className="text-sm font-medium text-gray-900">
@@ -986,6 +993,8 @@ export default function ResultsPage({
                     >
                       {isReleased ? 'Released' : 'Not released'}
                     </span>
+                  </div>
+                  <div className="md:flex md:justify-end">
                     <button
                       onClick={() => toggleRelease(classNum)}
                       disabled={releaseLoading === classNum}
@@ -1001,13 +1010,14 @@ export default function ResultsPage({
                 </div>
               )
             })}
+            </div>
           </div>
         )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-50 flex items-start justify-between gap-4 flex-wrap">
-          <div>
+        <div className="px-5 py-4 border-b border-gray-50 xl:grid xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start xl:gap-6">
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold text-gray-900">
               Download Report Cards
             </h2>
@@ -1016,7 +1026,7 @@ export default function ResultsPage({
             </p>
           </div>
 
-          <div className="flex flex-col items-start gap-3 sm:items-end">
+          <div className="mt-4 flex flex-col items-start gap-3 sm:items-end xl:mt-0">
             <button
               onClick={handleBulkGenerate}
               disabled={bulkGenerating || activeStudents.length === 0}
@@ -1155,19 +1165,30 @@ export default function ResultsPage({
             No students found
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div>
+            <div className="hidden bg-gray-50/80 px-5 py-3 md:grid md:grid-cols-[minmax(0,1fr)_140px_160px] md:items-center md:gap-4">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                Student
+              </div>
+              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                Release status
+              </div>
+              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400 md:text-right">
+                Report card
+              </div>
+            </div>
+            <div className="divide-y divide-gray-50">
             {filteredStudents.map(s => {
               const isReleased = releaseMap[Number(s.class_num)]?.released === true
               return (
-                <div key={s.id} className="px-5 py-3.5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
+                <div key={s.id} className="px-5 py-4 md:grid md:grid-cols-[minmax(0,1fr)_140px_160px] md:items-center md:gap-4">
+                    <div className="min-w-0">
                       <div className="text-sm font-medium text-gray-900">{s.name}</div>
                       <div className="text-xs text-gray-400 mt-0.5">
                         Roll {s.roll_no} · Class {s.class_num} · {s.stage ?? '—'}
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+                    <div className="mt-3 md:mt-0">
                       <span
                         className={`text-[11px] font-medium px-2.5 py-1 rounded-full border ${
                           isReleased
@@ -1177,6 +1198,8 @@ export default function ResultsPage({
                       >
                         {isReleased ? 'Visible to family' : 'Hidden'}
                       </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-3 md:mt-0 md:justify-end">
                       <button
                         onClick={() => handleGenerate(s)}
                         disabled={loading === s.id}
@@ -1185,10 +1208,10 @@ export default function ResultsPage({
                         {loading === s.id ? 'Generating…' : 'Download PDF'}
                       </button>
                     </div>
-                  </div>
                 </div>
               )
             })}
+            </div>
           </div>
         )}
       </div>

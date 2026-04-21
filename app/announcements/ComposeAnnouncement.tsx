@@ -46,7 +46,7 @@ export default function ComposeAnnouncement() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="mb-4 w-full sm:w-auto bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-3 rounded-lg transition-colors min-h-[44px]"
+        className="w-full sm:w-auto bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-3 rounded-lg transition-colors min-h-[44px]"
       >
         + New announcement
       </button>
@@ -54,7 +54,7 @@ export default function ComposeAnnouncement() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 mb-4">
+    <div className="bg-white rounded-xl border border-gray-100 p-5 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-gray-900">New announcement</h3>
         <button
@@ -69,7 +69,7 @@ export default function ComposeAnnouncement() {
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
           <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">
             Title
@@ -95,7 +95,7 @@ export default function ComposeAnnouncement() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
             <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1.5">
               Priority

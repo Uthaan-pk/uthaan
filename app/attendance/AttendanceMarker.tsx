@@ -221,60 +221,62 @@ export default function AttendanceMarker({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        {classNums.length > 1 && (
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              onClick={() => setClassFilter('all')}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                classFilter === 'all'
-                  ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]'
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              All classes
-            </button>
+      <div className="rounded-2xl border border-gray-100 bg-white px-4 py-4 shadow-sm md:px-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="space-y-3">
+            {classNums.length > 1 && (
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setClassFilter('all')}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    classFilter === 'all'
+                      ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  All classes
+                </button>
 
-            {classNums.map(n => (
-              <button
-                key={n}
-                onClick={() => setClassFilter(n)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  classFilter === n
-                    ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                Class {n}
-              </button>
-            ))}
-          </div>
-        )}
+                {classNums.map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setClassFilter(n)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                      classFilter === n
+                        ? 'bg-[#1a2e1a] text-[#6fcf6f] border-[#1a2e1a]'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    Class {n}
+                  </button>
+                ))}
+              </div>
+            )}
 
-        <div className="flex flex-col gap-3 lg:ml-auto lg:items-end">
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full border border-green-100 bg-green-50 px-2.5 py-1 font-medium text-green-700">
-              {presentCount} present
-            </span>
-            <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
-              {lateCount} late
-            </span>
-            <span className="rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 font-medium text-sky-700">
-              {excusedCount} excused
-            </span>
-            <span className="rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1 font-medium text-indigo-700">
-              {earlyLeaveCount} early leave
-            </span>
-            <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 font-medium text-gray-600">
-              {markedCount} / {visibleStudents.length} marked
-            </span>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full border border-green-100 bg-green-50 px-2.5 py-1 font-medium text-green-700">
+                {presentCount} present
+              </span>
+              <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+                {lateCount} late
+              </span>
+              <span className="rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 font-medium text-sky-700">
+                {excusedCount} excused
+              </span>
+              <span className="rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1 font-medium text-indigo-700">
+                {earlyLeaveCount} early leave
+              </span>
+              <span className="rounded-full border border-gray-200 bg-white px-2.5 py-1 font-medium text-gray-600">
+                {markedCount} / {visibleStudents.length} marked
+              </span>
+            </div>
           </div>
 
           {!readOnly && (
             <button
               onClick={handleSave}
               disabled={saving}
-              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors min-h-[44px] whitespace-nowrap"
+              className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-sm font-medium px-5 py-2.5 rounded-lg disabled:opacity-50 transition-colors min-h-[44px] whitespace-nowrap xl:self-start"
             >
               {saving ? 'Saving…' : 'Save attendance'}
             </button>
@@ -310,6 +312,14 @@ export default function AttendanceMarker({
       )}
 
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="hidden border-b border-gray-100 bg-gray-50/80 px-5 py-3 md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(320px,380px)] md:items-center md:gap-4">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+            Student
+          </div>
+          <div className="text-[11px] font-medium uppercase tracking-wide text-gray-400 md:text-right">
+            Attendance status
+          </div>
+        </div>
         {visibleStudents.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-gray-400">
             No students in this class
@@ -323,36 +333,38 @@ export default function AttendanceMarker({
             return (
               <div
                 key={student.id}
-                className={`px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center ${
+                className={`px-4 py-4 md:grid md:grid-cols-[minmax(0,1.4fr)_minmax(320px,380px)] md:items-center md:gap-4 ${
                   i < visibleStudents.length - 1 ? 'border-b border-gray-50' : ''
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-800 text-[10px] font-semibold flex-shrink-0">
-                  {getInitials(student.name)}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 leading-tight">
-                    {student.name}
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-800 text-[10px] font-semibold flex-shrink-0">
+                    {getInitials(student.name)}
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">
-                    {student.roll_no} · Class {student.class_num}
-                  </div>
-                  {meta && (
-                    <div className="mt-1 flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
-                        {meta.label}
-                      </span>
-                      {meta.reason && (
-                        <span className="text-[10px] text-gray-400">{meta.reason}</span>
-                      )}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-gray-900 leading-tight">
+                      {student.name}
                     </div>
-                  )}
+                    <div className="mt-0.5 text-[11px] text-gray-500">
+                      Roll {student.roll_no} · Class {student.class_num}
+                      {student.stage ? ` · ${student.stage}` : ''}
+                    </div>
+                    {meta && (
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+                          {meta.label}
+                        </span>
+                        {meta.reason && (
+                          <span className="text-[10px] text-gray-400">{meta.reason}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-shrink-0">
+                <div className="grid w-full grid-cols-2 gap-2 md:ml-auto md:max-w-[380px] md:grid-cols-3">
                   {locked ? (
-                    <span className={`text-xs font-semibold px-3 py-2 rounded-lg border min-h-[40px] inline-flex items-center ${
+                    <span className={`col-span-2 md:col-span-3 text-xs font-semibold px-3 py-2 rounded-lg border min-h-[40px] inline-flex items-center justify-center ${
                       current === 'excused'
                         ? 'bg-sky-50 text-sky-700 border-sky-200'
                         : 'bg-indigo-50 text-indigo-700 border-indigo-200'
@@ -388,7 +400,7 @@ export default function AttendanceMarker({
                       <button
                         onClick={() => setStudentStatus(student.id, 'absent')}
                         disabled={readOnly}
-                        className={`col-span-2 text-xs font-semibold px-3 py-2 rounded-lg border min-h-[40px] transition-colors sm:col-span-1 ${
+                        className={`col-span-2 md:col-span-1 text-xs font-semibold px-3 py-2 rounded-lg border min-h-[40px] transition-colors ${
                           current === 'absent'
                             ? 'bg-red-50 text-red-700 border-red-200'
                             : 'bg-white text-gray-500 border-gray-200 hover:border-red-200 hover:text-red-700'

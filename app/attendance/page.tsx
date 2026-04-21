@@ -189,7 +189,7 @@ export default async function AttendancePage() {
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="uthaan-page-content">
             <div className="max-w-2xl space-y-4">
               {isAdmin && belowThresholdCount > 0 && (
                 <div className="bg-white rounded-xl border border-l-4 border-l-red-400 border-gray-100 px-5 py-4 flex items-center justify-between">
@@ -297,7 +297,7 @@ export default async function AttendancePage() {
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="uthaan-page-content">
             <div className="max-w-2xl">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <StatCard
@@ -435,7 +435,7 @@ export default async function AttendancePage() {
             </span>
           </header>
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="uthaan-page-content">
             <div className="max-w-2xl">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <StatCard

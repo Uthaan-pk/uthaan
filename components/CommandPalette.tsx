@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Fuse from 'fuse.js'
-import { Loader2, Search, X, Zap } from 'lucide-react'
+import { Loader2, Search, Sparkles, X, Zap } from 'lucide-react'
 import { getEntriesForRole, type PageEntry } from '@/lib/commandPaletteIndex'
 import { createClient } from '@/lib/supabase/client'
 
@@ -15,10 +15,18 @@ type StudentHit = {
   class_num: number | null
 }
 
+type AiSuggestion = {
+  id: string
+  href: string
+  label: string
+  reason: string
+}
+
 type FlatResult =
   | { type: 'page'; item: PageEntry }
   | { type: 'action'; item: PageEntry }
   | { type: 'student'; item: StudentHit }
+  | { type: 'ai'; item: AiSuggestion }
 
 const FUSE_OPTS = {
   keys: ['label', 'description', 'keywords'],
@@ -44,6 +52,8 @@ export function CommandPalette({
   const [activeIndex, setActiveIndex] = useState(0)
   const [students, setStudents] = useState<StudentHit[]>([])
   const [loadingStudents, setLoadingStudents] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null)
+  const [loadingAi, setLoadingAi] = useState(false)
 
   const isStaff = userRole === 'teacher' || userRole === 'admin'
 
@@ -96,13 +106,66 @@ export function CommandPalette({
     }
   }, [query, isStaff, schoolId])
 
+  // AI suggestion — staff only, 10+ chars with a space, 400ms debounce.
+  // The loading indicator (Thinking…) only appears after the debounce fires,
+  // not on every keystroke, to avoid visual noise during fast typing.
+  // Any non-200 response (403, 429, 5xx, network error) silently falls back
+  // to Fuse.js — never shown as an error to the user.
+  const aiEnabled = isStaff && query.includes(' ') && query.length >= 10
+
+  useEffect(() => {
+    if (!aiEnabled) {
+      setAiSuggestion(null)
+      setLoadingAi(false)
+      return
+    }
+
+    let stale = false
+    const t = setTimeout(async () => {
+      if (stale) return
+      setLoadingAi(true)
+      try {
+        const pagePayload = getEntriesForRole(userRole, 'page').map((p) => ({
+          id: p.id,
+          label: p.label,
+          description: p.description,
+          href: p.href,
+          keywords: p.keywords,
+        }))
+        const res = await fetch('/api/command-ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, pages: pagePayload }),
+        })
+        if (!stale) {
+          if (res.ok) {
+            const data = await res.json()
+            setAiSuggestion(data.suggestion ?? null)
+          } else {
+            setAiSuggestion(null)
+          }
+        }
+      } catch {
+        if (!stale) setAiSuggestion(null)
+      } finally {
+        if (!stale) setLoadingAi(false)
+      }
+    }, 400)
+
+    return () => {
+      stale = true
+      clearTimeout(t)
+    }
+  }, [aiEnabled, query, userRole])
+
   const flatResults = useMemo<FlatResult[]>(
     () => [
+      ...(aiSuggestion ? [{ type: 'ai' as const, item: aiSuggestion }] : []),
       ...pageResults.map((item) => ({ type: 'page' as const, item })),
       ...actionResults.map((item) => ({ type: 'action' as const, item })),
       ...students.map((item) => ({ type: 'student' as const, item })),
     ],
-    [pageResults, actionResults, students]
+    [aiSuggestion, pageResults, actionResults, students]
   )
 
   const clamped = Math.min(activeIndex, Math.max(0, flatResults.length - 1))
@@ -125,6 +188,8 @@ export function CommandPalette({
     setQuery('')
     setActiveIndex(0)
     setStudents([])
+    setAiSuggestion(null)
+    setLoadingAi(false)
     const t = setTimeout(() => inputRef.current?.focus(), 30)
     return () => clearTimeout(t)
   }, [isOpen])
@@ -162,16 +227,21 @@ export function CommandPalette({
 
   if (!isOpen) return null
 
-  const pageStart = 0
-  const actionStart = pageResults.length
-  const studentStart = pageResults.length + actionResults.length
+  const aiStart = 0
+  const pageStart = aiSuggestion ? 1 : 0
+  const actionStart = pageStart + pageResults.length
+  const studentStart = actionStart + actionResults.length
 
   function getSectionLabel(idx: number): string | null {
+    if (aiSuggestion && idx === aiStart) return 'AI Suggestion'
     if (idx === pageStart && pageResults.length > 0) return 'Pages'
     if (idx === actionStart && actionResults.length > 0) return 'Quick Actions'
     if (idx === studentStart && students.length > 0) return 'Students'
     return null
   }
+
+  // Show pulsing Thinking… row only when loading AI and no prior suggestion exists
+  const showThinking = loadingAi && !aiSuggestion
 
   return (
     <>
@@ -207,7 +277,7 @@ export function CommandPalette({
               autoComplete="off"
               spellCheck={false}
             />
-            {loadingStudents && (
+            {(loadingStudents || loadingAi) && (
               <Loader2
                 className="h-4 w-4 shrink-0 animate-spin text-gray-400"
                 aria-hidden
@@ -224,7 +294,19 @@ export function CommandPalette({
 
           {/* Results */}
           <div className="max-h-[60vh] overflow-y-auto pb-2">
-            {flatResults.length === 0 && !loadingStudents ? (
+            {/* Pulsing Thinking… row — only when AI is in flight and no stale suggestion to show */}
+            {showThinking && (
+              <div className="animate-pulse px-4 py-2.5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-violet-100 bg-violet-50">
+                    <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                  </span>
+                  <span className="text-sm text-violet-400">Thinking…</span>
+                </div>
+              </div>
+            )}
+
+            {flatResults.length === 0 && !loadingStudents && !showThinking ? (
               query ? (
                 <p className="px-4 py-10 text-center text-sm text-gray-400">
                   No results for &ldquo;{query}&rdquo;
@@ -238,6 +320,50 @@ export function CommandPalette({
               flatResults.map((result, idx) => {
                 const label = getSectionLabel(idx)
                 const isActive = clamped === idx
+
+                // AI suggestion row
+                if (result.type === 'ai') {
+                  return (
+                    <div key={`ai-${result.item.id}`}>
+                      {label && (
+                        <SectionHeader
+                          label={label}
+                          icon={<Sparkles className="h-3 w-3 text-violet-400" />}
+                        />
+                      )}
+                      <button
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                          isActive
+                            ? 'bg-violet-50 text-violet-900'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onMouseEnter={() => setActiveIndex(idx)}
+                        onClick={() => navigate(result)}
+                      >
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
+                            isActive
+                              ? 'border-violet-200 bg-violet-100 text-violet-700'
+                              : 'border-violet-100 bg-violet-50 text-violet-400'
+                          }`}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium leading-snug">
+                            {result.item.label}
+                          </span>
+                          <span className="block truncate text-xs italic text-gray-400">
+                            {result.item.reason}
+                          </span>
+                        </span>
+                        {isActive && (
+                          <kbd className="shrink-0 text-[10px] text-gray-400">↵</kbd>
+                        )}
+                      </button>
+                    </div>
+                  )
+                }
 
                 if (result.type === 'page' || result.type === 'action') {
                   const Icon = result.item.icon

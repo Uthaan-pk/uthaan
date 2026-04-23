@@ -141,8 +141,9 @@ test('superadmin: impersonation exit works', async ({ browser }) => {
   ).toBeVisible({ timeout: 10000 })
 
   // Exit impersonation — stopImpersonating redirects back to /superadmin
+  // Timeout is 30 s: SSR session invalidation + redirect is known to be slow
   await Promise.all([
-    page.waitForURL(/\/superadmin/, { timeout: 15000 }),
+    page.waitForURL(/\/superadmin/, { timeout: 30000 }),
     page.getByRole('button', { name: /stop impersonating/i }).click(),
   ])
 

@@ -73,9 +73,10 @@ test('bulk import: happy path — 3 valid students imported and visible in list'
 
   // ── Verify students appear in the Students tab list ──
   await page.getByRole('button', { name: 'Students' }).click()
-  await expect(page.locator('input[placeholder*="Search"]')).toBeVisible({ timeout: 5000 })
+  // Scope to the Students tab search input specifically (command palette also has a search input in the DOM)
+  await expect(page.locator('input[placeholder*="Search by name"]')).toBeVisible({ timeout: 5000 })
 
-  await page.locator('input[placeholder*="Search"]').fill('PW Student Alpha')
+  await page.locator('input[placeholder*="Search by name"]').fill('PW Student Alpha')
   await expect(page.getByText('PW Student Alpha')).toBeVisible({ timeout: 10000 })
 
   await ctx.close()

@@ -1,11 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { CommandPalette } from './CommandPalette'
 import { createClient } from '@/lib/supabase/client'
 
 type UserCtx = { role: string; schoolId: string | null }
+
+type PaletteCtx = { openPalette: () => void }
+const CommandPaletteContext = createContext<PaletteCtx>({ openPalette: () => {} })
+export function useCommandPalette() {
+  return useContext(CommandPaletteContext)
+}
 
 export function CommandPaletteProvider({ children }: { children?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -61,7 +67,7 @@ export function CommandPaletteProvider({ children }: { children?: React.ReactNod
   const close = () => setIsOpen(false)
 
   return (
-    <>
+    <CommandPaletteContext.Provider value={{ openPalette: open }}>
       {children}
 
       {/* Mobile floating search button — only when logged in */}
@@ -84,6 +90,6 @@ export function CommandPaletteProvider({ children }: { children?: React.ReactNod
           schoolId={userCtx.schoolId}
         />
       )}
-    </>
+    </CommandPaletteContext.Provider>
   )
 }

@@ -11,6 +11,7 @@ import {
   buildAttendanceMap,
 } from '@/lib/attendanceLeaves'
 import { TERM_START_DATE } from '@/lib/constants'
+import { HelpButton } from '@/components/HelpButton'
 
 const statusStyles: Record<string, string> = {
   present: 'bg-green-50 text-green-800',
@@ -180,13 +181,16 @@ export default async function AttendancePage() {
         <div className="uthaan-page-main">
           <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Attendance</h1>
-            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              {new Date().toLocaleDateString('en-GB', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+                {new Date().toLocaleDateString('en-GB', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })}
+              </span>
+              <HelpButton pageKey="attendance" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">
@@ -292,9 +296,12 @@ export default async function AttendancePage() {
         <div className="uthaan-page-main">
           <header className="uthaan-page-header">
             <h1 className="text-sm font-semibold text-gray-900">Attendance</h1>
-            <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
-              Viewing as: {child.name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
+                Viewing as: {child.name}
+              </span>
+              <HelpButton pageKey="attendance" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">
@@ -430,9 +437,12 @@ export default async function AttendancePage() {
             <h1 className="text-sm font-semibold text-gray-900">
               My Attendance
             </h1>
-            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              {CURRENT_TERM}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+                {CURRENT_TERM}
+              </span>
+              <HelpButton pageKey="attendance" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">

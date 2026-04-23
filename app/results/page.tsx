@@ -6,6 +6,7 @@ import ResultsPage from './ResultsPage'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
 import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 import { getAiFeatureDefinition, isNewUsageMonth } from '@/lib/aiFeatures'
+import { HelpButton } from '@/components/HelpButton'
 
 async function isReleasedForClass(
   supabase: any,
@@ -282,9 +283,12 @@ export default async function Page() {
           <h1 className="text-sm font-semibold text-gray-900">
             Results &amp; Report Cards
           </h1>
-          <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            Academic Year 2025–26
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              Academic Year 2025–26
+            </span>
+            <HelpButton pageKey="report-comments" />
+          </div>
         </header>
         <main className="uthaan-page-content">
           <ResultsPage

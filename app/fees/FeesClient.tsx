@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { writeAuditLog } from '@/lib/audit'
+import { HelpButton } from '@/components/HelpButton'
 
 type Student = {
   id: string
@@ -217,12 +218,15 @@ export default function FeesClient({
       {/* Standard page header */}
       <header className="uthaan-page-header">
         <h1 className="text-sm font-semibold text-gray-900">Fees</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors min-h-[36px]"
-        >
-          + Assign Fee
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-[#1a2e1a] hover:bg-[#243d24] text-[#6fcf6f] text-xs font-medium px-4 py-2 rounded-lg transition-colors min-h-[36px]"
+          >
+            + Assign Fee
+          </button>
+          <HelpButton pageKey="fees" />
+        </div>
       </header>
 
       <main className="uthaan-page-content space-y-4">

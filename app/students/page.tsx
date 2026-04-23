@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar'
 import StudentsTable from './StudentsTable'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 import { TERM_START_DATE } from '@/lib/constants'
+import { HelpButton } from '@/components/HelpButton'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -50,9 +51,12 @@ export default async function StudentsPage() {
       <div className="uthaan-page-main">
         <header className="uthaan-page-header">
           <h1 className="text-sm font-semibold text-gray-900">Students</h1>
-          <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            {students?.length ?? 0} enrolled
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              {students?.length ?? 0} enrolled
+            </span>
+            <HelpButton pageKey="students-import" />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">

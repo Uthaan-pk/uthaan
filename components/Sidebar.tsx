@@ -21,8 +21,10 @@ import {
   UserPlus,
   CalendarOff,
   ScrollText,
+  Search,
 } from 'lucide-react'
 import { SUPPORT_WHATSAPP_NUMBER } from '@/lib/constants'
+import { useCommandPalette } from './CommandPaletteProvider'
 
 function getInitials(name: string) {
   return name
@@ -116,6 +118,7 @@ export default function Sidebar({
   const [isMobile, setIsMobile] = useState(false)
   const { t, lang } = useLanguage()
   const isUrdu = lang === 'ur'
+  const { openPalette } = useCommandPalette()
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -224,6 +227,19 @@ export default function Sidebar({
               </svg>
             </button>
           )}
+        </div>
+
+        {/* Desktop search bar — hidden inside mobile drawer (mobile uses FAB) */}
+        <div className="hidden md:block px-3 pt-3 pb-1">
+          <button
+            onClick={openPalette}
+            aria-label="Open search"
+            className="flex w-full items-center gap-2.5 rounded-xl bg-white/8 px-3 py-2 text-left transition-colors hover:bg-white/12"
+          >
+            <Search className="h-3.5 w-3.5 shrink-0 text-white/35" aria-hidden />
+            <span className="flex-1 text-sm text-white/35">Search...</span>
+            <kbd className="text-[10px] text-white/25">⌘K</kbd>
+          </button>
         </div>
 
         {isImpersonating && (

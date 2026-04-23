@@ -13,6 +13,7 @@ import {
 } from '@/lib/gradeUtils'
 import { CURRENT_YEAR, TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
+import { HelpButton } from '@/components/HelpButton'
 
 const SCHOOL_TIME_ZONE = 'Asia/Karachi'
 
@@ -143,9 +144,12 @@ export default async function DashboardPage() {
             <h1 className="text-sm font-semibold text-gray-900">
               {t.dashboard}
             </h1>
-            <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/20 px-3 py-1 rounded-full font-medium">
-              {child.name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/20 px-3 py-1 rounded-full font-medium">
+                {child.name}
+              </span>
+              <HelpButton pageKey="dashboard-parent" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">
@@ -674,9 +678,12 @@ export default async function DashboardPage() {
             <h1 className="text-sm font-semibold text-gray-900">
               {t.dashboard}
             </h1>
-            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Admin overview
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+                Admin overview
+              </span>
+              <HelpButton pageKey="dashboard-admin" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">
@@ -894,9 +901,12 @@ export default async function DashboardPage() {
           <h1 className="text-sm font-semibold text-gray-900">
             {t.dashboard}
           </h1>
-          <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            {t.springTerm2026}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              {t.springTerm2026}
+            </span>
+            <HelpButton pageKey="dashboard-teacher" />
+          </div>
         </header>
 
         <main className="uthaan-page-content">

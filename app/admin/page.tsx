@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import AdminClient from './AdminClient'
 import SetupChecklist from '@/components/onboarding/SetupChecklist'
+import { HelpButton } from '@/components/HelpButton'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -96,10 +97,12 @@ export default async function AdminPage() {
           <h1 className="text-sm font-semibold text-gray-900">
             Student management
           </h1>
-
-          <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-            {allStudents.length} students
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+              {allStudents.length} students
+            </span>
+            <HelpButton pageKey="students-import" />
+          </div>
         </header>
 
         <main className="uthaan-page-content">

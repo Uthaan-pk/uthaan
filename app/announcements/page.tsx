@@ -6,6 +6,7 @@ import { CURRENT_TERM } from '@/lib/constants'
 import AnnouncementList from './AnnouncementList'
 import { resolveEffectiveRole } from '@/lib/school'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { HelpButton } from '@/components/HelpButton'
 
 
 export default async function AnnouncementsPage() {
@@ -60,9 +61,12 @@ export default async function AnnouncementsPage() {
             <h1 className="text-sm font-semibold text-gray-900">
               Announcements
             </h1>
-            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              {CURRENT_TERM}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+                {CURRENT_TERM}
+              </span>
+              <HelpButton pageKey="announcements" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">
@@ -185,9 +189,12 @@ export default async function AnnouncementsPage() {
             <h1 className="text-sm font-semibold text-gray-900">
               Announcements
             </h1>
-            <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
-              Viewing as: {child.name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
+                Viewing as: {child.name}
+              </span>
+              <HelpButton pageKey="announcements" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">
@@ -304,9 +311,12 @@ export default async function AnnouncementsPage() {
             <h1 className="text-sm font-semibold text-gray-900">
               Announcements
             </h1>
-            <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
-              Class {student.class_num}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
+                Class {student.class_num}
+              </span>
+              <HelpButton pageKey="announcements" />
+            </div>
           </header>
 
           <main className="uthaan-page-content">

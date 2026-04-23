@@ -12,6 +12,7 @@ import {
   type FlatMarkRow,
 } from '@/lib/gradeUtils'
 import CsvImport from './CsvImport'
+import { HelpButton } from '@/components/HelpButton'
 
 type StudentRow = {
   id: string
@@ -258,6 +259,7 @@ export default async function MarksPage() {
               <span className="text-xs bg-green-50 text-green-800 border border-green-100 px-3 py-1 rounded-full font-medium">
                 {CURRENT_TERM}
               </span>
+              <HelpButton pageKey="marks" />
             </div>
           </header>
 
@@ -334,9 +336,12 @@ export default async function MarksPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Gradebook</h1>
-            <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
-              {child.name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-[#6fcf6f]/10 text-[#1a2e1a] border border-[#6fcf6f]/25 px-3 py-1 rounded-full font-medium">
+                {child.name}
+              </span>
+              <HelpButton pageKey="marks" />
+            </div>
           </header>
           <main className="uthaan-page-content">
             <GradebookGrid students={[child]} marks={marksRes.data ?? []} readOnly />

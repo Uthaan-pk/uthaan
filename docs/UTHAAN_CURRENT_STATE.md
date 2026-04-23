@@ -8,6 +8,9 @@
 - keep AI feature gating and usage enforcement production-safe
 - assignment feedback generator is the next AI feature
 
+## Recent Work (April 23 2026)
+- Global command palette built (Cmd+K / mobile FAB). Searches pages by role, students (debounced, RLS-safe), and quick actions. Race condition fixed, input guard added, z-index corrected. TypeScript clean, smoke tests passing.
+
 ## Recent Work (April 21 2026)
 - API key added to Vercel — AI features now live in production
 - Generate Comments button fixed (was silently disabled when no class selected)

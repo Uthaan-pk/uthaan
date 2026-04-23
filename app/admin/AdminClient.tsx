@@ -352,7 +352,10 @@ export default function AdminClient({
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div
+            data-testid="student-list-panel"
+            className="bg-white rounded-xl border border-gray-100 overflow-hidden"
+          >
             <div className="px-5 py-3 border-b border-gray-50 flex items-center justify-between gap-3">
               <span className="text-sm font-semibold text-gray-900">
                 All students

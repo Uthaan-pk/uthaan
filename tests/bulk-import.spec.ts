@@ -73,15 +73,20 @@ test('bulk import: happy path — 3 valid students imported and visible in list'
 
   // ── Verify students appear in the Students tab list ──
   await page.getByRole('button', { name: 'Students' }).click()
+  const studentListPanel = page.getByTestId('student-list-panel')
   // Scope to the Students tab search input specifically (command palette also has a search input in the DOM)
-  await expect(page.locator('input[placeholder*="Search by name"]')).toBeVisible({ timeout: 5000 })
-
-  await page.locator('input[placeholder*="Search by name"]').fill('PW Student Alpha')
-  // Scope to the student list panel to avoid strict-mode violation when the name
-  // appears elsewhere in the DOM (e.g. bulk-import preview table still mounted).
   await expect(
-    page.locator('div.overflow-hidden:has(span:text-is("All students"))').getByText('PW Student Alpha')
-  ).toBeVisible({ timeout: 10000 })
+    studentListPanel.getByPlaceholder('Search by name or roll number…')
+  ).toBeVisible({ timeout: 5000 })
+
+  await studentListPanel
+    .getByPlaceholder('Search by name or roll number…')
+    .fill('PW Student Alpha')
+  // Scope to the student list panel to avoid matching the bulk-import preview table,
+  // which can keep the same student names mounted in the DOM after a successful import.
+  await expect(studentListPanel.getByText('PW Student Alpha')).toBeVisible({
+    timeout: 10000,
+  })
 
   await ctx.close()
 })

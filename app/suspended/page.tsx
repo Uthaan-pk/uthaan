@@ -28,13 +28,6 @@ export default function SuspendedPage() {
           support to resolve this.
         </p>
 
-        <a
-          href="mailto:support@uthaan.com"
-          className="inline-flex items-center gap-2 bg-[#1a2e1a] text-white text-xs font-medium px-5 py-2.5 rounded-lg hover:bg-[#1a2e1a]/80 transition-colors"
-        >
-          Contact Support
-        </a>
-
         <div className="mt-6 pt-6 border-t border-gray-100">
           <a
             href="/auth/signout"

@@ -77,7 +77,11 @@ test('bulk import: happy path — 3 valid students imported and visible in list'
   await expect(page.locator('input[placeholder*="Search by name"]')).toBeVisible({ timeout: 5000 })
 
   await page.locator('input[placeholder*="Search by name"]').fill('PW Student Alpha')
-  await expect(page.getByText('PW Student Alpha')).toBeVisible({ timeout: 10000 })
+  // Scope to the student list panel to avoid strict-mode violation when the name
+  // appears elsewhere in the DOM (e.g. bulk-import preview table still mounted).
+  await expect(
+    page.locator('div.overflow-hidden:has(span:text-is("All students"))').getByText('PW Student Alpha')
+  ).toBeVisible({ timeout: 10000 })
 
   await ctx.close()
 })

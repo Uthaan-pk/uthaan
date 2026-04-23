@@ -33,9 +33,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#f8f7f4] text-gray-900">
         <LanguageProvider>
-          {children}
-          <ToastProvider />
-          <CommandPaletteProvider />
+          <CommandPaletteProvider>
+            {children}
+            <ToastProvider />
+          </CommandPaletteProvider>
         </LanguageProvider>
       </body>
     </html>

@@ -1298,13 +1298,13 @@
 
 .pricingAnnualLead {
   color: var(--white);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .pricingAnnualMeta {
   color: var(--gray);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .priceCard {
@@ -1473,19 +1473,6 @@
   margin-bottom: 10px;
 }
 
-.priceAnnualBadge {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 0.9rem;
-  border-radius: 999px;
-  border: 1px solid rgb(34 168 98 / 0.24);
-  background: rgb(34 168 98 / 0.08);
-  color: var(--green-light);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 0.35rem 0.65rem;
-}
-
 .priceAmount {
   font-size: 32px;
   font-weight: 700;
@@ -1503,6 +1490,13 @@
   font-size: 13px;
   color: var(--green-light);
   margin-bottom: 1rem;
+}
+
+.priceAnnualSummary {
+  margin-top: 1rem;
+  color: var(--gray);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .priceStudents {
@@ -1538,24 +1532,6 @@
   border: 1.5px solid var(--green-light);
   flex-shrink: 0;
   margin-top: 2px;
-}
-
-.priceAnnualBenefits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.priceAnnualBenefit {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 0.08);
-  background: rgb(255 255 255 / 0.03);
-  color: var(--gray);
-  font-size: 11px;
-  padding: 0.35rem 0.6rem;
 }
 
 .ctaSection {

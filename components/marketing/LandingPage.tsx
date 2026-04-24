@@ -181,20 +181,18 @@ const pricingCards = [
     amount: 'Rs. 12,000',
     period: '/ month',
     annualAmount: 'Rs. 120,000 / year',
-    annualBadge: 'Save 2 months',
     students: 'Up to 200 students',
     features: ['Core school management', 'Attendance, marks, fees, announcements', 'Up to 4 user roles', 'No AI included'],
-    annualBenefits: ['2 months free on annual billing', 'Priority onboarding', '12-month price lock'],
+    annualSummary: 'Priority onboarding and 12-month price lock',
   },
   {
     plan: 'Growth',
     amount: 'Rs. 30,000',
     period: '/ month',
     annualAmount: 'Rs. 300,000 / year',
-    annualBadge: 'Save 2 months',
     students: 'Up to 600 students',
     features: ['Everything in Starter', 'AI report card comments', 'Attendance alert summaries', 'Priority support'],
-    annualBenefits: ['2 months free on annual billing', 'Priority onboarding', 'Higher AI usage limits on annual plan', '12-month price lock'],
+    annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
     featured: true,
   },
   {
@@ -202,20 +200,18 @@ const pricingCards = [
     amount: 'Rs. 65,000',
     period: '/ month',
     annualAmount: 'Rs. 650,000 / year',
-    annualBadge: 'Save 2 months',
     students: 'Up to 1,500 students',
     features: ['Everything in Growth', 'Assignment feedback generator', 'Quiz generator when available', 'Higher AI limits'],
-    annualBenefits: ['2 months free on annual billing', 'Priority onboarding', 'Higher AI usage limits on annual plan', '12-month price lock'],
+    annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
   },
   {
     plan: 'Enterprise',
     amount: 'Custom',
     period: '\u00A0',
     annualAmount: 'Custom annual contract',
-    annualBadge: 'Annual option',
     students: '1,500+ students',
     features: ['Multi-campus/custom setup', 'High AI limits', 'Dedicated onboarding', 'Custom rollout support'],
-    annualBenefits: ['Annual and custom contract options available', 'Priority onboarding', '12-month price lock on agreed contract'],
+    annualSummary: 'Annual and custom contract options with priority onboarding',
   },
 ]
 
@@ -959,11 +955,9 @@ export default function LandingPage() {
           and AI access plus monthly limits are applied per school by superadmin.
         </p>
         <div className={styles.pricingAnnualNote}>
-          <div className={styles.pricingAnnualLead}>
-            Annual billing available: pay annually and get 2 months free.
-          </div>
+          <div className={styles.pricingAnnualLead}>Annual billing: save 2 months.</div>
           <div className={styles.pricingAnnualMeta}>
-            Annual schools get priority onboarding, a 12-month price lock, and higher AI usage limits on Growth and Pro annual plans.
+            Priority onboarding, 12-month price lock, and higher AI limits on Growth and Pro annual plans.
           </div>
         </div>
 
@@ -985,23 +979,19 @@ export default function LandingPage() {
                   className={`${styles.priceCardChevron} ${isExpanded ? styles.priceCardChevronExpanded : ''}`}
                 />
                 <div className={styles.pricePlan}>{card.plan}</div>
-                <div className={styles.priceAnnualBadge}>{card.annualBadge}</div>
                 <div className={`${styles.priceAmount} ${styles.mono}`}>{card.amount}</div>
                 <div className={styles.pricePeriod}>{card.period}</div>
-                <div className={styles.priceAnnualLine}>{card.annualAmount}</div>
+                <div className={styles.priceAnnualLine}>
+                  Annual: {card.annualAmount}
+                  {card.plan === 'Enterprise' ? '' : ' · save 2 months'}
+                </div>
                 <div className={styles.priceStudents}>{card.students}</div>
                 <ul className={styles.priceFeatures}>
                   {card.features.map((feature) => (
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                <div className={styles.priceAnnualBenefits}>
-                  {card.annualBenefits.map((benefit) => (
-                    <span key={benefit} className={styles.priceAnnualBenefit}>
-                      {benefit}
-                    </span>
-                  ))}
-                </div>
+                <div className={styles.priceAnnualSummary}>{card.annualSummary}</div>
                 <div className={`${styles.planFeatures} ${isExpanded ? styles.planFeaturesExpanded : ''}`}>
                   <div className={styles.planFeaturesSep} />
                   {planFeatures[planKey].map((feature, fi) => (

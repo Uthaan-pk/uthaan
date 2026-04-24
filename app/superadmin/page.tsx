@@ -298,58 +298,78 @@ export default async function SuperadminPage() {
                     </tr>
                     <tr className={i < schools.length - 1 ? 'border-b border-gray-50' : ''}>
                       <td colSpan={7} className="bg-[#fafcf9] px-5 py-4">
-                        <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                          <div>
-                            <h3 className="text-sm font-semibold text-gray-900">Features &amp; Limits</h3>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              Superadmin-managed feature access and monthly AI usage controls for {school.name}.
-                            </p>
-                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#6fcf6f]/20 bg-white px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[#1a2e1a]">
-                              Current plan
-                              <span className="rounded-full bg-[#6fcf6f]/10 px-2 py-0.5 text-[10px]">
-                                {school.plan}
+                        <div className="mb-4 rounded-2xl border border-[#6fcf6f]/20 bg-white p-4">
+                          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-sm font-semibold text-gray-900">Plan &amp; AI access</h3>
+                                <span className="rounded-full bg-[#6fcf6f]/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-[#1a2e1a]">
+                                  Current plan: {school.plan}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs text-gray-500">
+                                Use Apply plan for normal subscriptions. Manual overrides are only for special cases.
+                              </p>
+                            </div>
+
+                            <form action={applySchoolPlan} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                              <input type="hidden" name="school_id" value={school.id} />
+                              <div>
+                                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                                  School plan
+                                </label>
+                                <select
+                                  name="plan"
+                                  defaultValue={school.plan}
+                                  className="min-w-[150px] rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-[#6fcf6f] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                                >
+                                  {SCHOOL_PLANS.map((plan) => (
+                                    <option key={plan} value={plan}>
+                                      {plan}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <button
+                                type="submit"
+                                className="rounded-lg bg-[#1a2e1a] px-4 py-2.5 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
+                              >
+                                Apply plan
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+
+                        <details className="rounded-2xl border border-gray-200 bg-white p-4">
+                          <summary className="cursor-pointer list-none select-none">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <h3 className="text-sm font-semibold text-gray-900">
+                                  Advanced manual overrides
+                                </h3>
+                                <p className="mt-0.5 text-xs text-gray-500">
+                                  Override AI feature access and limits only when this school needs an exception.
+                                </p>
+                              </div>
+                              <span className="text-xs font-medium text-[#1a2e1a]">
+                                Expand overrides
                               </span>
                             </div>
-                          </div>
+                          </summary>
 
-                          <form action={applySchoolPlan} className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:items-end">
-                            <input type="hidden" name="school_id" value={school.id} />
-                            <div>
-                              <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                                Plan
-                              </label>
-                              <select
-                                name="plan"
-                                defaultValue={school.plan}
-                                className="min-w-[140px] rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-[#6fcf6f] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-                              >
-                                {SCHOOL_PLANS.map((plan) => (
-                                  <option key={plan} value={plan}>
-                                    {plan}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <button
-                              type="submit"
-                              className="rounded-lg bg-[#1a2e1a] px-4 py-2.5 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
-                            >
-                              Apply plan
-                            </button>
-                          </form>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                          {AI_FEATURES.map((feature) => (
-                            <FeatureCard
-                              key={`${school.id}-${feature.key}`}
-                              schoolId={school.id}
-                              featureKey={feature.key}
-                              label={feature.label}
-                              description={feature.description}
-                              feature={featureMap.get(school.id)?.[feature.key] ?? null}
-                            />
-                          ))}
-                        </div>
+                          <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                            {AI_FEATURES.map((feature) => (
+                              <FeatureCard
+                                key={`${school.id}-${feature.key}`}
+                                schoolId={school.id}
+                                featureKey={feature.key}
+                                label={feature.label}
+                                description={feature.description}
+                                feature={featureMap.get(school.id)?.[feature.key] ?? null}
+                              />
+                            ))}
+                          </div>
+                        </details>
                       </td>
                     </tr>
                     </Fragment>

@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
@@ -108,6 +109,7 @@ export async function applySchoolPlan(formData: FormData) {
 
   const admin = createAdminClient()
   const preset = SCHOOL_PLAN_PRESETS[plan]
+  const updatedAt = new Date().toISOString()
 
   await admin
     .from('schools')
@@ -123,12 +125,13 @@ export async function applySchoolPlan(formData: FormData) {
           feature_key: featureKey,
           enabled: config.enabled,
           monthly_limit: config.monthly_limit,
-          updated_at: new Date().toISOString(),
+          updated_at: updatedAt,
         })
       ),
       { onConflict: 'school_id,feature_key' }
     )
 
+  revalidatePath('/superadmin')
   redirect('/superadmin')
 }
 
@@ -293,6 +296,7 @@ export async function updateSchoolFeature(formData: FormData) {
       { onConflict: 'school_id,feature_key' }
     )
 
+  revalidatePath('/superadmin')
   redirect('/superadmin')
 }
 
@@ -324,5 +328,6 @@ export async function resetSchoolFeatureUsage(schoolId: string, featureKey: AiFe
     .eq('school_id', schoolId)
     .eq('feature_key', featureKey)
 
+  revalidatePath('/superadmin')
   redirect('/superadmin')
 }

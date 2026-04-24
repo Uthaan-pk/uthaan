@@ -86,25 +86,31 @@ const aiCards = [
     status: 'Live',
     badgeClass: styles.live,
     title: 'Report card comment generator',
-    body: 'Select a class and get personalised comments for every student in under 30 seconds. Fully editable before finalising. Costs less than Rs. 3 per student.',
+    body: 'Select a class and generate editable report card comments for students in seconds. Built for teacher and admin workflows inside the app.',
   },
   {
     status: 'Live',
     badgeClass: styles.live,
-    title: 'Automated attendance alerts',
-    body: 'Every Monday at 7am PKT, the system identifies students with 3+ absences and sends personalised parent alerts automatically. Zero teacher effort.',
+    title: 'Attendance alert summaries',
+    body: 'Attendance risk summaries run inside the app for school staff, helping admins spot repeated absence patterns early.',
   },
   {
     status: 'Live',
     badgeClass: styles.live,
     title: 'Smart navigation search',
-    body: `Type "I want to record attendance" or "show me who hasn't paid fees" and get taken directly to the right page. No more hunting through menus.`,
+    body: 'Staff can type tasks like attendance, fees, or results and jump directly to the right page without hunting through menus.',
   },
   {
     status: 'Coming soon',
     badgeClass: styles.soon,
     title: 'Assignment feedback generator',
-    body: 'AI-generated personalised feedback on student assignments. Teacher reviews and approves before sharing. Cuts marking time in half.',
+    body: 'Teacher-reviewed AI drafts for assignment feedback, designed to save marking time without removing staff control.',
+  },
+  {
+    status: 'Coming soon',
+    badgeClass: styles.soon,
+    title: 'Quiz generator',
+    body: 'Quiz generation from teacher prompts is planned for future Pro and Enterprise workflows when released.',
   },
 ]
 
@@ -114,14 +120,14 @@ const pricingCards = [
     amount: 'Rs. 8,000',
     period: '/ month',
     students: 'Up to 200 students',
-    features: ['All core features', '4 user roles', 'WhatsApp support', 'AI not included'],
+    features: ['Core school management', 'Attendance, marks, fees, announcements', 'Up to 4 user roles', 'No AI included'],
   },
   {
     plan: 'Growth',
     amount: 'Rs. 20,000',
     period: '/ month',
     students: 'Up to 600 students',
-    features: ['Everything in Starter', 'AI report comments', 'Attendance alerts', 'Priority support'],
+    features: ['Everything in Starter', 'AI report card comments', 'Attendance alert summaries', 'Priority support'],
     featured: true,
   },
   {
@@ -129,14 +135,33 @@ const pricingCards = [
     amount: 'Rs. 40,000',
     period: '/ month',
     students: 'Up to 1,500 students',
-    features: ['Everything in Growth', 'Dedicated support', 'Custom onboarding', 'Priority features'],
+    features: ['Everything in Growth', 'Assignment feedback generator', 'Quiz generator when available', 'Higher AI limits'],
   },
   {
     plan: 'Enterprise',
     amount: 'Custom',
     period: '\u00A0',
     students: '1,500+ students',
-    features: ['Everything in Pro', 'On-site training', 'Multi-campus support', 'SLA guarantee'],
+    features: ['Multi-campus/custom setup', 'High AI limits', 'Dedicated onboarding', 'Custom rollout support'],
+  },
+]
+
+const onboardingSteps = [
+  {
+    title: 'Request a demo',
+    body: 'Tell us about your school and what you want to evaluate in Uthaan.',
+  },
+  {
+    title: 'We set up your school',
+    body: 'Our team prepares your school workspace and applies the right plan manually.',
+  },
+  {
+    title: 'You receive admin and teacher logins',
+    body: 'Your staff gets access details after setup so onboarding stays controlled and clean.',
+  },
+  {
+    title: 'Your school starts using Uthaan',
+    body: 'You begin with guided onboarding support instead of being left to figure it out alone.',
   },
 ]
 
@@ -176,7 +201,7 @@ export default function LandingPage() {
             Login
           </Link>
           <Link href="/demo" className={styles.navCta}>
-            Get a demo
+            Request demo
           </Link>
         </div>
       </nav>
@@ -191,12 +216,13 @@ export default function LandingPage() {
           schools
         </h1>
         <p>
-          One platform for administrators, teachers, parents, and students. Built around how your
-          school actually works — not how a Silicon Valley startup thinks it should.
+          Uthaan is built for Pakistani private schools, with onboarding support from setup to
+          launch. One platform for administrators, teachers, parents, and students, shaped around
+          how your school actually works.
         </p>
         <div className={styles.heroButtons}>
           <Link href="/demo" className={styles.btnPrimary}>
-            Start free pilot
+            Request a demo
           </Link>
           <a href="#features" className={styles.btnSecondary}>
             See features
@@ -240,7 +266,8 @@ export default function LandingPage() {
           <div className={`${styles.sectionTag} ${styles.mono}`}>Artificial intelligence</div>
           <h2 className={styles.sectionTitle}>AI that actually saves teachers time</h2>
           <p className={styles.sectionSub}>
-            Powered by Anthropic&apos;s Claude — the same AI trusted by Fortune 500 companies. Every feature keeps the teacher in control.
+            Powered by Anthropic&apos;s Claude. These tools are designed for staff and admin use inside
+            the app, while students and parents stay out of AI control surfaces.
           </p>
 
           <div className={styles.aiGrid}>
@@ -254,6 +281,25 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+
+      <section id="onboarding" className={`${styles.section} ${styles.fadeIn}`}>
+        <div className={`${styles.sectionTag} ${styles.mono}`}>How onboarding works</div>
+        <h2 className={styles.sectionTitle}>A simple rollout for school owners</h2>
+        <p className={styles.sectionSub}>
+          Uthaan is not self-serve for new schools yet. We help you get set up properly before your
+          team starts using the system.
+        </p>
+
+        <div className={styles.onboardingGrid}>
+          {onboardingSteps.map((step, index) => (
+            <div key={step.title} className={styles.onboardingCard}>
+              <div className={`${styles.onboardingStep} ${styles.mono}`}>Step {index + 1}</div>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section id="compare" className={`${styles.section} ${styles.fadeIn}`}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>Comparison</div>
@@ -277,8 +323,8 @@ export default function LandingPage() {
               <tr><td>Fee management</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
               <tr><td>Pakistan / local context</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
               <tr><td>AI report card comments</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
-              <tr><td>Automated attendance alerts</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
-              <tr><td>WhatsApp parent alerts</td><td className={`${styles.uthaanCol} ${styles.soonTag}`}>Coming soon</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
+              <tr><td>Attendance alert summaries</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
+              <tr><td>WhatsApp parent alerts</td><td className={`${styles.uthaanCol} ${styles.soonTag}`}>Planned</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
               <tr><td>Role-based access (4 roles)</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td>Partial</td><td className={styles.check}>Yes</td><td>Partial</td></tr>
               <tr><td>Full audit log</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.check}>Yes</td><td className={styles.cross}>No</td></tr>
               <tr><td>Affordable for small schools</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td>Free (limited)</td><td className={styles.cross}>Expensive</td><td>Free (limited)</td></tr>
@@ -291,7 +337,8 @@ export default function LandingPage() {
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
-          No per-user fees. No hidden costs. Pay per school. Annual billing saves you 2 months.
+          Plans are assigned manually by superadmin today. AI access and monthly usage limits are
+          applied per school based on the selected plan.
         </p>
 
         <div className={styles.pricingGrid}>
@@ -317,11 +364,14 @@ export default function LandingPage() {
 
       <div className={`${styles.ctaSection} ${styles.fadeIn}`}>
         <div className={styles.ctaBox}>
-          <h2>Join the pilot programme</h2>
-          <p>3 months free. Personal onboarding. Direct access to the development team. Locked-in pricing for life.</p>
+          <h2>See how Uthaan would work for your school</h2>
+          <p>
+            Request a demo, tell us about your school, and we&apos;ll walk you through setup,
+            onboarding, and the right plan for your team.
+          </p>
           <div className={styles.heroButtons}>
             <Link href="/demo" className={styles.btnPrimary}>
-              Start free pilot
+              Request a demo
             </Link>
           </div>
         </div>

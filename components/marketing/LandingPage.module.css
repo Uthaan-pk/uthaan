@@ -312,6 +312,7 @@
 }
 
 .featureCard h3,
+.onboardingCard h3,
 .aiCard h3 {
   font-size: 16px;
   font-weight: 600;
@@ -319,6 +320,7 @@
 }
 
 .featureCard p,
+.onboardingCard p,
 .aiCard p {
   font-size: 14px;
   color: var(--gray);
@@ -343,6 +345,33 @@
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   margin-top: 3rem;
+}
+
+.onboardingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 3rem;
+}
+
+.onboardingCard {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--dark2);
+  padding: 1.5rem;
+}
+
+.onboardingStep {
+  display: inline-flex;
+  margin-bottom: 0.85rem;
+  border-radius: 999px;
+  background: rgb(26 122 74 / 15%);
+  border: 1px solid rgb(26 122 74 / 30%);
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-light);
 }
 
 .aiCard {

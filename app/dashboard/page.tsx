@@ -15,15 +15,18 @@ import { CURRENT_YEAR, TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 import { HelpButton } from '@/components/HelpButton'
 import {
+  AlertTriangle,
   ArrowRight,
   Bell,
   CalendarCheck2,
   ClipboardList,
+  Clock3,
   FileText,
   GraduationCap,
   Megaphone,
   ShieldCheck,
   Users,
+  Wallet,
 } from 'lucide-react'
 
 const SCHOOL_TIME_ZONE = 'Asia/Karachi'
@@ -195,6 +198,44 @@ function SignalCard({
       <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{value}</div>
       <div className="mt-1 text-xs leading-5 text-gray-500">{helper}</div>
     </Link>
+  )
+}
+
+function ProgressBar({
+  label,
+  value,
+  tone = 'default',
+  helper,
+}: {
+  label: string
+  value: number
+  tone?: 'default' | 'warning' | 'danger' | 'success'
+  helper?: string
+}) {
+  const safeValue = Math.max(0, Math.min(100, value))
+  const toneClass =
+    tone === 'danger'
+      ? 'bg-red-500'
+      : tone === 'warning'
+        ? 'bg-amber-500'
+        : tone === 'success'
+          ? 'bg-green-500'
+          : 'bg-[#6fcf6f]'
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="font-medium text-gray-700">{label}</span>
+        <span className="text-gray-500">{safeValue}%</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+        <div
+          className={`h-full rounded-full transition-[width] duration-500 ${toneClass}`}
+          style={{ width: `${safeValue}%` }}
+        />
+      </div>
+      {helper ? <div className="text-xs text-gray-500">{helper}</div> : null}
+    </div>
   )
 }
 
@@ -781,6 +822,7 @@ export default async function DashboardPage() {
       marksRes,
       weightsRes,
       announcementsRes,
+      timetableRes,
     ] = await Promise.all([
       supabase
         .from('students')
@@ -791,7 +833,7 @@ export default async function DashboardPage() {
         .select('student_id, paid, due_date'),
       supabase
         .from('attendance_logs')
-        .select('student_id, status')
+        .select('student_id, status, day')
         .gte('day', TERM_START_DATE),
       supabase
         .from('marks')
@@ -807,11 +849,22 @@ export default async function DashboardPage() {
         .select('id, title, created_at')
         .order('created_at', { ascending: false })
         .limit(3),
+      supabase
+        .from('timetable')
+        .select('class_num, day, period')
+        .eq('day', getSchoolWeekdayName()),
     ])
 
     const students = studentsRes.data ?? []
     const totalStudents = students.length
     const recentAnnouncements = announcementsRes.data ?? []
+    const activeClasses = Array.from(
+      new Set(
+        students
+          .map((student) => Number(student.class_num))
+          .filter((value) => !Number.isNaN(value) && value > 0)
+      )
+    ).sort((a, b) => a - b)
 
     const overdueFeeStudentIds = new Set(
       (feesRes.data ?? [])
@@ -819,18 +872,112 @@ export default async function DashboardPage() {
         .map(f => f.student_id)
     )
 
-    const attMap = buildAttendanceMap(absenceRes.data ?? [])
-    const studentsWithHighAbsences = students.filter((s) => {
+    const attendanceRows = absenceRes.data ?? []
+    const todayAttendanceRows = attendanceRows.filter((row) => row.day === today)
+    const attMap = buildAttendanceMap(attendanceRows)
+    const lowAttendanceStudents = students.filter((s) => {
       const pct = attMap[s.id]
       return pct !== null && pct !== undefined && pct < 75
-    }).length
+    })
+    const studentsWithHighAbsences = lowAttendanceStudents.length
+
+    const attendanceHealthValues = Object.values(attMap).filter(
+      (pct): pct is number => pct !== null
+    )
+    const attendanceHealth =
+      attendanceHealthValues.length > 0
+        ? Math.round(
+            attendanceHealthValues.reduce((sum, pct) => sum + pct, 0) /
+              attendanceHealthValues.length
+          )
+        : 0
+
+    const studentById = new Map(
+      students.map((student) => [student.id, student] as const)
+    )
+    const presentStatuses = new Set(['present', 'late', 'excused', 'early_leave'])
+    const todayPresentCount = todayAttendanceRows.filter((row) =>
+      presentStatuses.has(row.status)
+    ).length
+    const todayAttendanceRate =
+      totalStudents > 0 ? Math.round((todayPresentCount / totalStudents) * 100) : 0
+
+    const todayAttendanceByClass = new Map<
+      number,
+      { total: number; present: number }
+    >()
+    students.forEach((student) => {
+      const classNum = Number(student.class_num)
+      if (Number.isNaN(classNum) || classNum <= 0) return
+      todayAttendanceByClass.set(classNum, {
+        total: (todayAttendanceByClass.get(classNum)?.total ?? 0) + 1,
+        present: todayAttendanceByClass.get(classNum)?.present ?? 0,
+      })
+    })
+    todayAttendanceRows.forEach((row) => {
+      const student = studentById.get(row.student_id)
+      if (!student) return
+      const classNum = Number(student.class_num)
+      if (Number.isNaN(classNum) || classNum <= 0) return
+      const current = todayAttendanceByClass.get(classNum)
+      if (!current) return
+      if (presentStatuses.has(row.status)) {
+        current.present += 1
+      }
+    })
+
+    const todayClassRates = Array.from(todayAttendanceByClass.entries())
+      .map(([classNum, values]) => ({
+        classNum,
+        rate: values.total > 0 ? Math.round((values.present / values.total) * 100) : 0,
+        total: values.total,
+      }))
+      .sort((a, b) => a.rate - b.rate)
+
+    const scheduledClassesToday = Array.from(
+      new Set(
+        (timetableRes.data ?? [])
+          .map((row) => Number(row.class_num))
+          .filter((value) => !Number.isNaN(value) && value > 0)
+      )
+    ).sort((a, b) => a - b)
+    const classesWithAttendanceToday = new Set(
+      todayAttendanceRows
+        .map((row) => studentById.get(row.student_id))
+        .filter(Boolean)
+        .map((student) => Number(student!.class_num))
+        .filter((value) => !Number.isNaN(value) && value > 0)
+    )
+    const classesMissingAttendance = scheduledClassesToday.filter(
+      (classNum) => !classesWithAttendanceToday.has(classNum)
+    )
 
     const marks = (marksRes.data ?? []) as FlatMarkRow[]
     const weights = (weightsRes.data ?? []) as WeightRow[]
-    const studentsFailing = students.filter(student => {
-      const grades = computeSubjectFinalGrades(student.id, marks, weights)
-      return grades.some(grade => grade.overall < 50)
-    }).length
+    const failingStudents = students
+      .map((student) => {
+        const grades = computeSubjectFinalGrades(student.id, marks, weights)
+        const failingSubjects = grades.filter((grade) => grade.overall < 50)
+        return {
+          id: student.id,
+          name: student.name,
+          classNum: student.class_num,
+          failingSubjects: failingSubjects.length,
+        }
+      })
+      .filter((student) => student.failingSubjects > 0)
+      .sort((a, b) => b.failingSubjects - a.failingSubjects)
+    const studentsFailing = failingStudents.length
+
+    const lowAttendancePreview = lowAttendanceStudents
+      .map((student) => ({
+        id: student.id,
+        name: student.name,
+        classNum: student.class_num,
+        attendance: attMap[student.id] ?? 0,
+      }))
+      .sort((a, b) => a.attendance - b.attendance)
+      .slice(0, 5)
 
     return (
       <div className="uthaan-page-shell">
@@ -857,20 +1004,22 @@ export default async function DashboardPage() {
               <DashboardHero
                 eyebrow="Control centre"
                 title="School dashboard"
-                description="Review the school’s biggest operational issues first, then move directly into the right workflow without hunting across pages."
+                description="Start with the operational signals that need action today, then move directly into attendance, fees, results, or announcements without digging through the app."
                 badge="Admin overview"
                 actions={
                   <>
                     <Link href="/students" className="uthaan-button-secondary text-xs">Students</Link>
                     <Link href="/attendance" className="uthaan-button-secondary text-xs">Attendance</Link>
+                    <Link href="/fees" className="uthaan-button-secondary text-xs">Fees</Link>
+                    <Link href="/timetable" className="uthaan-button-secondary text-xs">Timetable</Link>
                     <Link href="/announcements" className="uthaan-button-secondary text-xs">Announcements</Link>
-                    <Link href="/marks" className="uthaan-button-secondary text-xs">Results</Link>
+                    <Link href="/results" className="uthaan-button-secondary text-xs">Results</Link>
                   </>
                 }
                 stats={[
                   { label: 'Total students', value: totalStudents },
-                  { label: 'Overdue fees', value: overdueFeeStudentIds.size, tone: overdueFeeStudentIds.size > 0 ? 'alert' : 'default' },
-                  { label: 'Attendance watchlist', value: studentsWithHighAbsences, tone: studentsWithHighAbsences > 0 ? 'alert' : 'default' },
+                  { label: 'Attendance health', value: `${attendanceHealth}%`, tone: attendanceHealth >= 85 ? 'success' : attendanceHealth >= 75 ? 'default' : 'alert' },
+                  { label: 'Fee risk', value: overdueFeeStudentIds.size, tone: overdueFeeStudentIds.size > 0 ? 'alert' : 'default' },
                 ]}
               />
 
@@ -880,16 +1029,16 @@ export default async function DashboardPage() {
                     title="Needs attention"
                     description="High-priority issues surfaced from current school records."
                   >
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                       <SignalCard
                         href="/fees"
-                        label="Overdue fees"
+                        label="Fee risk"
                         value={overdueFeeStudentIds.size}
                         helper="Students with overdue balances"
                         tone={overdueFeeStudentIds.size > 0 ? 'danger' : 'default'}
                       />
                       <SignalCard
-                        href="/attendance/low"
+                        href="/attendance"
                         label="Low attendance"
                         value={studentsWithHighAbsences}
                         helper="Below 75% attendance"
@@ -902,27 +1051,122 @@ export default async function DashboardPage() {
                         helper="One or more subjects below pass"
                         tone={studentsFailing > 0 ? 'danger' : 'default'}
                       />
+                      <SignalCard
+                        href="/attendance"
+                        label="Missing registers"
+                        value={classesMissingAttendance.length}
+                        helper="Classes without attendance today"
+                        tone={classesMissingAttendance.length > 0 ? 'warning' : 'default'}
+                      />
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] p-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                          <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          Attendance watchlist
+                        </div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          Students who may need school follow-up this term.
+                        </div>
+                        <div className="mt-4 space-y-2">
+                          {lowAttendancePreview.length > 0 ? (
+                            lowAttendancePreview.map((student) => (
+                              <div
+                                key={student.id}
+                                className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-3 py-3"
+                              >
+                                <div className="min-w-0">
+                                  <div className="truncate text-sm font-medium text-gray-900">
+                                    {student.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Class {student.classNum}
+                                  </div>
+                                </div>
+                                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                  {student.attendance}%
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-8 text-center text-sm text-gray-500">
+                              No students are currently below the attendance watch threshold.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] p-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                          <GraduationCap className="h-4 w-4 text-red-500" />
+                          Results risk
+                        </div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          Students with one or more subjects below the pass line.
+                        </div>
+                        <div className="mt-4 space-y-2">
+                          {failingStudents.slice(0, 5).length > 0 ? (
+                            failingStudents.slice(0, 5).map((student) => (
+                              <div
+                                key={student.id}
+                                className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-3 py-3"
+                              >
+                                <div className="min-w-0">
+                                  <div className="truncate text-sm font-medium text-gray-900">
+                                    {student.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Class {student.classNum}
+                                  </div>
+                                </div>
+                                <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600">
+                                  {student.failingSubjects} subject{student.failingSubjects === 1 ? '' : 's'}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-8 text-center text-sm text-gray-500">
+                              No failing subject trends are showing in the current marks set.
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </DashboardSection>
 
                   <DashboardSection
                     title="Quick actions"
-                    description="Jump into the workflows school operators use most."
+                    description="Jump into the operational workflows school admins actually use each day."
                   >
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                       <ActionTile
-                        href="/admin"
-                        eyebrow={t.adminPanel}
-                        title="Manage students and parents"
-                        body="Open the operational admin area for records, linking, and imports."
+                        href="/students"
+                        eyebrow="Students"
+                        title="Review student records"
+                        body="Open active student records and move into school roster work quickly."
                         icon={<Users className="h-4 w-4" />}
                       />
                       <ActionTile
-                        href="/admin/leaves"
-                        eyebrow="Leave management"
-                        title="Approve leave requests"
-                        body="Review full-day and early-leave items that need action."
+                        href="/attendance"
+                        eyebrow="Attendance"
+                        title="Check today’s attendance"
+                        body="Review missing registers, watchlist students, and class coverage."
                         icon={<CalendarCheck2 className="h-4 w-4" />}
+                      />
+                      <ActionTile
+                        href="/fees"
+                        eyebrow="Fees"
+                        title="Review overdue balances"
+                        body="Go straight to unpaid records and fee follow-up work."
+                        icon={<Wallet className="h-4 w-4" />}
+                      />
+                      <ActionTile
+                        href="/results"
+                        eyebrow="Results"
+                        title="Review results and report cards"
+                        body="Open result workflows and check academic performance summaries."
+                        icon={<GraduationCap className="h-4 w-4" />}
                       />
                       <ActionTile
                         href="/announcements"
@@ -932,11 +1176,11 @@ export default async function DashboardPage() {
                         icon={<Megaphone className="h-4 w-4" />}
                       />
                       <ActionTile
-                        href="/marks"
-                        eyebrow="Results"
-                        title="Review grades and report cards"
-                        body="Open grade workflows and check final performance summaries."
-                        icon={<GraduationCap className="h-4 w-4" />}
+                        href="/timetable"
+                        eyebrow="Timetable"
+                        title="Check class coverage"
+                        body="Review today’s scheduled classes and any gaps in operating coverage."
+                        icon={<Clock3 className="h-4 w-4" />}
                       />
                     </div>
                   </DashboardSection>
@@ -944,30 +1188,96 @@ export default async function DashboardPage() {
 
                 <div className="space-y-4">
                   <DashboardSection
-                    title="Operating snapshot"
-                    description="A quick read of the school’s current health."
+                    title="Today in school"
+                    description="A compact operational read for attendance and timetable coverage."
                   >
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
-                        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                          <Users className="h-3.5 w-3.5" />
-                          {t.totalStudents}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                        <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                          <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Attendance today
+                          </div>
+                          <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{todayAttendanceRate}%</div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            {todayPresentCount} of {totalStudents} students marked present, late, or excused.
+                          </div>
                         </div>
-                        <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{totalStudents}</div>
+                        <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                          <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                            <Clock3 className="h-3.5 w-3.5" />
+                            Classes today
+                          </div>
+                          <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+                            {scheduledClassesToday.length}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            {classesWithAttendanceToday.size} with attendance started.
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                          <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                            <Users className="h-3.5 w-3.5" />
+                            Active classes
+                          </div>
+                          <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+                            {activeClasses.length}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            {totalStudents} active students across the school.
+                          </div>
+                        </div>
                       </div>
-                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
-                        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                          <ClipboardList className="h-3.5 w-3.5" />
-                          Overdue fees
+
+                      <div className="rounded-2xl border border-gray-200 bg-white px-4 py-4">
+                        <div className="text-sm font-semibold text-gray-900">
+                          Attendance by class
                         </div>
-                        <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{overdueFeeStudentIds.size}</div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          Lowest-performing classes today based on marked records.
+                        </div>
+                        <div className="mt-4 space-y-3">
+                          {todayClassRates.slice(0, 4).length > 0 ? (
+                            todayClassRates.slice(0, 4).map((entry) => (
+                              <ProgressBar
+                                key={entry.classNum}
+                                label={`Class ${entry.classNum}`}
+                                value={entry.rate}
+                                tone={entry.rate < 75 ? 'danger' : entry.rate < 85 ? 'warning' : 'success'}
+                                helper={`${entry.total} students`}
+                              />
+                            ))
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-gray-200 bg-[#fafcf9] px-4 py-6 text-center text-sm text-gray-500">
+                              Today&apos;s attendance data has not been recorded yet.
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
-                        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                          Attendance watchlist
+
+                      <div className="rounded-2xl border border-gray-200 bg-white px-4 py-4">
+                        <div className="text-sm font-semibold text-gray-900">
+                          Class coverage
                         </div>
-                        <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{studentsWithHighAbsences}</div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          Scheduled classes that still need attendance to be started.
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {classesMissingAttendance.length > 0 ? (
+                            classesMissingAttendance.map((classNum) => (
+                              <span
+                                key={classNum}
+                                className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700"
+                              >
+                                Class {classNum}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+                              All scheduled classes have attendance started
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </DashboardSection>

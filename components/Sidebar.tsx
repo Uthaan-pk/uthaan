@@ -137,12 +137,11 @@ export default function Sidebar({
   const isStaff = isTeacher || isAdmin
   const isParent = role === 'parent'
   const canSeeResults = isTeacher || isAdmin || role === 'student' || isParent
-  const showAssignments = isTeacher || isAdmin || role === 'student' || isParent
-  const showQuizzes = isTeacher || isAdmin || role === 'student' || isParent
-  const showMaterials = isTeacher || isAdmin || role === 'student' || isParent
+  const showAssignments = isTeacher || role === 'student' || isParent
+  const showQuizzes = isTeacher || role === 'student' || isParent
+  const showMaterials = isTeacher || role === 'student' || isParent
   const overviewLabel = isAdmin ? 'Overview' : t.main
   const schoolOperationsLabel = isUrdu ? 'اسکول آپریشنز' : 'School Operations'
-  const teachingLabel = isUrdu ? 'تدریس و تعلیم' : 'Teaching & Learning'
 
   return (
     <>
@@ -334,47 +333,6 @@ export default function Sidebar({
                 icon={<Megaphone className={`w-4 h-4 shrink-0 ${pathname === '/announcements' ? '' : 'opacity-60'}`} />}
               />
 
-              <p
-                className={`text-white/30 px-2 mt-4 mb-2 ${
-                  isUrdu
-                    ? 'text-xs tracking-normal'
-                    : 'text-[10px] uppercase tracking-widest'
-                }`}
-              >
-                {teachingLabel}
-              </p>
-
-              {showAssignments && (
-                <NavItem
-                  label={t.assignments}
-                  href="/assignments"
-                  active={pathname.startsWith('/assignments')}
-                  onClose={close}
-                  isUrdu={isUrdu}
-                  icon={<ClipboardList className={`w-4 h-4 shrink-0 ${pathname.startsWith('/assignments') ? '' : 'opacity-60'}`} />}
-                />
-              )}
-
-              <NavItem
-                label={t.gradebook}
-                href="/marks"
-                active={pathname === '/marks'}
-                onClose={close}
-                isUrdu={isUrdu}
-                icon={<BookOpen className={`w-4 h-4 shrink-0 ${pathname === '/marks' ? '' : 'opacity-60'}`} />}
-              />
-
-              {showQuizzes && (
-                <NavItem
-                  label={t.quizzes}
-                  href="/quizzes"
-                  active={pathname.startsWith('/quizzes')}
-                  onClose={close}
-                  isUrdu={isUrdu}
-                  icon={<HelpCircle className={`w-4 h-4 shrink-0 ${pathname.startsWith('/quizzes') ? '' : 'opacity-60'}`} />}
-                />
-              )}
-
               <NavItem
                 label={t.timetable}
                 href="/timetable"
@@ -383,17 +341,6 @@ export default function Sidebar({
                 isUrdu={isUrdu}
                 icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
               />
-
-              {showMaterials && (
-                <NavItem
-                  label={t.materials}
-                  href="/materials"
-                  active={pathname === '/materials'}
-                  onClose={close}
-                  isUrdu={isUrdu}
-                  icon={<FolderOpen className={`w-4 h-4 shrink-0 ${pathname === '/materials' ? '' : 'opacity-60'}`} />}
-                />
-              )}
             </>
           ) : (
             <>

@@ -5,6 +5,7 @@ import { Fragment } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+  applySchoolPlan,
   toggleSchoolStatus,
   deleteSchool,
   impersonateSchool,
@@ -17,11 +18,13 @@ import UsageTable, { type UsageRow } from './UsageTable'
 import { TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 import { AI_FEATURES, type AiFeatureKey, type SchoolFeatureRow } from '@/lib/aiFeatures'
+import { SCHOOL_PLANS, type SchoolPlan } from '@/lib/schoolPlans'
 
 type SchoolRow = {
   id: string
   name: string
   slug: string
+  plan: SchoolPlan
   is_active: boolean | null
   created_at: string | null
   student_count: number
@@ -49,7 +52,7 @@ export default async function SuperadminPage() {
   const admin = createAdminClient()
 
   const [schoolsRes, studentsRes, usersRes, quizzesRes, assignmentsRes, attLogsRes, featuresRes] = await Promise.all([
-    admin.from('schools').select('id, name, slug, is_active, created_at').order('created_at'),
+    admin.from('schools').select('id, name, slug, plan, is_active, created_at').order('created_at'),
     admin.from('students').select('id, school_id, is_active'),
     admin.from('user_roles').select('user_id, school_id, role'),
     admin.from('quizzes').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
@@ -295,11 +298,45 @@ export default async function SuperadminPage() {
                     </tr>
                     <tr className={i < schools.length - 1 ? 'border-b border-gray-50' : ''}>
                       <td colSpan={7} className="bg-[#fafcf9] px-5 py-4">
-                        <div className="mb-3">
-                          <h3 className="text-sm font-semibold text-gray-900">Features &amp; Limits</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            Superadmin-managed feature access and monthly AI usage controls for {school.name}.
-                          </p>
+                        <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <h3 className="text-sm font-semibold text-gray-900">Features &amp; Limits</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Superadmin-managed feature access and monthly AI usage controls for {school.name}.
+                            </p>
+                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#6fcf6f]/20 bg-white px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-[#1a2e1a]">
+                              Current plan
+                              <span className="rounded-full bg-[#6fcf6f]/10 px-2 py-0.5 text-[10px]">
+                                {school.plan}
+                              </span>
+                            </div>
+                          </div>
+
+                          <form action={applySchoolPlan} className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:items-end">
+                            <input type="hidden" name="school_id" value={school.id} />
+                            <div>
+                              <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                                Plan
+                              </label>
+                              <select
+                                name="plan"
+                                defaultValue={school.plan}
+                                className="min-w-[140px] rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-[#6fcf6f] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+                              >
+                                {SCHOOL_PLANS.map((plan) => (
+                                  <option key={plan} value={plan}>
+                                    {plan}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <button
+                              type="submit"
+                              className="rounded-lg bg-[#1a2e1a] px-4 py-2.5 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
+                            >
+                              Apply plan
+                            </button>
+                          </form>
                         </div>
                         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                           {AI_FEATURES.map((feature) => (

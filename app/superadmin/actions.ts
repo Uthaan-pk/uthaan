@@ -9,6 +9,7 @@ import {
   buildDefaultSchoolFeatures,
   type AiFeatureKey,
 } from '@/lib/aiFeatures'
+import { SCHOOL_PLANS, SCHOOL_PLAN_PRESETS, isSchoolPlan, type SchoolPlan } from '@/lib/schoolPlans'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -95,6 +96,42 @@ export async function updateDemoRequestStatus(formData: FormData) {
   redirect('/superadmin/demo-requests')
 }
 
+export async function applySchoolPlan(formData: FormData) {
+  await assertSuperadmin()
+
+  const schoolId = String(formData.get('school_id') ?? '').trim()
+  const plan = String(formData.get('plan') ?? '').trim()
+
+  if (!schoolId || !isSchoolPlan(plan)) {
+    redirect('/superadmin')
+  }
+
+  const admin = createAdminClient()
+  const preset = SCHOOL_PLAN_PRESETS[plan]
+
+  await admin
+    .from('schools')
+    .update({ plan })
+    .eq('id', schoolId)
+
+  await admin
+    .from('school_features')
+    .upsert(
+      (Object.entries(preset) as Array<[AiFeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
+        ([featureKey, config]) => ({
+          school_id: schoolId,
+          feature_key: featureKey,
+          enabled: config.enabled,
+          monthly_limit: config.monthly_limit,
+          updated_at: new Date().toISOString(),
+        })
+      ),
+      { onConflict: 'school_id,feature_key' }
+    )
+
+  redirect('/superadmin')
+}
+
 // ── Actions ────────────────────────────────────────────────────────────────
 
 export async function onboardSchool(
@@ -136,6 +173,11 @@ export async function onboardSchool(
 
   const schoolId: string = school.id
   const password = generatePassword()
+
+  await admin
+    .from('schools')
+    .update({ plan: 'starter' satisfies SchoolPlan })
+    .eq('id', schoolId)
 
   await admin.from('school_features').upsert(buildDefaultSchoolFeatures(schoolId), {
     onConflict: 'school_id,feature_key',

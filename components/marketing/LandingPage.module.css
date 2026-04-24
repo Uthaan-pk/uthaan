@@ -1284,6 +1284,8 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
   margin-top: 3rem;
+  padding-top: 0.85rem;
+  overflow: visible;
 }
 
 .pricingAnnualNote {
@@ -1319,7 +1321,7 @@
   padding: 1.75rem;
   background: var(--dark2);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
   transition:
     transform 0.25s,

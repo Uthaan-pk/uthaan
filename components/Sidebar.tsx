@@ -142,6 +142,7 @@ export default function Sidebar({
   const showMaterials = isTeacher || role === 'student' || isParent
   const overviewLabel = isAdmin ? 'Overview' : t.main
   const schoolOperationsLabel = isUrdu ? 'اسکول آپریشنز' : 'School Operations'
+  const childProgressLabel = isUrdu ? 'بچے کی پیش رفت' : 'Child Progress'
 
   return (
     <>
@@ -342,6 +343,72 @@ export default function Sidebar({
                 icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
               />
             </>
+          ) : isParent ? (
+            <>
+              <NavItem
+                label={t.myChild}
+                href="/my-child"
+                active={pathname === '/my-child'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/my-child' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
+                label={t.announcements}
+                href="/announcements"
+                active={pathname === '/announcements'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Megaphone className={`w-4 h-4 shrink-0 ${pathname === '/announcements' ? '' : 'opacity-60'}`} />}
+              />
+
+              <p
+                className={`text-white/30 px-2 mt-4 mb-2 ${
+                  isUrdu
+                    ? 'text-xs tracking-normal'
+                    : 'text-[10px] uppercase tracking-widest'
+                }`}
+              >
+                {childProgressLabel}
+              </p>
+
+              <NavItem
+                label={t.attendance}
+                href="/attendance"
+                active={pathname === '/attendance'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<CalendarCheck className={`w-4 h-4 shrink-0 ${pathname === '/attendance' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
+                label="Results"
+                href="/results"
+                active={pathname === '/results'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<FileText className={`w-4 h-4 shrink-0 ${pathname === '/results' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
+                label={t.fees}
+                href="/fees"
+                active={pathname === '/fees'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<CreditCard className={`w-4 h-4 shrink-0 ${pathname === '/fees' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
+                label={t.timetable}
+                href="/timetable"
+                active={pathname === '/timetable'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
+              />
+            </>
           ) : (
             <>
               {isStaff && (
@@ -354,18 +421,6 @@ export default function Sidebar({
                   icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/students' ? '' : 'opacity-60'}`} />}
                 />
               )}
-
-              {isParent && (
-                <NavItem
-                  label={t.myChild}
-                  href="/my-child"
-                  active={pathname === '/my-child'}
-                  onClose={close}
-                  isUrdu={isUrdu}
-                  icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/my-child' ? '' : 'opacity-60'}`} />}
-                />
-              )}
-
               <NavItem
                 label={t.announcements}
                 href="/announcements"

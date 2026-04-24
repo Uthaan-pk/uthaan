@@ -412,19 +412,47 @@ export default async function DashboardPage() {
     }
 
     const today = new Date().toISOString().split('T')[0]
-    const [attRes, marksRes, assignmentsRes] = await Promise.all([
+    const todayName = getSchoolWeekdayName()
+    const todayDisplay = getSchoolDateLabel()
+    const currentSchoolMinutes = getSchoolMinutes()
+
+    type ParentTodayPeriod = { period: number; subject: string; start_time: string; end_time: string }
+
+    const [attRes, attTodayRes, marksRes, assignmentsRes, feesRes, announcementsRes, timetableRes] = await Promise.all([
       supabase
         .from('attendance_logs')
         .select('status')
         .eq('student_id', child.id),
+      supabase
+        .from('attendance_logs')
+        .select('status')
+        .eq('student_id', child.id)
+        .eq('day', today)
+        .maybeSingle(),
       supabase.from('marks').select('percent').eq('student_id', child.id),
       supabase
         .from('assignments')
         .select('id, due_date')
         .eq('class_num', child.class_num),
+      supabase
+        .from('fees')
+        .select('paid, due_date')
+        .eq('student_id', child.id),
+      supabase
+        .from('announcements')
+        .select('id, title, created_at')
+        .order('created_at', { ascending: false })
+        .limit(3),
+      supabase
+        .from('timetable')
+        .select('period, subject, start_time, end_time')
+        .eq('class_num', child.class_num)
+        .eq('day', todayName)
+        .order('period', { ascending: true }),
     ])
 
     const att = attRes.data ?? []
+    const attendanceToday = attTodayRes.data?.status ?? null
     const attRate =
       att.length > 0
         ? Math.round(
@@ -437,6 +465,14 @@ export default async function DashboardPage() {
       (a) => a.due_date === today
     ).length
 
+    const feeRows = feesRes.data ?? []
+    const overdueFees = feeRows.filter((fee) => !fee.paid && fee.due_date < today).length
+    const unpaidFees = feeRows.filter((fee) => !fee.paid).length
+    const feeStatusLabel =
+      overdueFees > 0 ? `${overdueFees} overdue` : unpaidFees > 0 ? `${unpaidFees} unpaid` : 'Up to date'
+    const feeTone =
+      overdueFees > 0 ? 'danger' : unpaidFees > 0 ? 'warning' : 'success'
+
     const marks = marksRes.data ?? []
     const avgMark =
       marks.length > 0
@@ -444,6 +480,21 @@ export default async function DashboardPage() {
             marks.reduce((a, m) => a + Number(m.percent), 0) / marks.length
           )
         : null
+
+    const attPresentStatuses = new Set(['present', 'late', 'excused', 'early_leave'])
+    const attendanceTrend =
+      att.length > 0
+        ? Math.round((att.filter((log) => attPresentStatuses.has(log.status)).length / att.length) * 100)
+        : null
+
+    const todayPeriods = (timetableRes.data ?? []) as ParentTodayPeriod[]
+    const nextPeriod =
+      todayPeriods.find((period) => {
+        const startMinutes = parseMinutes(period.start_time)
+        return startMinutes !== null && startMinutes >= currentSchoolMinutes
+      }) ?? null
+
+    const recentAnnouncements = announcementsRes.data ?? []
 
     return (
       <div className="uthaan-page-shell">
@@ -463,18 +514,25 @@ export default async function DashboardPage() {
 
           <main className="uthaan-page-content">
             <div className="max-w-5xl space-y-6">
-              <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
-                <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
+              <div className="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-[0_10px_40px_rgba(16,24,40,0.06)]">
+                <div className="bg-[linear-gradient(135deg,#f4fbf6_0%,#ffffff_55%,#f7faf8_100%)] px-5 py-5 sm:px-6">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5d7a63]">
                         Parent overview
                       </div>
-                      <div className="mt-2 text-2xl font-semibold text-gray-900">
+                      <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
                         {child.name}
                       </div>
                       <div className="mt-1 text-sm text-gray-500">
                         Class {child.class_num} · Roll {child.roll_no}
+                      </div>
+                      <div className="mt-3 inline-flex items-center rounded-full border border-[#6fcf6f]/20 bg-white/80 px-3 py-1 text-xs font-medium text-[#1a7a4a]">
+                        {nextPeriod
+                          ? `Next class: ${nextPeriod.subject} · ${nextPeriod.start_time?.slice(0, 5)}`
+                          : todayPeriods.length > 0
+                            ? 'No more classes today'
+                            : 'No classes scheduled today'}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -496,10 +554,10 @@ export default async function DashboardPage() {
                       </div>
                       <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
                         <div className="text-[11px] uppercase tracking-wide text-gray-500">
-                          Due today
+                          Fee status
                         </div>
                         <div className="mt-1 text-xl font-semibold text-gray-900">
-                          {dueToday}
+                          {feeStatusLabel}
                         </div>
                       </div>
                     </div>
@@ -507,52 +565,141 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
-                <div className="bg-white rounded-xl border border-gray-100 p-5">
-                  <div className="text-sm font-semibold text-gray-900">
-                    Child summary
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500">
-                    Keep track of attendance, grades, and daily school work for {child.name}.
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <Link href="/my-child" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 hover:border-gray-200 transition-colors">
-                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Profile</div>
-                      <div className="mt-1 text-sm font-medium text-gray-900">View child record</div>
-                    </Link>
-                    <Link href="/results" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 hover:border-gray-200 transition-colors">
-                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Results</div>
-                      <div className="mt-1 text-sm font-medium text-gray-900">See marks and report card</div>
-                    </Link>
-                    <Link href="/fees" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 hover:border-gray-200 transition-colors">
-                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Fees</div>
-                      <div className="mt-1 text-sm font-medium text-gray-900">Review payment status</div>
-                    </Link>
-                  </div>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_0.9fr]">
+                <div className="space-y-4">
+                  <DashboardSection
+                    title="At a glance"
+                    description={`A calm summary of ${child.name}'s attendance, results, fees, and day ahead.`}
+                  >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <StudentSummaryRow
+                        label="Attendance"
+                        value={attRate !== null ? `${attRate}%` : '—'}
+                        helper={
+                          attendanceTrend !== null
+                            ? `${attendanceTrend}% of recorded days are present, late, or excused.`
+                            : 'Attendance data will appear once records are available.'
+                        }
+                        tone={attRate !== null && attRate >= 85 ? 'success' : attRate !== null && attRate < 75 ? 'warning' : 'default'}
+                      />
+                      <StudentSummaryRow
+                        label="Results"
+                        value={avgMark !== null ? `${avgMark}%` : '—'}
+                        helper="Average from recorded marks and results."
+                        tone={avgMark !== null && avgMark >= 70 ? 'success' : avgMark !== null && avgMark < 50 ? 'warning' : 'default'}
+                      />
+                      <StudentSummaryRow
+                        label="Fees"
+                        value={feeStatusLabel}
+                        helper={
+                          overdueFees > 0
+                            ? 'There are overdue payments to review.'
+                            : unpaidFees > 0
+                              ? 'There are unpaid fees pending.'
+                              : 'No unpaid fees are currently showing.'
+                        }
+                        tone={feeTone}
+                      />
+                      <StudentSummaryRow
+                        label="Today"
+                        value={dueToday > 0 ? `${dueToday} due today` : 'All clear'}
+                        helper={
+                          nextPeriod
+                            ? `${nextPeriod.subject} starts at ${nextPeriod.start_time?.slice(0, 5)}.`
+                            : todayPeriods.length > 0
+                              ? 'The school day is already underway or complete.'
+                              : 'No timetable items are scheduled for today.'
+                        }
+                        tone={dueToday > 0 ? 'warning' : 'default'}
+                      />
+                    </div>
+                  </DashboardSection>
+
+                  {recentAnnouncements.length > 0 && (
+                    <DashboardSection
+                      title="Recent announcements"
+                      description="Latest school messages relevant to parents."
+                    >
+                      <div className="space-y-2">
+                        {recentAnnouncements.map((announcement) => (
+                          <div
+                            key={announcement.id}
+                            className="rounded-2xl border border-gray-100 bg-[#fafcf9] px-4 py-3.5"
+                          >
+                            <div className="text-sm font-medium text-gray-900">
+                              {announcement.title}
+                            </div>
+                            <div className="mt-1 text-xs text-gray-500">
+                              {formatCompactDate(announcement.created_at)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </DashboardSection>
+                  )}
                 </div>
 
-                <div className="bg-white rounded-xl border border-gray-100 p-5">
-                  <div className="text-sm font-semibold text-gray-900">
-                    Quick links
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <Link href="/announcements" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
-                      <span>Announcements</span>
-                      <span className="text-gray-400">→</span>
-                    </Link>
-                    <Link href="/my-child" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
-                      <span>My Child</span>
-                      <span className="text-gray-400">→</span>
-                    </Link>
-                    <Link href="/results" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
-                      <span>Results</span>
-                      <span className="text-gray-400">→</span>
-                    </Link>
-                    <Link href="/fees" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
-                      <span>Fees</span>
-                      <span className="text-gray-400">→</span>
-                    </Link>
-                  </div>
+                <div className="space-y-4">
+                  <DashboardSection
+                    title="Quick links"
+                    description="Shortcuts for the parent tasks you use most."
+                  >
+                    <div className="space-y-2">
+                      <Link href="/my-child" className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                        <span>My Child</span>
+                        <span className="text-gray-400">→</span>
+                      </Link>
+                      <Link href="/results" className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                        <span>Results</span>
+                        <span className="text-gray-400">→</span>
+                      </Link>
+                      <Link href="/fees" className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                        <span>Fees</span>
+                        <span className="text-gray-400">→</span>
+                      </Link>
+                      <Link href="/timetable" className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
+                        <span>Timetable</span>
+                        <span className="text-gray-400">→</span>
+                      </Link>
+                    </div>
+                  </DashboardSection>
+
+                  <DashboardSection
+                    title="Today at school"
+                    description={todayDisplay}
+                  >
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Attendance status
+                        </div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">
+                          {attendanceToday === 'present'
+                            ? 'Present'
+                            : attendanceToday === 'absent'
+                              ? 'Absent'
+                              : attendanceToday === 'late'
+                                ? 'Late'
+                                : attendanceToday === 'excused'
+                                  ? 'Excused'
+                                  : 'Not recorded'}
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                          Next timetable item
+                        </div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">
+                          {nextPeriod
+                            ? `${nextPeriod.subject} · ${nextPeriod.start_time?.slice(0, 5)}`
+                            : todayPeriods.length > 0
+                              ? 'No more classes today'
+                              : 'No classes scheduled'}
+                        </div>
+                      </div>
+                    </div>
+                  </DashboardSection>
                 </div>
               </div>
             </div>

@@ -31,6 +31,7 @@ export default function AssignmentChecklist({
 }) {
   const supabase = useMemo(() => createClient(), [])
   const [mode, setMode] = useState<'auto' | 'manual'>('auto')
+  const [showCompleted, setShowCompleted] = useState(false)
   const [manualChecked, setManualChecked] = useState<Set<string>>(
     () => new Set(initialManualChecks.map(c => c.assignment_id))
   )
@@ -95,6 +96,20 @@ export default function AssignmentChecklist({
     return 'upcoming'
   }
 
+  const pendingAssignments = useMemo(
+    () => sorted.filter((assignment) => !isChecked(assignment.id)),
+    [sorted, submittedIds, manualChecked, mode]
+  )
+
+  const completedAssignments = useMemo(
+    () => sorted.filter((assignment) => isChecked(assignment.id)),
+    [sorted, submittedIds, manualChecked, mode]
+  )
+
+  const visibleAssignments = showCompleted
+    ? [...pendingAssignments, ...completedAssignments]
+    : [...pendingAssignments, ...completedAssignments.slice(0, 3)]
+
   if (assignments.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-100 px-5 py-8 text-center text-sm text-gray-400">
@@ -127,7 +142,7 @@ export default function AssignmentChecklist({
 
       {/* List */}
       <div className="divide-y divide-gray-50">
-        {sorted.map(a => {
+        {visibleAssignments.map(a => {
           const checked = isChecked(a.id)
           const status = dueStatus(a.due_date)
           const isOverdue = status === 'overdue' && !checked
@@ -175,6 +190,19 @@ export default function AssignmentChecklist({
           )
         })}
       </div>
+
+      {completedAssignments.length > 3 && (
+        <div className="border-t border-gray-50 bg-gray-50/40 px-5 py-3">
+          <button
+            onClick={() => setShowCompleted((value) => !value)}
+            className="text-xs font-medium text-[#1a2e1a] hover:underline"
+          >
+            {showCompleted
+              ? 'Show fewer completed items'
+              : `View ${completedAssignments.length - 3} more completed item${completedAssignments.length - 3 === 1 ? '' : 's'}`}
+          </button>
+        </div>
+      )}
 
       {mode === 'manual' && (
         <div className="px-5 py-2.5 border-t border-gray-50 bg-gray-50/40">

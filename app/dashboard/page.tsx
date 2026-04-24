@@ -46,6 +46,36 @@ function getSchoolWeekdayName(now = new Date()) {
   }).format(now)
 }
 
+function getSchoolDateLabel(now = new Date()) {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: SCHOOL_TIME_ZONE,
+  }).format(now)
+}
+
+function getSchoolMinutes(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: SCHOOL_TIME_ZONE,
+  }).formatToParts(now)
+
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0')
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0')
+
+  return hour * 60 + minute
+}
+
+function parseMinutes(value: string | null | undefined) {
+  if (!value) return null
+  const [hour, minute] = value.split(':').map(Number)
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return null
+  return hour * 60 + minute
+}
+
 function DashboardHero({
   eyebrow,
   title,
@@ -278,6 +308,39 @@ function ProgressBar({
   )
 }
 
+function StudentSummaryRow({
+  label,
+  value,
+  helper,
+  tone = 'default',
+}: {
+  label: string
+  value: string
+  helper: string
+  tone?: 'default' | 'success' | 'warning' | 'danger'
+}) {
+  const toneClass =
+    tone === 'danger'
+      ? 'border-red-200 bg-red-50/75'
+      : tone === 'warning'
+        ? 'border-amber-200 bg-amber-50/75'
+        : tone === 'success'
+          ? 'border-green-200 bg-green-50/75'
+          : 'border-gray-200 bg-[#fafcf9]'
+
+  return (
+    <div className={`rounded-2xl border px-4 py-4 ${toneClass}`}>
+      <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+        {label}
+      </div>
+      <div className="mt-2 text-xl font-semibold tracking-tight text-gray-900">
+        {value}
+      </div>
+      <div className="mt-1 text-xs leading-5 text-gray-500">{helper}</div>
+    </div>
+  )
+}
+
 export default async function DashboardPage() {
   const cookieStore = await cookies()
   const cookieLang = cookieStore.get('uthaan_lang')?.value
@@ -504,6 +567,8 @@ export default async function DashboardPage() {
     const today = new Date().toISOString().split('T')[0]
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
     const todayName = getSchoolWeekdayName()
+    const todayDisplay = getSchoolDateLabel()
+    const currentSchoolMinutes = getSchoolMinutes()
 
     let dueToday = 0
     let avgMark: number | null = null
@@ -515,11 +580,13 @@ export default async function DashboardPage() {
     type TodayPeriod = { period: number; subject: string; start_time: string; end_time: string }
     type UpcomingQuiz = { id: string; title: string; subject: string; status: string }
     type HomeworkItem = { id: string; title: string; subject: string; due_date: string | null }
+    type AnnouncementItem = { id: string; title: string; created_at: string }
 
     let todayPeriods: TodayPeriod[] = []
     let upcomingQuizzes: UpcomingQuiz[] = []
     let homeworkDue: HomeworkItem[] = []
     let attendanceToday: string | null = null
+    let recentAnnouncements: AnnouncementItem[] = []
 
     if (studentId) {
       const { data: student } = await supabase
@@ -529,7 +596,7 @@ export default async function DashboardPage() {
         .single()
 
       if (student?.class_num) {
-        const [assignRes, marksRes, subsRes, checksRes, timetableRes, quizzesRes, attRes] = await Promise.all([
+        const [assignRes, marksRes, subsRes, checksRes, timetableRes, quizzesRes, attRes, announcementsRes] = await Promise.all([
           supabase
             .from('assignments')
             .select('id, title, subject, due_date')
@@ -562,6 +629,11 @@ export default async function DashboardPage() {
             .eq('student_id', studentId)
             .eq('day', today)
             .maybeSingle(),
+          supabase
+            .from('announcements')
+            .select('id, title, created_at')
+            .order('created_at', { ascending: false })
+            .limit(3),
         ])
 
         dueToday = (assignRes.data ?? []).filter(
@@ -585,8 +657,42 @@ export default async function DashboardPage() {
           (a) => a.due_date === today || a.due_date === tomorrow
         ) as HomeworkItem[]
         attendanceToday = attRes.data?.status ?? null
+        recentAnnouncements = (announcementsRes.data ?? []) as AnnouncementItem[]
       }
     }
+
+    const nextPeriod =
+      todayPeriods.find((period) => {
+        const startMinutes = parseMinutes(period.start_time)
+        return startMinutes !== null && startMinutes >= currentSchoolMinutes
+      }) ?? null
+
+    const scheduleSummary = nextPeriod
+      ? `${nextPeriod.subject} · ${nextPeriod.start_time?.slice(0, 5)}`
+      : todayPeriods.length > 0
+        ? 'No more classes today'
+        : 'No classes scheduled today'
+
+    const dueSoonCount = homeworkDue.length
+    const urgentAssignments = homeworkDue.slice(0, 3)
+    const attendanceLabel =
+      attendanceToday === 'present'
+        ? t.present
+        : attendanceToday === 'absent'
+          ? t.absent
+          : attendanceToday === 'late'
+            ? t.late
+            : attendanceToday === 'excused'
+              ? 'Excused'
+              : t.notRecorded
+    const attendanceTone =
+      attendanceToday === 'present'
+        ? 'success'
+        : attendanceToday === 'absent'
+          ? 'danger'
+          : attendanceToday === 'late'
+            ? 'warning'
+            : 'default'
 
     return (
       <div className="uthaan-page-shell">
@@ -603,27 +709,30 @@ export default async function DashboardPage() {
 
           <main className="uthaan-page-content">
             <div className="max-w-5xl space-y-6">
-              <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
-                <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
+              <div className="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-[0_10px_40px_rgba(16,24,40,0.06)]">
+                <div className="bg-[linear-gradient(135deg,#f4fbf6_0%,#ffffff_55%,#f7faf8_100%)] px-5 py-5 sm:px-6">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        {t.todayOverview}
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5d7a63]">
+                        Daily briefing
                       </div>
-                      <div className="mt-2 text-2xl font-semibold text-gray-900">
-                        {todayName}
+                      <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+                        {todayDisplay}
                       </div>
                       <div className="mt-1 text-sm text-gray-500">
-                        Keep up with today&apos;s schedule, homework, and active quizzes.
+                        Focus on your next class, work due soon, and any quiz or result updates that matter today.
+                      </div>
+                      <div className="mt-3 inline-flex items-center rounded-full border border-[#6fcf6f]/20 bg-white/80 px-3 py-1 text-xs font-medium text-[#1a7a4a]">
+                        {nextPeriod ? `Next class: ${scheduleSummary}` : scheduleSummary}
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[340px]">
                       <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
                         <div className="text-[11px] uppercase tracking-wide text-gray-500">
-                          Due today
+                          Due soon
                         </div>
                         <div className="mt-1 text-xl font-semibold text-gray-900">
-                          {dueToday}
+                          {dueSoonCount}
                         </div>
                       </div>
                       <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
@@ -647,104 +756,67 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.95fr]">
-                <div className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {t.todaySchedule}
-                      </div>
-                      <div className="mt-1 text-xs text-gray-500">
-                        Today&apos;s classes and timings.
-                      </div>
-                    </div>
-                    <Link
-                      href="/timetable"
-                      className="text-xs font-medium text-[#1a2e1a] hover:underline"
-                    >
-                      {t.viewSchedule} →
-                    </Link>
-                  </div>
-                  <div className="mt-4">
-                    {todayPeriods.length > 0 ? (
-                      <div className="space-y-2">
-                        {todayPeriods.map((p) => (
-                          <div key={p.period} className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-[#fafcf9] px-3 py-3">
-                            <div className="min-w-0">
-                              <div className="text-[11px] uppercase tracking-wide text-gray-500">
-                                Period {p.period}
-                              </div>
-                              <div className="mt-1 text-sm font-medium text-gray-900">
-                                {p.subject}
-                              </div>
-                            </div>
-                            <div className="text-xs text-gray-500 text-right">
-                              {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-8 text-center text-sm text-gray-500">
-                        {t.noPeriods}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                  <div className="bg-white rounded-xl border border-gray-100 p-4">
-                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                      {t.attendanceStatus}
-                    </div>
-                    {attendanceToday === 'present' && (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-                        <span className="text-sm font-medium text-green-700">{t.present}</span>
-                      </div>
-                    )}
-                    {attendanceToday === 'absent' && (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                        <span className="text-sm font-medium text-red-600">{t.absent}</span>
-                      </div>
-                    )}
-                    {attendanceToday === 'late' && (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
-                        <span className="text-sm font-medium text-amber-600">{t.late}</span>
-                      </div>
-                    )}
-                    {!attendanceToday && (
-                      <div className="text-xs text-gray-400 mt-1">{t.notRecorded}</div>
-                    )}
-                  </div>
-
-                  <div className={`rounded-xl border p-4 ${upcomingQuizzes.length > 0 ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}>
-                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                      {t.upcomingQuizzes}
-                    </div>
-                    {upcomingQuizzes.length > 0 ? (
-                      <div className="space-y-1 mt-1">
-                        {upcomingQuizzes.slice(0, 2).map((q) => (
-                          <div key={q.id} className="text-xs text-gray-700 truncate">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#6fcf6f] mr-1.5 align-middle" />
-                            {q.title}
-                          </div>
-                        ))}
-                        {upcomingQuizzes.length > 2 && (
-                          <div className="text-[11px] text-gray-400">+{upcomingQuizzes.length - 2} more</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-gray-400 mt-1">{t.noneActive}</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.9fr]">
                 <div className="space-y-4">
+                  <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {t.todaySchedule}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          Your classes for today, with the next one easy to spot.
+                        </div>
+                      </div>
+                      <Link
+                        href="/timetable"
+                        className="text-xs font-medium text-[#1a2e1a] hover:underline"
+                      >
+                        {t.viewSchedule} →
+                      </Link>
+                    </div>
+                    <div className="mt-4">
+                      {todayPeriods.length > 0 ? (
+                        <div className="space-y-2">
+                          {todayPeriods.map((p) => {
+                            const isNext =
+                              nextPeriod?.period === p.period &&
+                              nextPeriod?.subject === p.subject &&
+                              nextPeriod?.start_time === p.start_time
+
+                            return (
+                              <div
+                                key={p.period}
+                                className={`flex items-start justify-between gap-3 rounded-xl border px-3 py-3 ${
+                                  isNext
+                                    ? 'border-[#6fcf6f]/30 bg-[#6fcf6f]/8'
+                                    : 'border-gray-100 bg-[#fafcf9]'
+                                }`}
+                              >
+                                <div className="min-w-0">
+                                  <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                                    Period {p.period}
+                                    {isNext ? ' · Next' : ''}
+                                  </div>
+                                  <div className="mt-1 text-sm font-medium text-gray-900">
+                                    {p.subject}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-gray-500 text-right">
+                                  {p.start_time?.slice(0, 5)}–{p.end_time?.slice(0, 5)}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-8 text-center text-sm text-gray-500">
+                          {t.noPeriods}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {homeworkDue.length > 0 && (
                     <div className="bg-white rounded-xl border border-l-4 border-l-amber-400 border-gray-100 p-4">
                       <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-2">
@@ -779,69 +851,105 @@ export default async function DashboardPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                    <Link
-                      href="/assignments"
-                      className={`bg-white rounded-xl border p-4 hover:border-gray-200 transition-colors ${
-                        dueToday > 0
-                          ? 'border-l-4 border-l-amber-400 border-gray-100'
-                          : 'border-gray-100'
-                      }`}
-                    >
-                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                        {t.dueToday}
-                      </div>
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {dueToday}
-                      </div>
-                      <div
-                        className={`text-[11px] mt-1 font-medium ${
-                          dueToday > 0 ? 'text-amber-600' : 'text-gray-400'
-                        }`}
-                      >
-                        {dueToday > 0 ? `${t.submitNow} →` : t.allClear}
-                      </div>
-                    </Link>
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                    <div className="text-sm font-semibold text-gray-900">
+                      Today at a glance
+                    </div>
+                    <div className="mt-1 text-sm text-gray-500">
+                      A quick summary of what needs your attention now.
+                    </div>
 
-                    <Link
-                      href="/marks"
-                      className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-                    >
-                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                        {t.myAverage}
-                      </div>
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {avgMark !== null ? `${avgMark}%` : '—'}
-                      </div>
-                      <div className="text-[11px] text-gray-400 mt-1">
-                        {t.viewGradebook} →
-                      </div>
-                    </Link>
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      <StudentSummaryRow
+                        label={t.attendanceStatus}
+                        value={attendanceLabel}
+                        helper={
+                          attendanceToday
+                            ? 'Your attendance has already been recorded for today.'
+                            : 'Attendance has not been recorded yet today.'
+                        }
+                        tone={attendanceTone}
+                      />
+                      <StudentSummaryRow
+                        label="Average"
+                        value={avgMark !== null ? `${avgMark}%` : '—'}
+                        helper="Your current marks snapshot from recorded results."
+                        tone={avgMark !== null && avgMark >= 70 ? 'success' : avgMark !== null && avgMark < 50 ? 'warning' : 'default'}
+                      />
+                      <StudentSummaryRow
+                        label={t.upcomingQuizzes}
+                        value={String(upcomingQuizzes.length)}
+                        helper={
+                          upcomingQuizzes.length > 0
+                            ? `${upcomingQuizzes[0]?.title ?? 'Quiz'} is currently active.`
+                            : 'No active quizzes are showing right now.'
+                        }
+                        tone={upcomingQuizzes.length > 0 ? 'warning' : 'default'}
+                      />
+                    </div>
 
-                    <Link
-                      href="/timetable"
-                      className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-                    >
-                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                        {t.timetableView}
+                    <div className="mt-5 border-t border-gray-100 pt-5">
+                      <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Quick links
                       </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">
-                        {t.viewSchedule} →
+                      <div className="mt-3 space-y-2">
+                        <Link
+                          href="/assignments"
+                          className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
+                        >
+                          <span>Assignments</span>
+                          <span className="text-gray-400">→</span>
+                        </Link>
+                        <Link
+                          href="/results"
+                          className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
+                        >
+                          <span>Results</span>
+                          <span className="text-gray-400">→</span>
+                        </Link>
+                        <Link
+                          href="/quizzes"
+                          className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
+                        >
+                          <span>{t.quizzes}</span>
+                          <span className="text-gray-400">→</span>
+                        </Link>
+                        <Link
+                          href="/announcements"
+                          className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
+                        >
+                          <span>{t.announcements}</span>
+                          <span className="text-gray-400">→</span>
+                        </Link>
                       </div>
-                    </Link>
-
-                    <Link
-                      href="/quizzes"
-                      className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
-                    >
-                      <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                        {t.quizzes}
-                      </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">
-                        {t.checkActive} →
-                      </div>
-                    </Link>
+                    </div>
                   </div>
+
+                  {recentAnnouncements.length > 0 && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {t.announcements}
+                      </div>
+                      <div className="mt-1 text-sm text-gray-500">
+                        Recent school updates you may want to read.
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        {recentAnnouncements.map((announcement) => (
+                          <div
+                            key={announcement.id}
+                            className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3"
+                          >
+                            <div className="text-sm font-medium text-gray-900">
+                              {announcement.title}
+                            </div>
+                            <div className="mt-1 text-xs text-gray-500">
+                              {formatCompactDate(announcement.created_at)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

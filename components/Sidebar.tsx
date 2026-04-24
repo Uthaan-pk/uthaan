@@ -396,14 +396,16 @@ export default function Sidebar({
                 />
               )}
 
-              <NavItem
-                label={t.gradebook}
-                href="/marks"
-                active={pathname === '/marks'}
-                onClose={close}
-                isUrdu={isUrdu}
-                icon={<BookOpen className={`w-4 h-4 shrink-0 ${pathname === '/marks' ? '' : 'opacity-60'}`} />}
-              />
+              {role !== 'student' && (
+                <NavItem
+                  label={t.gradebook}
+                  href="/marks"
+                  active={pathname === '/marks'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<BookOpen className={`w-4 h-4 shrink-0 ${pathname === '/marks' ? '' : 'opacity-60'}`} />}
+                />
+              )}
 
               {canSeeResults && (
                 <NavItem

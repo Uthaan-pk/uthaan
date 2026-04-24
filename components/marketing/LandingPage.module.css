@@ -1286,6 +1286,27 @@
   margin-top: 3rem;
 }
 
+.pricingAnnualNote {
+  margin-top: 1.4rem;
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid rgb(34 168 98 / 0.2);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgb(34 168 98 / 0.1), rgb(34 168 98 / 0.03));
+  padding: 1rem 1.1rem;
+}
+
+.pricingAnnualLead {
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pricingAnnualMeta {
+  color: var(--gray);
+  font-size: 13px;
+}
+
 .priceCard {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -1449,7 +1470,20 @@
   color: var(--gray);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+}
+
+.priceAnnualBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgb(34 168 98 / 0.24);
+  background: rgb(34 168 98 / 0.08);
+  color: var(--green-light);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
 }
 
 .priceAmount {
@@ -1462,6 +1496,12 @@
 .pricePeriod {
   font-size: 13px;
   color: var(--gray);
+  margin-bottom: 0.45rem;
+}
+
+.priceAnnualLine {
+  font-size: 13px;
+  color: var(--green-light);
   margin-bottom: 1rem;
 }
 
@@ -1498,6 +1538,24 @@
   border: 1.5px solid var(--green-light);
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+.priceAnnualBenefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.priceAnnualBenefit {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.03);
+  color: var(--gray);
+  font-size: 11px;
+  padding: 0.35rem 0.6rem;
 }
 
 .ctaSection {

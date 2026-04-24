@@ -287,12 +287,117 @@
   animation-delay: 330ms;
 }
 
+.deviceStage {
+  position: relative;
+  perspective: 1800px;
+  padding-bottom: 1.1rem;
+}
+
+.deviceGlow {
+  position: absolute;
+  left: 50%;
+  bottom: 0.6rem;
+  width: min(74%, 620px);
+  height: 58px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(34 168 98 / 0.22) 0%, rgb(34 168 98 / 0.08) 45%, transparent 72%);
+  filter: blur(18px);
+  opacity: 0;
+  animation: deviceGlowRise 1200ms ease 460ms forwards;
+  pointer-events: none;
+}
+
+.deviceLid {
+  position: absolute;
+  inset: 0 0 1rem;
+  border-radius: 30px;
+  transform-origin: bottom center;
+  transform: perspective(1800px) rotateX(-88deg) scaleY(0.96);
+  animation: deviceOpen 1100ms cubic-bezier(0.2, 0.82, 0.18, 1) 180ms forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.deviceLidInner {
+  position: absolute;
+  inset: 0;
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgb(34 40 48 / 0.95), rgb(10 14 18 / 0.98));
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    0 30px 80px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.deviceLidInner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 50% 22%, rgb(34 168 98 / 0.08), transparent 32%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.03), transparent 34%);
+}
+
+.deviceLidBar {
+  position: absolute;
+  left: 50%;
+  top: 0.8rem;
+  width: 92px;
+  height: 7px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.deviceBase {
+  position: absolute;
+  left: 2.8%;
+  right: 2.8%;
+  bottom: 0;
+  height: 20px;
+  border-radius: 0 0 36px 36px;
+  background:
+    linear-gradient(180deg, rgb(210 217 223 / 0.9), rgb(108 118 128 / 0.85));
+  box-shadow:
+    0 18px 42px rgb(0 0 0 / 26%),
+    inset 0 1px 0 rgb(255 255 255 / 0.35);
+  z-index: 1;
+}
+
+.deviceBase::before {
+  content: '';
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: -1px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.05));
+}
+
+.deviceTrackpad {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 18%;
+  min-width: 90px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgb(60 68 76 / 0.55);
+}
+
 .previewFloatingCards {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.85rem;
   margin-bottom: 1rem;
+  position: relative;
+  z-index: 4;
 }
 
 .previewChip {
@@ -311,6 +416,8 @@
     background 0.2s,
     box-shadow 0.2s;
   box-shadow: 0 10px 24px rgb(0 0 0 / 14%);
+  opacity: 0;
+  animation: floatCardIn 640ms cubic-bezier(0.2, 0.82, 0.18, 1) calc(900ms + var(--stagger-delay, 0ms)) forwards;
 }
 
 .previewChip:hover {
@@ -338,6 +445,7 @@
 }
 
 .previewShell {
+  position: relative;
   border: 1px solid rgb(255 255 255 / 0.08);
   border-radius: 28px;
   overflow: hidden;
@@ -348,6 +456,11 @@
     0 40px 90px rgb(0 0 0 / 28%),
     inset 0 1px 0 rgb(255 255 255 / 0.05);
   backdrop-filter: blur(12px);
+  transform-origin: bottom center;
+  transform: translateY(24px) scale(0.94);
+  opacity: 0;
+  animation: deviceScreenReveal 960ms cubic-bezier(0.2, 0.82, 0.18, 1) 320ms forwards;
+  z-index: 2;
 }
 
 .previewShellTop {
@@ -1289,6 +1402,15 @@
     grid-template-columns: 1fr;
   }
 
+  .deviceLid {
+    inset: 0 0 0.85rem;
+  }
+
+  .deviceBase {
+    left: 3.5%;
+    right: 3.5%;
+  }
+
   .previewMetrics {
     grid-template-columns: 1fr;
   }
@@ -1333,6 +1455,24 @@
     justify-content: flex-start;
   }
 
+  .deviceStage {
+    perspective: 1200px;
+  }
+
+  .deviceLid {
+    transform: perspective(1200px) rotateX(-84deg) scaleY(0.97);
+    animation-duration: 900ms;
+  }
+
+  .deviceBase {
+    height: 16px;
+  }
+
+  .deviceTrackpad {
+    height: 6px;
+    min-width: 72px;
+  }
+
   .previewChip {
     width: 100%;
     justify-content: space-between;
@@ -1360,6 +1500,35 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .heroBadge::before,
+  .heroBadge,
+  .hero h1,
+  .hero p,
+  .heroButtons,
+  .heroPreview,
+  .deviceGlow,
+  .deviceLid,
+  .previewShell,
+  .previewChip,
+  .fadeIn {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .deviceGlow,
+  .previewShell,
+  .previewChip,
+  .fadeIn {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .deviceLid {
+    display: none;
+  }
+}
+
 @keyframes heroEnter {
   from {
     opacity: 0;
@@ -1368,5 +1537,57 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes deviceOpen {
+  0% {
+    transform: perspective(1800px) rotateX(-88deg) scaleY(0.96);
+    opacity: 0.98;
+  }
+  55% {
+    transform: perspective(1800px) rotateX(-26deg) scaleY(0.985);
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(1800px) rotateX(0deg) scaleY(1);
+    opacity: 0;
+  }
+}
+
+@keyframes deviceScreenReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes deviceGlowRise {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@keyframes floatCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

@@ -1,6 +1,8 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import DemoRequestForm from './DemoRequestForm'
+import styles from './demo.module.css'
 
 export default function DemoPage() {
   return (
@@ -14,6 +16,11 @@ export default function DemoPage() {
             Login
           </Link>
         </div>
+
+        <Link href="/#pricing" className={styles.backLink}>
+          <ArrowLeft size={15} />
+          Back to website
+        </Link>
 
         <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <section className="pt-4">

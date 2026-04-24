@@ -1320,6 +1320,108 @@
   box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
 }
 
+.priceCardChevron {
+  position: absolute;
+  top: 1.75rem;
+  right: 1.75rem;
+  color: var(--gray);
+  transition: transform 0.3s ease;
+}
+
+.priceCardChevronExpanded {
+  transform: rotate(180deg);
+}
+
+.planFeatures {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
+  opacity: 0;
+}
+
+.planFeaturesExpanded {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--gray);
+  padding: 4px 0;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.planFeaturesExpanded .featureItem {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.checkGreen {
+  color: var(--green-light);
+  flex-shrink: 0;
+}
+
+.checkTeal {
+  color: #5eead4;
+  flex-shrink: 0;
+}
+
+.planFeaturesSep {
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+.priceCta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  transition:
+    background 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
+  text-decoration: none;
+}
+
+.priceCtaPrimary {
+  background: var(--green);
+  color: var(--white);
+  border: 1px solid var(--green);
+}
+
+.priceCtaPrimary:hover {
+  background: var(--green-light);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgb(26 122 74 / 22%);
+}
+
+.priceCtaOutline {
+  background: transparent;
+  color: var(--green-light);
+  border: 1px solid rgb(34 168 98 / 0.4);
+}
+
+.priceCtaOutline:hover {
+  background: rgb(34 168 98 / 0.08);
+  border-color: var(--green-light);
+  transform: translateY(-1px);
+}
+
 .featured {
   border-color: var(--green);
   box-shadow:

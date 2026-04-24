@@ -17,10 +17,6 @@ import {
   FolderOpen,
   CreditCard,
   BarChart2,
-  Shield,
-  UserPlus,
-  CalendarOff,
-  ScrollText,
   Search,
 } from 'lucide-react'
 import { useCommandPalette } from './CommandPaletteProvider'
@@ -141,6 +137,12 @@ export default function Sidebar({
   const isStaff = isTeacher || isAdmin
   const isParent = role === 'parent'
   const canSeeResults = isTeacher || isAdmin || role === 'student' || isParent
+  const showAssignments = isTeacher || isAdmin || role === 'student' || isParent
+  const showQuizzes = isTeacher || isAdmin || role === 'student' || isParent
+  const showMaterials = isTeacher || isAdmin || role === 'student' || isParent
+  const overviewLabel = isAdmin ? 'Overview' : t.main
+  const schoolOperationsLabel = isUrdu ? 'اسکول آپریشنز' : 'School Operations'
+  const teachingLabel = isUrdu ? 'تدریس و تعلیم' : 'Teaching & Learning'
 
   return (
     <>
@@ -261,7 +263,7 @@ export default function Sidebar({
                 : 'text-[11px] uppercase tracking-[0.18em]'
             }`}
           >
-            {t.main}
+            {overviewLabel}
           </p>
 
           <NavItem
@@ -273,141 +275,7 @@ export default function Sidebar({
             icon={<LayoutDashboard className={`w-4 h-4 shrink-0 ${pathname === '/dashboard' ? '' : 'opacity-60'}`} />}
           />
 
-          {isStaff && (
-            <NavItem
-              label={t.students}
-              href="/students"
-              active={pathname === '/students'}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/students' ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          {isParent && (
-            <NavItem
-              label={t.myChild}
-              href="/my-child"
-              active={pathname === '/my-child'}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/my-child' ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          <NavItem
-            label={t.announcements}
-            href="/announcements"
-            active={pathname === '/announcements'}
-            onClose={close}
-            isUrdu={isUrdu}
-            icon={<Megaphone className={`w-4 h-4 shrink-0 ${pathname === '/announcements' ? '' : 'opacity-60'}`} />}
-          />
-
-          <p
-            className={`text-white/30 px-2 mt-4 mb-2 ${
-              isUrdu
-                ? 'text-xs tracking-normal'
-                : 'text-[10px] uppercase tracking-widest'
-            }`}
-          >
-            {t.academic}
-          </p>
-
-          {(isTeacher || role === 'student' || isParent) && (
-            <NavItem
-              label={t.assignments}
-              href="/assignments"
-              active={pathname.startsWith('/assignments')}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<ClipboardList className={`w-4 h-4 shrink-0 ${pathname.startsWith('/assignments') ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          <NavItem
-            label={t.gradebook}
-            href="/marks"
-            active={pathname === '/marks'}
-            onClose={close}
-            isUrdu={isUrdu}
-            icon={<BookOpen className={`w-4 h-4 shrink-0 ${pathname === '/marks' ? '' : 'opacity-60'}`} />}
-          />
-
-          {canSeeResults && (
-            <NavItem
-              label={isStaff ? 'Results & Report Cards' : 'Results'}
-              href="/results"
-              active={pathname === '/results'}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<FileText className={`w-4 h-4 shrink-0 ${pathname === '/results' ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          <NavItem
-            label={t.attendance}
-            href="/attendance"
-            active={pathname === '/attendance'}
-            onClose={close}
-            isUrdu={isUrdu}
-            icon={<CalendarCheck className={`w-4 h-4 shrink-0 ${pathname === '/attendance' ? '' : 'opacity-60'}`} />}
-          />
-
-          {(isTeacher || role === 'student' || isParent) && (
-            <NavItem
-              label={t.quizzes}
-              href="/quizzes"
-              active={pathname.startsWith('/quizzes')}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<HelpCircle className={`w-4 h-4 shrink-0 ${pathname.startsWith('/quizzes') ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          <NavItem
-            label={t.timetable}
-            href="/timetable"
-            active={pathname === '/timetable'}
-            onClose={close}
-            isUrdu={isUrdu}
-            icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
-          />
-
-          {(isTeacher || role === 'student' || isParent) && (
-            <NavItem
-              label={t.materials}
-              href="/materials"
-              active={pathname === '/materials'}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<FolderOpen className={`w-4 h-4 shrink-0 ${pathname === '/materials' ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          {(role === 'admin' || role === 'student' || isParent) && (
-            <NavItem
-              label={t.fees}
-              href="/fees"
-              active={pathname === '/fees'}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<CreditCard className={`w-4 h-4 shrink-0 ${pathname === '/fees' ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          {isStaff && (
-            <NavItem
-              label={t.analytics}
-              href="/analytics"
-              active={pathname === '/analytics'}
-              onClose={close}
-              isUrdu={isUrdu}
-              icon={<BarChart2 className={`w-4 h-4 shrink-0 ${pathname === '/analytics' ? '' : 'opacity-60'}`} />}
-            />
-          )}
-
-          {role === 'admin' && (
+          {isAdmin ? (
             <>
               <p
                 className={`text-white/30 px-2 mt-4 mb-2 ${
@@ -416,52 +284,252 @@ export default function Sidebar({
                     : 'text-[10px] uppercase tracking-widest'
                 }`}
               >
-                {t.admin}
+                {schoolOperationsLabel}
               </p>
 
               <NavItem
-                label={t.studentManagement}
-                href="/admin"
-                active={pathname === '/admin'}
+                label={t.students}
+                href="/students"
+                active={pathname === '/students'}
                 onClose={close}
                 isUrdu={isUrdu}
-                icon={<Shield className={`w-4 h-4 shrink-0 ${pathname === '/admin' ? '' : 'opacity-60'}`} />}
+                icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/students' ? '' : 'opacity-60'}`} />}
               />
 
               <NavItem
-                label="Onboarding"
-                href="/admin/signups"
-                active={pathname === '/admin/signups'}
+                label={t.attendance}
+                href="/attendance"
+                active={pathname === '/attendance'}
                 onClose={close}
                 isUrdu={isUrdu}
-                icon={<UserPlus className={`w-4 h-4 shrink-0 ${pathname === '/admin/signups' ? '' : 'opacity-60'}`} />}
+                icon={<CalendarCheck className={`w-4 h-4 shrink-0 ${pathname === '/attendance' ? '' : 'opacity-60'}`} />}
               />
 
               <NavItem
-                label="Leave Management"
-                href="/admin/leaves"
-                active={pathname === '/admin/leaves'}
+                label={t.fees}
+                href="/fees"
+                active={pathname === '/fees'}
                 onClose={close}
                 isUrdu={isUrdu}
-                icon={<CalendarOff className={`w-4 h-4 shrink-0 ${pathname === '/admin/leaves' ? '' : 'opacity-60'}`} />}
+                icon={<CreditCard className={`w-4 h-4 shrink-0 ${pathname === '/fees' ? '' : 'opacity-60'}`} />}
               />
 
-              <NavItem
-                label="Audit Log"
-                href="/admin/audit"
-                active={pathname === '/admin/audit'}
-                onClose={close}
-                isUrdu={isUrdu}
-                icon={<ScrollText className={`w-4 h-4 shrink-0 ${pathname === '/admin/audit' ? '' : 'opacity-60'}`} />}
-              />
+              {canSeeResults && (
+                <NavItem
+                  label="Results & Report Cards"
+                  href="/results"
+                  active={pathname === '/results'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<FileText className={`w-4 h-4 shrink-0 ${pathname === '/results' ? '' : 'opacity-60'}`} />}
+                />
+              )}
 
               <NavItem
-                label={t.gradeSettings}
-                href="/grade-settings"
-                active={pathname === '/grade-settings'}
+                label={t.announcements}
+                href="/announcements"
+                active={pathname === '/announcements'}
                 onClose={close}
                 isUrdu={isUrdu}
+                icon={<Megaphone className={`w-4 h-4 shrink-0 ${pathname === '/announcements' ? '' : 'opacity-60'}`} />}
               />
+
+              <p
+                className={`text-white/30 px-2 mt-4 mb-2 ${
+                  isUrdu
+                    ? 'text-xs tracking-normal'
+                    : 'text-[10px] uppercase tracking-widest'
+                }`}
+              >
+                {teachingLabel}
+              </p>
+
+              {showAssignments && (
+                <NavItem
+                  label={t.assignments}
+                  href="/assignments"
+                  active={pathname.startsWith('/assignments')}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<ClipboardList className={`w-4 h-4 shrink-0 ${pathname.startsWith('/assignments') ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              <NavItem
+                label={t.gradebook}
+                href="/marks"
+                active={pathname === '/marks'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<BookOpen className={`w-4 h-4 shrink-0 ${pathname === '/marks' ? '' : 'opacity-60'}`} />}
+              />
+
+              {showQuizzes && (
+                <NavItem
+                  label={t.quizzes}
+                  href="/quizzes"
+                  active={pathname.startsWith('/quizzes')}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<HelpCircle className={`w-4 h-4 shrink-0 ${pathname.startsWith('/quizzes') ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              <NavItem
+                label={t.timetable}
+                href="/timetable"
+                active={pathname === '/timetable'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
+              />
+
+              {showMaterials && (
+                <NavItem
+                  label={t.materials}
+                  href="/materials"
+                  active={pathname === '/materials'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<FolderOpen className={`w-4 h-4 shrink-0 ${pathname === '/materials' ? '' : 'opacity-60'}`} />}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              {isStaff && (
+                <NavItem
+                  label={t.students}
+                  href="/students"
+                  active={pathname === '/students'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/students' ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              {isParent && (
+                <NavItem
+                  label={t.myChild}
+                  href="/my-child"
+                  active={pathname === '/my-child'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<Users className={`w-4 h-4 shrink-0 ${pathname === '/my-child' ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              <NavItem
+                label={t.announcements}
+                href="/announcements"
+                active={pathname === '/announcements'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Megaphone className={`w-4 h-4 shrink-0 ${pathname === '/announcements' ? '' : 'opacity-60'}`} />}
+              />
+
+              <p
+                className={`text-white/30 px-2 mt-4 mb-2 ${
+                  isUrdu
+                    ? 'text-xs tracking-normal'
+                    : 'text-[10px] uppercase tracking-widest'
+                }`}
+              >
+                {t.academic}
+              </p>
+
+              {showAssignments && (
+                <NavItem
+                  label={t.assignments}
+                  href="/assignments"
+                  active={pathname.startsWith('/assignments')}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<ClipboardList className={`w-4 h-4 shrink-0 ${pathname.startsWith('/assignments') ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              <NavItem
+                label={t.gradebook}
+                href="/marks"
+                active={pathname === '/marks'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<BookOpen className={`w-4 h-4 shrink-0 ${pathname === '/marks' ? '' : 'opacity-60'}`} />}
+              />
+
+              {canSeeResults && (
+                <NavItem
+                  label={isStaff ? 'Results & Report Cards' : 'Results'}
+                  href="/results"
+                  active={pathname === '/results'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<FileText className={`w-4 h-4 shrink-0 ${pathname === '/results' ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              <NavItem
+                label={t.attendance}
+                href="/attendance"
+                active={pathname === '/attendance'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<CalendarCheck className={`w-4 h-4 shrink-0 ${pathname === '/attendance' ? '' : 'opacity-60'}`} />}
+              />
+
+              {showQuizzes && (
+                <NavItem
+                  label={t.quizzes}
+                  href="/quizzes"
+                  active={pathname.startsWith('/quizzes')}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<HelpCircle className={`w-4 h-4 shrink-0 ${pathname.startsWith('/quizzes') ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              <NavItem
+                label={t.timetable}
+                href="/timetable"
+                active={pathname === '/timetable'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
+              />
+
+              {showMaterials && (
+                <NavItem
+                  label={t.materials}
+                  href="/materials"
+                  active={pathname === '/materials'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<FolderOpen className={`w-4 h-4 shrink-0 ${pathname === '/materials' ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              {(role === 'student' || isParent) && (
+                <NavItem
+                  label={t.fees}
+                  href="/fees"
+                  active={pathname === '/fees'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<CreditCard className={`w-4 h-4 shrink-0 ${pathname === '/fees' ? '' : 'opacity-60'}`} />}
+                />
+              )}
+
+              {isTeacher && (
+                <NavItem
+                  label={t.analytics}
+                  href="/analytics"
+                  active={pathname === '/analytics'}
+                  onClose={close}
+                  isUrdu={isUrdu}
+                  icon={<BarChart2 className={`w-4 h-4 shrink-0 ${pathname === '/analytics' ? '' : 'opacity-60'}`} />}
+                />
+              )}
             </>
           )}
         </nav>

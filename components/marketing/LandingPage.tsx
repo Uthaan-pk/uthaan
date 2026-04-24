@@ -484,6 +484,9 @@ export default function LandingPage() {
               Compare
             </a>
           </li>
+          <li>
+            <Link href="/founders">Founders</Link>
+          </li>
         </ul>
         <div className={styles.navActions}>
           <Link href="/login" className={styles.navLogin}>

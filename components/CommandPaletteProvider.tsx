@@ -5,7 +5,7 @@ import { Search } from 'lucide-react'
 import { CommandPalette } from './CommandPalette'
 import { createClient } from '@/lib/supabase/client'
 
-type UserCtx = { role: string; schoolId: string | null }
+export type PaletteUserCtx = { role: string; schoolId: string | null }
 
 type PaletteCtx = { openPalette: () => void }
 const CommandPaletteContext = createContext<PaletteCtx>({ openPalette: () => {} })
@@ -13,12 +13,20 @@ export function useCommandPalette() {
   return useContext(CommandPaletteContext)
 }
 
-export function CommandPaletteProvider({ children }: { children?: React.ReactNode }) {
+export function CommandPaletteProvider({
+  children,
+  initialUserCtx = null,
+}: {
+  children?: React.ReactNode
+  initialUserCtx?: PaletteUserCtx | null
+}) {
   const [isOpen, setIsOpen] = useState(false)
-  const [userCtx, setUserCtx] = useState<UserCtx | null>(null)
+  const [userCtx, setUserCtx] = useState<PaletteUserCtx | null>(initialUserCtx)
 
   // Fetch role once on mount
   useEffect(() => {
+    if (initialUserCtx) return
+
     async function load() {
       try {
         const supabase = createClient()
@@ -41,7 +49,7 @@ export function CommandPaletteProvider({ children }: { children?: React.ReactNod
       }
     }
     load()
-  }, [])
+  }, [initialUserCtx])
 
   // Global Cmd+K / Ctrl+K listener — skip when focus is inside a text field
   useEffect(() => {

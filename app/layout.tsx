@@ -4,6 +4,8 @@ import "./globals.css";
 import ToastProvider from "@/components/Toast";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CommandPaletteProvider } from "@/components/CommandPaletteProvider";
+import { createClient } from "@/lib/supabase/server";
+import { getSchoolContext } from "@/lib/school";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,11 +23,24 @@ export const metadata: Metadata = {
     "Uthaan helps Pakistani private schools manage attendance, fees, results, and parent communication — all in one place.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const schoolContext = user
+    ? await getSchoolContext(supabase, user.id).catch(() => null)
+    : null;
+
+  const initialUserCtx = schoolContext
+    ? { role: schoolContext.role, schoolId: schoolContext.schoolId }
+    : null;
+
   return (
     <html
       lang="en"
@@ -33,7 +48,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#f8f7f4] text-gray-900">
         <LanguageProvider>
-          <CommandPaletteProvider>
+          <CommandPaletteProvider initialUserCtx={initialUserCtx}>
             {children}
             <ToastProvider />
           </CommandPaletteProvider>

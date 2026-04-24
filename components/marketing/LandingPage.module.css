@@ -1319,6 +1319,8 @@
   padding: 1.75rem;
   background: var(--dark2);
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
   transition:
     transform 0.25s,
     box-shadow 0.25s,
@@ -1327,9 +1329,26 @@
 }
 
 .priceCard:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 28px 48px rgb(0 0 0 / 20%);
-  border-color: rgb(255 255 255 / 0.14);
+  transform: translateY(-6px);
+  box-shadow:
+    0 24px 42px rgb(0 0 0 / 22%),
+    0 0 0 1px rgb(34 168 98 / 0.12);
+  border-color: rgb(34 168 98 / 0.2);
+  background:
+    linear-gradient(180deg, rgb(34 168 98 / 0.06), rgb(255 255 255 / 0.02)),
+    var(--dark2);
+}
+
+.priceCard:focus-visible {
+  outline: none;
+  transform: translateY(-6px);
+  box-shadow:
+    0 24px 42px rgb(0 0 0 / 22%),
+    0 0 0 1px rgb(34 168 98 / 0.16);
+  border-color: rgb(34 168 98 / 0.26);
+  background:
+    linear-gradient(180deg, rgb(34 168 98 / 0.08), rgb(255 255 255 / 0.02)),
+    var(--dark2);
 }
 
 .priceCardLink {
@@ -1341,10 +1360,25 @@
 
 /* Non-featured cards get a green tint + scale instead of the generic lift */
 .priceCardHover:hover {
-  border-color: rgb(34 168 98 / 0.3);
-  background: rgb(34 168 98 / 0.04);
-  transform: scale(1.01);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+  border-color: rgb(34 168 98 / 0.34);
+  background:
+    linear-gradient(180deg, rgb(34 168 98 / 0.1), rgb(34 168 98 / 0.03)),
+    var(--dark2);
+  transform: translateY(-8px);
+  box-shadow:
+    0 26px 48px rgb(0 0 0 / 24%),
+    0 0 0 1px rgb(34 168 98 / 0.16);
+}
+
+.priceCardHover:focus-visible {
+  border-color: rgb(34 168 98 / 0.38);
+  background:
+    linear-gradient(180deg, rgb(34 168 98 / 0.11), rgb(34 168 98 / 0.04)),
+    var(--dark2);
+  transform: translateY(-8px);
+  box-shadow:
+    0 26px 48px rgb(0 0 0 / 24%),
+    0 0 0 1px rgb(34 168 98 / 0.2);
 }
 
 .priceCardChevron {
@@ -1355,6 +1389,11 @@
   transition:
     transform 0.3s ease,
     color 0.2s ease;
+}
+
+.priceCard:hover .priceCardChevron,
+.priceCard:focus-visible .priceCardChevron {
+  color: var(--green-light);
 }
 
 .priceCardChevronExpanded {
@@ -1416,6 +1455,18 @@
   box-shadow:
     0 0 0 1px rgb(34 168 98 / 0.15),
     0 26px 52px rgb(26 122 74 / 0.16);
+}
+
+.featured:hover,
+.featured:focus-visible {
+  border-color: var(--green-light);
+  background:
+    linear-gradient(180deg, rgb(34 168 98 / 0.13), rgb(34 168 98 / 0.04)),
+    var(--dark2);
+  transform: translateY(-8px);
+  box-shadow:
+    0 0 0 1px rgb(34 168 98 / 0.24),
+    0 30px 56px rgb(26 122 74 / 0.22);
 }
 
 .featuredBadge {

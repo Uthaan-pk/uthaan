@@ -1307,6 +1307,12 @@
   font-size: 12px;
 }
 
+.pricingPilotNote {
+  margin-top: 0.75rem;
+  color: var(--gray);
+  font-size: 12px;
+}
+
 .priceCard {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -1339,66 +1345,6 @@
   background: rgb(34 168 98 / 0.04);
   transform: scale(1.01);
   box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
-}
-
-.priceCardChevron {
-  position: absolute;
-  top: 1.75rem;
-  right: 1.75rem;
-  color: var(--gray);
-  transition: transform 0.3s ease;
-}
-
-.priceCardChevronExpanded {
-  transform: rotate(180deg);
-}
-
-.planFeatures {
-  max-height: 0;
-  overflow: hidden;
-  transition:
-    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s ease;
-  opacity: 0;
-}
-
-.planFeaturesExpanded {
-  max-height: 500px;
-  opacity: 1;
-}
-
-.featureItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--gray);
-  padding: 4px 0;
-  opacity: 0;
-  transform: translateY(6px);
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-
-.planFeaturesExpanded .featureItem {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.checkGreen {
-  color: var(--green-light);
-  flex-shrink: 0;
-}
-
-.checkTeal {
-  color: #5eead4;
-  flex-shrink: 0;
-}
-
-.planFeaturesSep {
-  border-top: 1px solid var(--border);
-  margin: 1rem 0;
 }
 
 .priceCta {

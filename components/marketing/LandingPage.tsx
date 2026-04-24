@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Check, ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import styles from './LandingPage.module.css'
@@ -215,41 +215,6 @@ const pricingCards = [
   },
 ]
 
-const planFeatures: Record<string, string[]> = {
-  starter: [
-    'Up to 200 students',
-    'Attendance tracking',
-    'Fee management',
-    'Report cards',
-    'Announcements',
-    'Parent & student portal',
-    'Email support',
-  ],
-  growth: [
-    'Up to 600 students',
-    'Everything in Starter',
-    'AI report card comments (50/month)',
-    'AI attendance alerts (10/month)',
-    'Priority support',
-  ],
-  pro: [
-    'Up to 1,500 students',
-    'Everything in Growth',
-    'AI assignment feedback (100/month)',
-    'AI quiz generator (50/month)',
-    'Advanced analytics',
-    'Dedicated onboarding',
-  ],
-  enterprise: [
-    '1,500+ students',
-    'Everything in Pro',
-    'AI report card comments (1,000/month)',
-    'AI attendance alerts (200/month)',
-    'Custom setup',
-    'SLA support',
-  ],
-}
-
 const onboardingSteps = [
   {
     title: 'Request a demo',
@@ -413,7 +378,6 @@ type SystemStoryKey = keyof typeof systemStories
 export default function LandingPage() {
   const featurePreviewRef = useRef<HTMLDivElement>(null)
 
-  const [expandedPlan, setExpandedPlan] = useState<string | null>(null)
   const [activeSection, setActiveSection] = useState('features')
   const [activeFeatureCard, setActiveFeatureCard] = useState<FeatureCardKey>('students')
   const [activeHeroCard, setActiveHeroCard] = useState<HeroPreviewKey>('comments')
@@ -951,9 +915,10 @@ export default function LandingPage() {
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
-          Pilot schools get 3 months free, then choose a plan. Payments are still handled manually,
-          and AI access plus monthly limits are applied per school by superadmin.
+          Start with a guided school pilot, then choose the plan that fits your rollout.
+          Payments are handled manually, and AI access plus monthly limits are managed per school by Uthaan.
         </p>
+        <div className={styles.pricingPilotNote}>Pilot terms are discussed during onboarding.</div>
         <div className={styles.pricingAnnualNote}>
           <div className={styles.pricingAnnualLead}>Annual billing: save 2 months.</div>
           <div className={styles.pricingAnnualMeta}>
@@ -963,21 +928,13 @@ export default function LandingPage() {
 
         <div className={styles.pricingGrid}>
           {pricingCards.map((card, index) => {
-            const isExpanded = expandedPlan === card.plan
-            const planKey = card.plan.toLowerCase()
             return (
               <div
                 key={card.plan}
                 className={`${styles.priceCard} ${styles.staggerItem} ${card.featured ? styles.featured : styles.priceCardHover}`}
-                style={{ ...staggerStyle(index), cursor: 'pointer' }}
-                onClick={() => setExpandedPlan(isExpanded ? null : card.plan)}
-                aria-expanded={isExpanded}
+                style={staggerStyle(index)}
               >
                 {card.featured ? <div className={styles.featuredBadge}>Most popular</div> : null}
-                <ChevronDown
-                  size={15}
-                  className={`${styles.priceCardChevron} ${isExpanded ? styles.priceCardChevronExpanded : ''}`}
-                />
                 <div className={styles.pricePlan}>{card.plan}</div>
                 <div className={`${styles.priceAmount} ${styles.mono}`}>{card.amount}</div>
                 <div className={styles.pricePeriod}>{card.period}</div>
@@ -992,28 +949,13 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <div className={styles.priceAnnualSummary}>{card.annualSummary}</div>
-                <div className={`${styles.planFeatures} ${isExpanded ? styles.planFeaturesExpanded : ''}`}>
-                  <div className={styles.planFeaturesSep} />
-                  {planFeatures[planKey].map((feature, fi) => (
-                    <div
-                      key={feature}
-                      className={styles.featureItem}
-                      style={{ transitionDelay: `${fi * 40}ms` }}
-                    >
-                      <Check size={14} className={card.featured ? styles.checkGreen : styles.checkTeal} />
-                      {feature}
-                    </div>
-                  ))}
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Link
-                      href={`/demo?plan=${planKey}`}
-                      className={`${styles.priceCta} ${card.featured ? styles.priceCtaPrimary : styles.priceCtaOutline}`}
-                    >
-                      {card.featured ? 'Start Free Pilot' : 'Request Demo'}
-                      <ChevronRight size={14} />
-                    </Link>
-                  </div>
-                </div>
+                <Link
+                  href={`/demo?plan=${card.plan.toLowerCase()}`}
+                  className={`${styles.priceCta} ${card.featured ? styles.priceCtaPrimary : styles.priceCtaOutline}`}
+                >
+                  {card.plan === 'Enterprise' ? 'Talk to us' : 'Request demo'}
+                  <ChevronRight size={14} />
+                </Link>
               </div>
             )
           })}

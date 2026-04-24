@@ -1,122 +1,224 @@
 # Uthaan Current State
 
+## Product Snapshot
+- Uthaan is a school management platform for Pakistani private schools.
+- Stack: Next.js App Router, TypeScript, Tailwind, Supabase, Vercel, lucide-react.
+- Roles:
+  - superadmin
+  - admin
+  - teacher
+  - student
+  - parent
+
 ## Current Priorities
 - improve product polish and reliability
-- make the app feel differentiated from generic classroom tools
-- maintain role restrictions and RLS integrity
-- expand Playwright smoke coverage (RLS regression tests next)
-- keep AI feature gating and usage enforcement production-safe
-- assignment feedback generator is the next AI feature
+- preserve RLS integrity and school scoping
+- keep role restrictions production-safe
+- prevent AI leakage to students and parents
+- keep marketing copy accurate to what is actually live
+- continue moving from manual operator workflows toward safer guided automation
 
-## Recent Work (April 23 2026)
-- Global command palette built (Cmd+K / mobile FAB). Searches pages by role, students (debounced, RLS-safe), and quick actions. Race condition fixed, input guard added, z-index corrected. TypeScript clean, smoke tests passing.
+## Current Routing
+- `/` public marketing landing page
+- `/demo` public demo / pilot request form
+- `/login` app login
+- `/dashboard` logged-in school dashboard
+- `/superadmin` Uthaan operator control center
+- `/superadmin/demo-requests` superadmin review queue for demo / pilot requests
 
-## Recent Work (April 21 2026)
-- API key added to Vercel — AI features now live in production
-- Generate Comments button fixed (was silently disabled when no class selected)
-- Teacher timetable filtered to own periods only
-- Dashboard "my classes today" fixed with Asia/Karachi timezone
-- {CURRENT_TERM} literal string bug fixed on timetable page
-- Attendance page centered to match rest of app layout
-- Attendance page filtered to teacher's own classes only
-- Timetable tabs filtered — teachers only see classes they teach
-- Materials page filtered — teachers see only their subject/class materials
-- Low attendance card on admin dashboard now links to /attendance/low drilldown
-- Bulk import RLS bug fixed (adminSupabase + school_id on insert)
-- All 7 bulk import Playwright tests passing
-- Audit log instrumented for 5 high-risk actions (marks, archive, fees, attendance, role changes)
-- 10 UI polish fixes: WhatsApp constant, audit log nav, marks see-all, login page, forgot password, fees header, N+1 acks, skeleton states, timetable mobile, pagination
-- Seed data added: timetable periods, announcements, assignments, marks, fees, attendance history for demo school
+## Recent Work (Latest)
+- Public marketing site now lives at `/` instead of redirecting to `/login` or `/dashboard`
+- Public `/demo` flow added for manual demo / pilot capture
+- `demo_requests` review flow added at `/superadmin/demo-requests`
+- Marketing site copy updated to reflect current onboarding, plans, and live vs planned features
+- Superadmin plan automation added:
+  - `schools.plan` persisted
+  - applying a plan updates `schools.plan`
+  - applying a plan upserts `school_features`
+  - manual per-feature overrides still remain available
+- Superadmin now has visible `Sign out`
+- Superadmin now has `View website`
+- Shared app sidebar now has `View website`
+- Bulk-import happy-path selector stabilized using `student-list-panel`
+
+## Demo / Pilot Flow
+- Public users submit requests at `/demo`
+- Requests are stored in `demo_requests`
+- Superadmin reviews them at `/superadmin/demo-requests`
+- This flow does not automatically:
+  - create schools
+  - create auth users
+  - assign billing
+  - send email
+  - use WhatsApp API
 
 ## AI Features Status
-- [x] Report card comment generator — built, class-level bulk workflow, teacher/admin only
-- [x] Attendance alert summary — built, cron-based (Mon 7am PKT), runs weekly
-- [ ] Assignment feedback generator — next up
-- [ ] Quiz generator from topic
-- [ ] Fee defaulter risk flag (nightly cron)
-- [ ] Student performance insight (claude-sonnet-4-6)
-- [ ] Announcement writer (bilingual EN + Urdu)
+- [x] Report card comment generator — live, teacher/admin only
+- [x] Attendance alert summaries — live inside app / cron-based
+- [x] Smart navigation command palette — live for staff
+- [ ] Assignment feedback generator — planned / coming soon
+- [ ] Quiz generator from topic — planned / coming soon
+- [ ] Fee defaulter risk flag
+- [ ] Student performance insight
+- [ ] Announcement writer (EN + Urdu)
 
 ## Feature Control System
-- school_features is active and seeded per school
+- `school_features` is the source of truth for feature gating
 - current columns in use:
-  - school_id
-  - feature_key
-  - enabled
-  - monthly_limit
-  - used_this_month
-  - last_reset_at
+  - `school_id`
+  - `feature_key`
+  - `enabled`
+  - `monthly_limit`
+  - `used_this_month`
+  - `last_reset_at`
 - seeded feature keys:
-  - ai_report_comments
-  - ai_assignment_feedback
-  - ai_quiz_generator
-  - ai_attendance_alerts
+  - `ai_report_comments`
+  - `ai_assignment_feedback`
+  - `ai_quiz_generator`
+  - `ai_attendance_alerts`
 - current implementation status:
   - report comments route enforces teacher/admin-only access
-  - route behavior is school-aware and checks feature enabled state
-  - monthly limits and month-reset logic are live
+  - routes are school-aware and check feature enabled state
+  - monthly limits and month-reset logic are live where implemented
   - usage increments only after successful generation
-  - bulk class generation counts as 1 usage event
-  - superadmin toggle persists
+  - superadmin manual toggle persists
   - superadmin monthly limit persists
   - superadmin reset usage works
-  - missing school_features rows are handled safely
-  - ANTHROPIC_API_KEY is set in Vercel environment variables
+  - missing `school_features` rows are handled safely
+  - `ANTHROPIC_API_KEY` is set in Vercel environment variables
+
+## School Plans
+- `schools.plan` allowed values:
+  - `pilot`
+  - `starter`
+  - `growth`
+  - `pro`
+  - `enterprise`
+- Applying a plan updates `schools.plan` and upserts all four AI feature rows
+- Applying a plan does not reset:
+  - `used_this_month`
+  - `last_reset_at`
+- Manual per-feature overrides remain possible afterward
+
+## Plan Presets
+- `starter`
+  - report comments disabled, limit `0`
+  - attendance alerts disabled, limit `0`
+  - assignment feedback disabled, limit `0`
+  - quiz generator disabled, limit `0`
+- `growth`
+  - report comments enabled, limit `50`
+  - attendance alerts enabled, limit `10`
+  - assignment feedback disabled, limit `0`
+  - quiz generator disabled, limit `0`
+- `pro`
+  - report comments enabled, limit `200`
+  - attendance alerts enabled, limit `50`
+  - assignment feedback enabled, limit `100`
+  - quiz generator enabled, limit `50`
+- `pilot`
+  - report comments enabled, limit `100`
+  - attendance alerts enabled, limit `20`
+  - assignment feedback enabled, limit `20`
+  - quiz generator enabled, limit `10`
+- `enterprise`
+  - report comments enabled, limit `1000`
+  - attendance alerts enabled, limit `200`
+  - assignment feedback enabled, limit `500`
+  - quiz generator enabled, limit `200`
+
+## Command Palette
+- Global command palette exists
+- entry points:
+  - `Cmd+K`
+  - sidebar button
+  - mobile FAB
+- role-aware
+- uses Fuse.js search, live student search, and `/api/command-ai`
+- AI command navigation uses `claude-haiku-4-5-20251001`
+- students/parents blocked from AI command navigation
+- teacher/admin rate limit: `20` queries/hour
+
+## Help Video System
+- `HelpButton` + `HelpModal` on page headers
+- `lib/helpVideos.ts` still contains placeholder YouTube IDs
+- real videos still need to replace placeholders
 
 ## Attendance Alert Agent
-- Cron: every Monday 7am PKT (vercel.json: 0 2 * * 1)
-- Flags students with 3+ absences/late in last 7 days
-- Generates parent alert messages via Anthropic Batch API
-- Saves alerts as announcements in the app
-- Parents see alerts on their announcements page
-- To disable: Vercel → Settings → Cron Jobs → toggle off
-- Cost: ~$0.02-0.05 per run, negligible
+- cron: every Monday 7am PKT (`vercel.json: 0 2 * * 1`)
+- flags students with repeated recent attendance issues
+- generates attendance alert summaries / announcements for staff-facing workflow
+- parents can see resulting in-app alerts where applicable
+- no WhatsApp Business API flow is live
 
 ## Audit Log
-- lib/audit.ts — writeAuditLog() helper, swallows errors so it never blocks callers
-- Instrumented actions:
-  - marks CSV import (actions.ts)
-  - manual marks save (MarksEditor.tsx)
-  - student archive (delete-student/route.ts)
-  - fee mark paid/unpaid/assign (FeesClient.tsx)
-  - attendance save (AttendanceMarker.tsx)
-  - role assignment (assign-role/route.ts)
-- Audit Log page accessible via admin sidebar
+- `lib/audit.ts` exports `writeAuditLog()`
+- audit errors are swallowed and should never block the main flow
+- audit log is meant for admin / superadmin accountability, not student / parent use
 
-## Playwright Test Coverage
-- bulk-import.spec.ts — all 7 tests passing
-- smoke.spec.ts — core role-based workflows
-- Global setup with saved auth states
-- Superadmin auth skipped (redirects to /superadmin not /dashboard)
+## Superadmin
+- Superadmin is the Uthaan operator role, not a school role
+- manages:
+  - schools
+  - school status
+  - demo requests
+  - browsing / impersonation
+  - feature access and monthly limits
+  - plan assignment
+- `Stop impersonating` remains separate from `Sign out`
+
+## Marketing Site Reality
+- Acquisition users should go to `/demo`
+- Existing users should go to `/login`
+- Website should not claim:
+  - WhatsApp Business API is live
+  - payment automation is live
+  - auto-provisioned school creation is live
+- Onboarding should be described as:
+  1. request demo
+  2. Uthaan sets up school
+  3. school receives admin / teacher logins
+  4. school starts using app
+
+## Business Model
+- Starter: `Rs. 8,000/month`, up to `200` students, core app, no AI
+- Growth: `Rs. 20,000/month`, up to `600` students, core + report comments + attendance alerts
+- Pro: `Rs. 40,000/month`, up to `1,500` students, more AI + higher limits
+- Enterprise: custom, `1,500+` students, custom setup / high limits
+- payment automation is not built yet
+- payments are expected to be manual first
+- WhatsApp Business API is planned later, not live
+
+## Bulk Import / Tests
+- bulk import RLS-safe path uses `adminSupabase` + `school_id` on insert
+- happy-path selector stabilized by scoping to `student-list-panel`
+- superadmin flaky smoke test remains skipped unless explicitly revisited
 
 ## Known Data Constraints
-- user_roles.school_id is NOT NULL
-- superadmin must still have a valid school_id in this database
-- student tests may require a valid linked student record
+- `user_roles.school_id` is `NOT NULL`
+- superadmin must still have a valid `school_id` in this database
+- student tests may require a linked student record
 - parent tests may require a parent_student link
-- teacher workflows depend on timetable/class assignment data
-- students.class_num is constrained to 1–8
-- announcements.priority valid values: normal, important, urgent
-
-## UI Conventions
-- Icons: lucide-react across all sidebar nav items
-- Stat cards use conditional color tinting for attendance/fee/quiz status
-- Teacher dashboard is morning briefing layout
-- Admin dashboard is control centre layout with needs-attention cards
-- All pages use uthaan-page-shell / uthaan-page-main / uthaan-page-header / uthaan-page-content
-- Skeleton loading states via components/Skeleton.tsx
-- Pagination: PAGE_SIZE=50 on students and fees lists
+- teacher workflows depend on timetable / class assignment data
+- `students.class_num` constrained to `1–8`
+- `announcements.priority` valid values: `normal`, `important`, `urgent`
 
 ## Current Risk Areas
 - auth and RLS mismatches
-- school-scoped visibility bugs
+- school_id scoping bugs
 - hidden selector drift in Playwright
 - data-dependent smoke tests
 - cross-role permission regressions
+- AI feature leakage to students/parents
+- overclaiming unfinished features on marketing site
 
-## What good help looks like
+## What Good Help Looks Like
 - inspect first
 - identify exact root cause
 - make the smallest safe change
 - avoid unrelated rewrites
 - preserve production behavior
+- SQL first for schema changes
+- do not touch RLS unless explicitly required
+- do not weaken role checks
+- never expose AI to student/parent roles

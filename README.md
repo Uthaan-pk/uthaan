@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Uthaan
 
-## Getting Started
+Uthaan is a school management platform for Pakistani private schools.
 
-First, run the development server:
+## Stack
+- Next.js App Router
+- TypeScript
+- Tailwind
+- Supabase
+- Vercel
+- lucide-react
+
+## Roles
+- superadmin
+- admin
+- teacher
+- student
+- parent
+
+## Routing
+- `/` public marketing website
+- `/demo` public demo / pilot request form
+- `/login` app login
+- `/dashboard` logged-in school dashboard
+- `/superadmin` operator control center
+- `/superadmin/demo-requests` demo request review queue
+
+## Current Product Notes
+- `school_features` is the source of truth for AI feature gating.
+- `schools.plan` is persisted and can be applied by superadmin.
+- Demo requests are manual-review only; they do not auto-create schools or users.
+- Payment automation is not built yet.
+- WhatsApp Business API is not built yet.
+
+## Development
+
+Run the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Type-check:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx tsc --noEmit
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Lint:
 
-## Learn More
+```bash
+npm run lint
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Working Rules
+- inspect first
+- SQL first for schema changes
+- keep patches minimal and production-safe
+- do not touch RLS unless explicitly required
+- do not weaken role checks
+- never expose AI to student/parent roles

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import styles from './LandingPage.module.css'
@@ -184,6 +184,9 @@ const pricingCards = [
     students: 'Up to 200 students',
     features: ['Core school management', 'Attendance, marks, fees, announcements', 'Up to 4 user roles', 'No AI included'],
     annualSummary: 'Priority onboarding and 12-month price lock',
+    bestFor: 'Best for smaller schools moving from notebooks or spreadsheets into one structured system.',
+    setupNote: 'Guided onboarding helps your school get live cleanly without a heavy rollout.',
+    aiNote: 'No AI included on Starter.',
   },
   {
     plan: 'Growth',
@@ -194,6 +197,9 @@ const pricingCards = [
     features: ['Everything in Starter', 'AI report card comments', 'Attendance alert summaries', 'Priority support'],
     annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
     featured: true,
+    bestFor: 'Best for growing schools that want core operations plus practical staff-facing AI.',
+    setupNote: 'Priority onboarding keeps rollout faster for schools moving onto Growth.',
+    aiNote: 'Annual Growth schools receive higher AI usage limits than monthly schools.',
   },
   {
     plan: 'Pro',
@@ -203,6 +209,9 @@ const pricingCards = [
     students: 'Up to 1,500 students',
     features: ['Everything in Growth', 'Assignment feedback generator', 'Quiz generator when available', 'Higher AI limits'],
     annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
+    bestFor: 'Best for larger schools that want deeper AI-assisted staff workflows and higher operating capacity.',
+    setupNote: 'Pro onboarding is handled as a guided school rollout, not self-serve setup.',
+    aiNote: 'Annual Pro schools receive higher AI usage limits than monthly schools.',
   },
   {
     plan: 'Enterprise',
@@ -212,6 +221,9 @@ const pricingCards = [
     students: '1,500+ students',
     features: ['Multi-campus/custom setup', 'High AI limits', 'Dedicated onboarding', 'Custom rollout support'],
     annualSummary: 'Annual and custom contract options with priority onboarding',
+    bestFor: 'Best for larger groups, multi-campus schools, or schools needing a tailored rollout.',
+    setupNote: 'Enterprise onboarding and rollout terms are scoped with your school directly.',
+    aiNote: 'AI limits and rollout model are agreed as part of the contract.',
   },
 ]
 
@@ -378,6 +390,7 @@ type SystemStoryKey = keyof typeof systemStories
 export default function LandingPage() {
   const featurePreviewRef = useRef<HTMLDivElement>(null)
 
+  const [expandedPlan, setExpandedPlan] = useState<string | null>('Growth')
   const [activeSection, setActiveSection] = useState('features')
   const [activeFeatureCard, setActiveFeatureCard] = useState<FeatureCardKey>('students')
   const [activeHeroCard, setActiveHeroCard] = useState<HeroPreviewKey>('comments')
@@ -928,13 +941,28 @@ export default function LandingPage() {
 
         <div className={styles.pricingGrid}>
           {pricingCards.map((card, index) => {
+            const isExpanded = expandedPlan === card.plan
             return (
               <div
                 key={card.plan}
                 className={`${styles.priceCard} ${styles.staggerItem} ${card.featured ? styles.featured : styles.priceCardHover}`}
                 style={staggerStyle(index)}
+                role="button"
+                tabIndex={0}
+                onClick={() => setExpandedPlan(isExpanded ? null : card.plan)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setExpandedPlan(isExpanded ? null : card.plan)
+                  }
+                }}
+                aria-expanded={isExpanded}
               >
                 {card.featured ? <div className={styles.featuredBadge}>Most popular</div> : null}
+                <ChevronDown
+                  size={15}
+                  className={`${styles.priceCardChevron} ${isExpanded ? styles.priceCardChevronExpanded : ''}`}
+                />
                 <div className={styles.pricePlan}>{card.plan}</div>
                 <div className={`${styles.priceAmount} ${styles.mono}`}>{card.amount}</div>
                 <div className={styles.pricePeriod}>{card.period}</div>
@@ -949,8 +977,24 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <div className={styles.priceAnnualSummary}>{card.annualSummary}</div>
+                <div className={`${styles.planContext} ${isExpanded ? styles.planContextExpanded : ''}`}>
+                  <div className={styles.planContextSep} />
+                  <div className={styles.planContextBlock}>
+                    <div className={styles.planContextLabel}>Best for</div>
+                    <div className={styles.planContextText}>{card.bestFor}</div>
+                  </div>
+                  <div className={styles.planContextBlock}>
+                    <div className={styles.planContextLabel}>Onboarding</div>
+                    <div className={styles.planContextText}>{card.setupNote}</div>
+                  </div>
+                  <div className={styles.planContextBlock}>
+                    <div className={styles.planContextLabel}>AI and annual plan</div>
+                    <div className={styles.planContextText}>{card.aiNote}</div>
+                  </div>
+                </div>
                 <Link
                   href={`/demo?plan=${card.plan.toLowerCase()}`}
+                  onClick={(event) => event.stopPropagation()}
                   className={`${styles.priceCta} ${card.featured ? styles.priceCtaPrimary : styles.priceCtaOutline}`}
                 >
                   {card.plan === 'Enterprise' ? 'Talk to us' : 'Request demo'}

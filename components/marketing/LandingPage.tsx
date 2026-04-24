@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { JetBrains_Mono, Sora } from 'next/font/google'
-import { useEffect } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import styles from './LandingPage.module.css'
 
 const sora = Sora({
@@ -166,6 +166,8 @@ const onboardingSteps = [
 ]
 
 export default function LandingPage() {
+  const [activeSection, setActiveSection] = useState('features')
+
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll(`.${styles.fadeIn}`))
     const observer = new IntersectionObserver(
@@ -184,6 +186,38 @@ export default function LandingPage() {
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    const ids = ['features', 'ai', 'pricing', 'compare']
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter((section): section is HTMLElement => section !== null)
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+
+        if (visible?.target?.id) {
+          setActiveSection(visible.target.id)
+        }
+      },
+      {
+        rootMargin: '-35% 0px -45% 0px',
+        threshold: [0.15, 0.4, 0.7],
+      }
+    )
+
+    sections.forEach((section) => observer.observe(section))
+
+    return () => observer.disconnect()
+  }, [])
+
+  const staggerStyle = (index: number) =>
+    ({
+      '--stagger-delay': `${index * 90}ms`,
+    }) as CSSProperties
+
   return (
     <div className={`${styles.page} ${styles.sora} ${sora.variable} ${jetbrainsMono.variable}`}>
       <nav className={styles.nav}>
@@ -191,10 +225,10 @@ export default function LandingPage() {
           Uth<span>aan</span>
         </div>
         <ul className={styles.navLinks}>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#ai">AI</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#compare">Compare</a></li>
+          <li><a href="#features" className={activeSection === 'features' ? styles.navLinkActive : ''}>Features</a></li>
+          <li><a href="#ai" className={activeSection === 'ai' ? styles.navLinkActive : ''}>AI</a></li>
+          <li><a href="#pricing" className={activeSection === 'pricing' ? styles.navLinkActive : ''}>Pricing</a></li>
+          <li><a href="#compare" className={activeSection === 'compare' ? styles.navLinkActive : ''}>Compare</a></li>
         </ul>
         <div className={styles.navActions}>
           <Link href="/login" className={styles.navLogin}>
@@ -207,6 +241,8 @@ export default function LandingPage() {
       </nav>
 
       <div className={styles.hero}>
+        <div className={styles.heroGlow} aria-hidden="true" />
+        <div className={styles.heroGrid} aria-hidden="true" />
         <div className={`${styles.heroBadge} ${styles.mono}`}>Pilot programme open — April 2026</div>
         <h1>
           School management
@@ -227,6 +263,28 @@ export default function LandingPage() {
           <a href="#features" className={styles.btnSecondary}>
             See features
           </a>
+        </div>
+        <div className={styles.heroPreview}>
+          <div className={styles.previewCard}>
+            <div className={styles.previewTopline}>
+              <span className={styles.previewDot} />
+              Uthaan operator-guided onboarding
+            </div>
+            <div className={styles.previewMetrics}>
+              <div className={styles.previewMetric}>
+                <div className={`${styles.previewMetricValue} ${styles.mono}`}>4</div>
+                <div className={styles.previewMetricLabel}>roles</div>
+              </div>
+              <div className={styles.previewMetric}>
+                <div className={`${styles.previewMetricValue} ${styles.mono}`}>PKT</div>
+                <div className={styles.previewMetricLabel}>school-ready</div>
+              </div>
+              <div className={styles.previewMetric}>
+                <div className={`${styles.previewMetricValue} ${styles.mono}`}>AI</div>
+                <div className={styles.previewMetricLabel}>staff tools only</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -251,8 +309,12 @@ export default function LandingPage() {
         <p className={styles.sectionSub}>No more juggling Excel sheets, WhatsApp groups, and paper registers.</p>
 
         <div className={styles.featureGrid}>
-          {featureCards.map((card) => (
-            <div key={card.title} className={styles.featureCard}>
+          {featureCards.map((card, index) => (
+            <div
+              key={card.title}
+              className={`${styles.featureCard} ${styles.staggerItem}`}
+              style={staggerStyle(index)}
+            >
               <div className={styles.featureIcon}>{card.icon}</div>
               <h3>{card.title}</h3>
               <p>{card.body}</p>
@@ -271,8 +333,12 @@ export default function LandingPage() {
           </p>
 
           <div className={styles.aiGrid}>
-            {aiCards.map((card) => (
-              <div key={card.title} className={styles.aiCard}>
+            {aiCards.map((card, index) => (
+              <div
+                key={card.title}
+                className={`${styles.aiCard} ${styles.staggerItem}`}
+                style={staggerStyle(index)}
+              >
                 <span className={`${styles.aiBadge} ${styles.mono} ${card.badgeClass}`}>{card.status}</span>
                 <h3>{card.title}</h3>
                 <p>{card.body}</p>
@@ -292,7 +358,11 @@ export default function LandingPage() {
 
         <div className={styles.onboardingGrid}>
           {onboardingSteps.map((step, index) => (
-            <div key={step.title} className={styles.onboardingCard}>
+            <div
+              key={step.title}
+              className={`${styles.onboardingCard} ${styles.staggerItem}`}
+              style={staggerStyle(index)}
+            >
               <div className={`${styles.onboardingStep} ${styles.mono}`}>Step {index + 1}</div>
               <h3>{step.title}</h3>
               <p>{step.body}</p>
@@ -342,10 +412,11 @@ export default function LandingPage() {
         </p>
 
         <div className={styles.pricingGrid}>
-          {pricingCards.map((card) => (
+          {pricingCards.map((card, index) => (
             <div
               key={card.plan}
-              className={`${styles.priceCard} ${card.featured ? styles.featured : ''}`}
+              className={`${styles.priceCard} ${styles.staggerItem} ${card.featured ? styles.featured : ''}`}
+              style={staggerStyle(index)}
             >
               {card.featured ? <div className={styles.featuredBadge}>Most popular</div> : null}
               <div className={styles.pricePlan}>{card.plan}</div>

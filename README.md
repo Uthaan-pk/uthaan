@@ -26,6 +26,13 @@ Uthaan is a school management platform for Pakistani private schools.
 - `/superadmin/demo-requests` demo request review queue
 
 ## Current Product Notes
+- Public website uses premium interactive product storytelling:
+  - interactive hero insight chips
+  - role-based product preview for Admin / Teacher / Parent / Student
+  - before/after scattered systems vs one-platform story
+- Hero uses a clean floating SaaS/dashboard preview, not a literal laptop/device mockup.
+- Public acquisition CTAs go to `/demo`.
+- Existing-user login goes to `/login`.
 - `school_features` is the source of truth for AI feature gating.
 - `schools.plan` is persisted and can be applied by superadmin.
 - Demo requests are manual-review only; they do not auto-create schools or users.

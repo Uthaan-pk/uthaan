@@ -14,8 +14,14 @@
 
 ## Marketing Site
 - Landing page lives in `components/marketing/LandingPage.tsx` + `LandingPage.module.css`.
+- Website now uses premium interactive product storytelling:
+  - interactive hero insight chips
+  - floating SaaS/dashboard hero preview
+  - role-based preview for Admin / Teacher / Parent / Student
+  - before/after scattered systems vs one-platform story
 - Acquisition CTAs should point to `/demo`.
 - Existing users should use `/login`.
+- Hero should stay sleek and glassy, not a literal laptop/device mockup.
 - Do not claim WhatsApp Business API is live.
 - Do not claim payment automation is live.
 - Onboarding copy should reflect the current flow:
@@ -28,9 +34,21 @@
 - Public users can submit demo / pilot requests at `/demo`.
 - Requests are stored in `demo_requests`.
 - Superadmin reviews requests at `/superadmin/demo-requests`.
+- Public users can insert only.
+- Public users cannot read / update / delete requests.
 - This does not automatically create schools or auth users yet.
 - This does not implement payments.
 - This does not implement WhatsApp API.
+
+## Demo Submit Reliability
+- `/demo` previously had a production server error on submit.
+- Root cause:
+  - `app/demo/actions.ts` mixed a `'use server'` action with a non-action exported constant
+  - the insert path was not wrapped in `try/catch`
+- Fix:
+  - keep the server action file action-only
+  - keep form initial state in the client component
+  - catch failures and return a friendly inline error state
 
 ## demo_requests
 - Fields:
@@ -62,6 +80,7 @@
 - Superadmin manages:
   - schools
   - demo requests
+  - school/admin creation
   - school status
   - browsing / impersonation
   - feature access
@@ -70,6 +89,8 @@
 - Superadmin now has visible `Sign out`.
 - Superadmin now has `View website`.
 - Shared app sidebar also has `View website`.
+- `View website` works for logged-in users because `/` is explicitly public in middleware.
+- `Sign out` uses the existing `/auth/signout` route.
 - `Stop impersonating` remains separate from `Sign out`.
 
 ## School Plans And Feature Automation

@@ -31,6 +31,11 @@
 - Public `/demo` flow added for manual demo / pilot capture
 - `demo_requests` review flow added at `/superadmin/demo-requests`
 - Marketing site copy updated to reflect current onboarding, plans, and live vs planned features
+- Public marketing site upgraded with premium interactive storytelling:
+  - interactive hero insight chips
+  - floating SaaS/dashboard hero preview
+  - role-based preview for Admin / Teacher / Parent / Student
+  - interactive before/after scattered-systems story
 - Superadmin plan automation added:
   - `schools.plan` persisted
   - applying a plan updates `schools.plan`
@@ -45,12 +50,25 @@
 - Public users submit requests at `/demo`
 - Requests are stored in `demo_requests`
 - Superadmin reviews them at `/superadmin/demo-requests`
+- Public users can insert requests only
+- Public users cannot read, update, or delete requests
 - This flow does not automatically:
   - create schools
   - create auth users
   - assign billing
   - send email
   - use WhatsApp API
+
+## Demo Request Submission Bug Fix
+- `/demo` had a production server error on form submit
+- Root cause:
+  - `app/demo/actions.ts` was a `'use server'` module exporting a non-action constant alongside the server action
+  - the submit path also lacked a protective `try/catch`
+- Fix:
+  - kept the server action file server-action-only
+  - moved `initialState` into the client form component
+  - wrapped the insert path in `try/catch`
+  - returned a friendly inline error instead of crashing the page
 
 ## AI Features Status
 - [x] Report card comment generator — live, teacher/admin only
@@ -162,14 +180,22 @@
   - schools
   - school status
   - demo requests
+  - school/admin creation
   - browsing / impersonation
   - feature access and monthly limits
   - plan assignment
+- `View website` works for logged-in users because `/` is public in middleware
+- `Sign out` uses the existing `/auth/signout` route
 - `Stop impersonating` remains separate from `Sign out`
 
 ## Marketing Site Reality
 - Acquisition users should go to `/demo`
 - Existing users should go to `/login`
+- Hero should stay a clean floating SaaS/dashboard preview, not a literal laptop animation
+- Website now includes clickable product-story elements:
+  - hero insight chips
+  - role-based preview
+  - before/after story
 - Website should not claim:
   - WhatsApp Business API is live
   - payment automation is live

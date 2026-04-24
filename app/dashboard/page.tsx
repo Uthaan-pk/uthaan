@@ -169,6 +169,45 @@ function ActionTile({
   )
 }
 
+function QuickActionRow({
+  href,
+  eyebrow,
+  title,
+  body,
+  icon,
+}: {
+  href: string
+  eyebrow: string
+  title: string
+  body: string
+  icon: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-center gap-3 rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-white"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#6fcf6f]/15 bg-[#6fcf6f]/10 text-[#1a7a4a]">
+        {icon}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+          {eyebrow}
+        </div>
+        <div className="mt-1 text-sm font-medium text-gray-900">
+          {title}
+        </div>
+        <div className="mt-1 text-sm leading-6 text-gray-500">
+          {body}
+        </div>
+      </div>
+
+      <ArrowRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-gray-500" />
+    </Link>
+  )
+}
+
 function SignalCard({
   href,
   label,
@@ -1504,21 +1543,21 @@ export default async function DashboardPage() {
                   description="The staff workflows most likely to matter today."
                 >
                   <div className="space-y-3">
-                    <ActionTile
+                    <QuickActionRow
                       href="/attendance"
                       eyebrow="Attendance"
                       title="Mark today’s attendance"
                       body="Record status for current classes without leaving the dashboard flow."
                       icon={<CalendarCheck2 className="h-4 w-4" />}
                     />
-                    <ActionTile
+                    <QuickActionRow
                       href="/marks"
                       eyebrow="Gradebook"
                       title="Open marks and grading"
                       body="Review pending work, update scores, and continue result prep."
                       icon={<FileText className="h-4 w-4" />}
                     />
-                    <ActionTile
+                    <QuickActionRow
                       href="/announcements"
                       eyebrow="Announcements"
                       title="Review school updates"

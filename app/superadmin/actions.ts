@@ -10,7 +10,8 @@ import {
   buildDefaultSchoolFeatures,
   type AiFeatureKey,
 } from '@/lib/aiFeatures'
-import { SCHOOL_PLANS, SCHOOL_PLAN_PRESETS, isSchoolPlan, type SchoolPlan } from '@/lib/schoolPlans'
+import { SCHOOL_PLAN_PRESETS, isSchoolPlan, type SchoolPlan } from '@/lib/schoolPlans'
+import { writeAuditLog } from '@/lib/audit'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -31,21 +32,35 @@ export type DemoRequestStatus = (typeof DEMO_REQUEST_STATUSES)[number]
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
+function cryptoPick(charset: string): string {
+  const buf = new Uint32Array(1)
+  crypto.getRandomValues(buf)
+  return charset[buf[0] % charset.length]
+}
+
 function generatePassword(): string {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
   const lower = 'abcdefghjkmnpqrstuvwxyz'
   const digits = '23456789'
   const symbols = '!@#$%&*'
   const all = upper + lower + digits + symbols
-  // Guarantee at least one of each character class
-  const guaranteed = [
-    upper[Math.floor(Math.random() * upper.length)],
-    lower[Math.floor(Math.random() * lower.length)],
-    digits[Math.floor(Math.random() * digits.length)],
-    symbols[Math.floor(Math.random() * symbols.length)],
+
+  const chars = [
+    cryptoPick(upper),
+    cryptoPick(lower),
+    cryptoPick(digits),
+    cryptoPick(symbols),
+    ...Array.from({ length: 8 }, () => cryptoPick(all)),
   ]
-  const rest = Array.from({ length: 8 }, () => all[Math.floor(Math.random() * all.length)])
-  return [...guaranteed, ...rest].sort(() => Math.random() - 0.5).join('')
+
+  // Fisher-Yates shuffle with crypto randomness
+  const order = new Uint32Array(chars.length)
+  crypto.getRandomValues(order)
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = order[i] % (i + 1)
+    ;[chars[i], chars[j]] = [chars[j], chars[i]]
+  }
+  return chars.join('')
 }
 
 // ── Guard ──────────────────────────────────────────────────────────────────
@@ -224,6 +239,145 @@ export async function onboardSchool(
   }
 }
 
+
+export async function convertDemoRequest(
+  _prevState: OnboardResult | null,
+  formData: FormData
+): Promise<OnboardResult> {
+  await assertSuperadmin()
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Not authenticated.' }
+
+  const demoRequestId = (formData.get('demo_request_id') as string)?.trim()
+  const name = (formData.get('name') as string)?.trim()
+  const slug = (formData.get('slug') as string)?.trim().toLowerCase()
+  const firstName = (formData.get('firstName') as string)?.trim()
+  const lastName = (formData.get('lastName') as string)?.trim()
+  const email = (formData.get('email') as string)?.trim().toLowerCase()
+  const planRaw = (formData.get('plan') as string)?.trim()
+
+  if (!demoRequestId || !name || !slug || !firstName || !lastName || !email) {
+    return { success: false, error: 'All fields are required.' }
+  }
+  if (!isSchoolPlan(planRaw)) {
+    return { success: false, error: 'Invalid plan selected.' }
+  }
+  const plan: SchoolPlan = planRaw
+
+  const admin = createAdminClient()
+
+  const { data: demoReq, error: demoFetchErr } = await admin
+    .from('demo_requests')
+    .select('id, status')
+    .eq('id', demoRequestId)
+    .single()
+
+  if (demoFetchErr || !demoReq) {
+    return { success: false, error: 'Demo request not found.' }
+  }
+  if (demoReq.status === 'converted') {
+    return { success: false, error: 'This demo request has already been converted to a school.' }
+  }
+
+  const { data: slugExists } = await admin
+    .from('schools')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle()
+  if (slugExists) return { success: false, error: `Slug "${slug}" is already taken.` }
+
+  // Step 1: Create school
+  const { data: school, error: schoolErr } = await admin
+    .from('schools')
+    .insert({ name, slug, is_active: true })
+    .select('id')
+    .single()
+
+  if (schoolErr || !school) {
+    return { success: false, error: schoolErr?.message ?? 'Failed to create school.' }
+  }
+
+  const schoolId: string = school.id
+  const password = generatePassword()
+
+  // Apply plan to schools and school_features
+  await admin.from('schools').update({ plan }).eq('id', schoolId)
+
+  const preset = SCHOOL_PLAN_PRESETS[plan]
+  const updatedAt = new Date().toISOString()
+  await admin.from('school_features').upsert(
+    (Object.entries(preset) as Array<[AiFeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
+      ([featureKey, config]) => ({
+        school_id: schoolId,
+        feature_key: featureKey,
+        enabled: config.enabled,
+        monthly_limit: config.monthly_limit,
+        updated_at: updatedAt,
+      })
+    ),
+    { onConflict: 'school_id,feature_key' }
+  )
+
+  // Step 2: Create auth user
+  const { data: authData, error: authErr } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { first_name: firstName, last_name: lastName },
+  })
+
+  if (authErr || !authData.user) {
+    await admin.from('schools').delete().eq('id', schoolId)
+    return { success: false, error: authErr?.message ?? 'Failed to create admin user.' }
+  }
+
+  const userId = authData.user.id
+
+  // Step 3: Assign admin role
+  const { error: roleErr } = await admin
+    .from('user_roles')
+    .insert({ user_id: userId, role: 'admin', school_id: schoolId })
+
+  if (roleErr) {
+    await admin.auth.admin.deleteUser(userId)
+    await admin.from('schools').delete().eq('id', schoolId)
+    return { success: false, error: roleErr.message ?? 'Failed to assign admin role.' }
+  }
+
+  // Step 4: Mark demo request as converted
+  await admin
+    .from('demo_requests')
+    .update({
+      status: 'converted',
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: user.id,
+    })
+    .eq('id', demoRequestId)
+
+  // Best-effort audit — never blocks conversion
+  await writeAuditLog(admin, {
+    actor_user_id: user.id,
+    action: 'demo_request_converted',
+    entity_type: 'demo_request',
+    entity_id: demoRequestId,
+    new_value: { school_id: schoolId, school_name: name, admin_email: email, plan },
+  })
+
+  return {
+    success: true,
+    credentials: {
+      schoolName: name,
+      schoolId,
+      adminName: `${firstName} ${lastName}`,
+      adminEmail: email,
+      password,
+    },
+  }
+}
 
 export async function toggleSchoolStatus(schoolId: string, currentlyActive: boolean) {
   await assertSuperadmin()

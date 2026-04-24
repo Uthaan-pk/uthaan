@@ -17,8 +17,18 @@ const jetbrainsMono = JetBrains_Mono({
 
 const featureCards = [
   {
+    key: 'students',
     title: 'Student management',
     body: 'Add, archive, and bulk import students via CSV. Full profiles with class, roll number, and parent links.',
+    previewEyebrow: 'Student records',
+    previewTitle: 'Keep profiles, class placement, and parent links organized',
+    previewSummary: 'Bring imported student records into one clean directory so admins can find class, roll number, and family context without digging.',
+    previewStats: [
+      ['412', 'students'],
+      ['8', 'classes'],
+      ['92%', 'parent linked'],
+    ],
+    previewLines: ['Class 5 · Roll 12 · Parent linked', 'Class 7 · Archive controls', 'Bulk CSV import with cleanup'],
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -29,8 +39,18 @@ const featureCards = [
     ),
   },
   {
+    key: 'fees',
     title: 'Fee management',
     body: 'Assign fees, mark paid/unpaid, view defaulter list. Full fee ledger per student — no separate software needed.',
+    previewEyebrow: 'Fee ledger',
+    previewTitle: 'Track paid, unpaid, and overdue fees in one view',
+    previewSummary: 'Give school admins a structured ledger instead of fee notebooks, with cleaner student-level history and defaulter visibility.',
+    previewStats: [
+      ['Rs.', 'ledger-ready'],
+      ['34', 'overdue'],
+      ['1', 'source of truth'],
+    ],
+    previewLines: ['April fee · Paid', 'May fee · Unpaid', 'Defaulter list filtered by class'],
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -39,8 +59,18 @@ const featureCards = [
     ),
   },
   {
+    key: 'attendance',
     title: 'Attendance marking',
     body: "Mark present, absent, or late per class. Auto-filtered to each teacher's own classes. No cross-class confusion.",
+    previewEyebrow: 'Attendance workflow',
+    previewTitle: 'Mark attendance class by class without confusion',
+    previewSummary: 'Teachers see the right class list, mark attendance quickly, and give admins cleaner daily oversight across the school.',
+    previewStats: [
+      ['38', 'present'],
+      ['4', 'absent'],
+      ['2', 'late'],
+    ],
+    previewLines: ['Class 6-B · Morning register', 'Teacher sees own assigned classes', 'Admin summary updates same day'],
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M9 11l3 3L22 4" />
@@ -49,8 +79,18 @@ const featureCards = [
     ),
   },
   {
+    key: 'marks',
     title: 'Marks and gradebook',
     body: 'Enter marks manually or import via CSV. Auto-calculated results, class averages, and downloadable report cards.',
+    previewEyebrow: 'Gradebook',
+    previewTitle: 'Move from scattered marks sheets to a cleaner gradebook',
+    previewSummary: 'Record marks, calculate averages, and prepare report cards from the same workflow instead of stitching together spreadsheets.',
+    previewStats: [
+      ['81%', 'class avg'],
+      ['3', 'subjects'],
+      ['PDF', 'reports'],
+    ],
+    previewLines: ['Maths · 83', 'Science · 79', 'Result summary ready for report card'],
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -59,8 +99,18 @@ const featureCards = [
     ),
   },
   {
+    key: 'timetable',
     title: 'Timetable builder',
     body: 'Set periods per class per day. Teachers see only their own classes. No scheduling conflicts, no confusion.',
+    previewEyebrow: 'School timetable',
+    previewTitle: 'Build a timetable that stays readable for staff',
+    previewSummary: 'Keep periods, classes, and teacher allocation in one structured schedule so daily operations are easier to trust.',
+    previewStats: [
+      ['6', 'periods'],
+      ['Mon', 'to Sat'],
+      ['0', 'conflicts shown'],
+    ],
+    previewLines: ['Period 1 · Class 4 Maths', 'Period 3 · Teacher view filtered', 'Daily schedule by class'],
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -71,8 +121,18 @@ const featureCards = [
     ),
   },
   {
+    key: 'audit',
     title: 'Audit trail',
     body: 'Every sensitive action logged — marks, fees, attendance, role changes. Full accountability for your school.',
+    previewEyebrow: 'Accountability',
+    previewTitle: 'Keep a clean record of sensitive school actions',
+    previewSummary: 'When someone edits marks, changes fee status, or updates a role, the school keeps an audit trail for accountability.',
+    previewStats: [
+      ['24', 'recent logs'],
+      ['Fees', 'tracked'],
+      ['Roles', 'tracked'],
+    ],
+    previewLines: ['Marks updated by admin', 'Fee status changed to paid', 'Role permissions edited'],
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -302,11 +362,13 @@ const systemStories = {
 } as const
 
 type HeroPreviewKey = (typeof heroPreviewCards)[number]['key']
+type FeatureCardKey = (typeof featureCards)[number]['key']
 type RoleKey = keyof typeof roleStories
 type SystemStoryKey = keyof typeof systemStories
 
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState('features')
+  const [activeFeatureCard, setActiveFeatureCard] = useState<FeatureCardKey>('students')
   const [activeHeroCard, setActiveHeroCard] = useState<HeroPreviewKey>('comments')
   const [activeRole, setActiveRole] = useState<RoleKey>('admin')
   const [activeStory, setActiveStory] = useState<SystemStoryKey>('after')
@@ -366,6 +428,7 @@ export default function LandingPage() {
       '--stagger-delay': `${index * 90}ms`,
     }) as CSSProperties
 
+  const activeFeaturePreview = featureCards.find((card) => card.key === activeFeatureCard) ?? featureCards[0]
   const activeHeroPreview = heroPreviewCards.find((card) => card.key === activeHeroCard) ?? heroPreviewCards[0]
   const activeRoleStory = roleStories[activeRole]
   const activeSystemStory = systemStories[activeStory]
@@ -526,18 +589,57 @@ export default function LandingPage() {
         <h2 className={styles.sectionTitle}>Everything your school needs in one place</h2>
         <p className={styles.sectionSub}>No more juggling Excel sheets, WhatsApp groups, and paper registers.</p>
 
-        <div className={styles.featureGrid}>
-          {featureCards.map((card, index) => (
-            <div
-              key={card.title}
-              className={`${styles.featureCard} ${styles.staggerItem}`}
-              style={staggerStyle(index)}
-            >
-              <div className={styles.featureIcon}>{card.icon}</div>
-              <h3>{card.title}</h3>
-              <p>{card.body}</p>
+        <div className={styles.featureExperience}>
+          <div className={styles.featureGrid}>
+            {featureCards.map((card, index) => (
+              <button
+                key={card.key}
+                type="button"
+                className={`${styles.featureCard} ${styles.staggerItem} ${activeFeatureCard === card.key ? styles.featureCardActive : ''}`}
+                style={staggerStyle(index)}
+                onClick={() => setActiveFeatureCard(card.key)}
+                aria-pressed={activeFeatureCard === card.key}
+              >
+                <div className={styles.featureIcon}>{card.icon}</div>
+                <h3>{card.title}</h3>
+                <p>{card.body}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.featurePreviewPanel}>
+            <div className={styles.featurePreviewTop}>
+              <div className={`${styles.sectionTag} ${styles.mono}`}>{activeFeaturePreview.previewEyebrow}</div>
+              <div className={styles.featurePreviewStatus}>Selected feature</div>
             </div>
-          ))}
+            <h3 className={styles.featurePreviewTitle}>{activeFeaturePreview.previewTitle}</h3>
+            <p className={styles.featurePreviewSummary}>{activeFeaturePreview.previewSummary}</p>
+
+            <div className={styles.featurePreviewStats}>
+              {activeFeaturePreview.previewStats.map(([value, label]) => (
+                <div key={label} className={styles.featurePreviewStat}>
+                  <div className={`${styles.featurePreviewStatValue} ${styles.mono}`}>{value}</div>
+                  <div className={styles.featurePreviewStatLabel}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.featurePreviewScreen}>
+              <div className={styles.featurePreviewScreenBar}>
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className={styles.featurePreviewRows}>
+                {activeFeaturePreview.previewLines.map((line, index) => (
+                  <div key={line} className={styles.featurePreviewRow} style={staggerStyle(index)}>
+                    <span className={styles.featurePreviewRowDot} aria-hidden="true" />
+                    <span>{line}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

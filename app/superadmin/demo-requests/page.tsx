@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { updateDemoRequestStatus, type DemoRequestStatus } from '../actions'
+import ConvertDemoRequestForm from './ConvertDemoRequestForm'
 
 type DemoRequestRow = {
   id: string
@@ -149,6 +150,24 @@ export default async function DemoRequestsPage() {
                         {request.message}
                       </div>
                     ) : null}
+
+                    {(request.status === 'new' ||
+                      request.status === 'contacted' ||
+                      request.status === 'approved') && (
+                      <ConvertDemoRequestForm
+                        requestId={request.id}
+                        schoolName={request.school_name}
+                        contactName={request.contact_name}
+                        email={request.email}
+                        requestedPlan={request.requested_plan}
+                      />
+                    )}
+
+                    {request.status === 'converted' && (
+                      <p className="text-xs text-[#6fcf6f] font-medium">
+                        Converted to school
+                      </p>
+                    )}
                   </div>
 
                   <form action={updateDemoRequestStatus} className="min-w-[220px] space-y-2">

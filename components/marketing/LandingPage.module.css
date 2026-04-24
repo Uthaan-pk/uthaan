@@ -282,21 +282,121 @@
 
 .heroPreview {
   margin-top: 3rem;
-  width: min(100%, 560px);
+  width: min(100%, 980px);
   animation: heroEnter 1000ms ease both;
   animation-delay: 330ms;
 }
 
-.previewCard {
+.previewFloatingCards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.previewChip {
   border: 1px solid rgb(255 255 255 / 0.08);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.03));
-  border-radius: 24px;
-  padding: 1rem;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 0.7rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 14%);
+}
+
+.previewChip:hover {
+  transform: translateY(-2px);
+  border-color: rgb(34 168 98 / 0.35);
+  background: rgb(34 168 98 / 0.1);
+}
+
+.previewChipActive {
+  border-color: rgb(34 168 98 / 0.45);
+  background: linear-gradient(180deg, rgb(34 168 98 / 0.2), rgb(34 168 98 / 0.08));
   box-shadow:
-    0 30px 80px rgb(0 0 0 / 22%),
+    0 16px 30px rgb(12 18 25 / 24%),
+    0 0 0 1px rgb(34 168 98 / 0.12);
+}
+
+.previewChipLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.previewChipHint {
+  font-size: 11px;
+  color: var(--gray);
+}
+
+.previewShell {
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 28px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.02)),
+    radial-gradient(circle at top, rgb(34 168 98 / 0.08), transparent 40%);
+  box-shadow:
+    0 40px 90px rgb(0 0 0 / 28%),
     inset 0 1px 0 rgb(255 255 255 / 0.05);
   backdrop-filter: blur(12px);
+}
+
+.previewShellTop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  background: rgb(13 17 23 / 0.65);
+}
+
+.previewBrowserDots {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.previewBrowserDots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.2);
+}
+
+.previewBrowserDots span:first-child {
+  background: #ff5f57;
+}
+
+.previewBrowserDots span:nth-child(2) {
+  background: #febc2e;
+}
+
+.previewBrowserDots span:nth-child(3) {
+  background: #28c840;
+}
+
+.previewUrl {
+  flex: 1;
+  text-align: left;
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.previewCard {
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 1.15rem;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .previewTopline {
@@ -308,6 +408,58 @@
   background: rgb(255 255 255 / 0.04);
   color: var(--gray);
   font-size: 12px;
+}
+
+.previewStory {
+  margin-top: 1rem;
+  border-radius: 22px;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background:
+    linear-gradient(180deg, rgb(11 17 22 / 0.92), rgb(17 25 32 / 0.88));
+  padding: 1.1rem;
+  text-align: left;
+}
+
+.previewStoryHeader {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.previewStoryTitle {
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.previewStorySummary {
+  margin: 0.9rem 0 0;
+  max-width: 520px;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.previewStatusCard {
+  min-width: 136px;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.03);
+  padding: 0.85rem;
+}
+
+.previewStatusValue {
+  font-size: 22px;
+  color: var(--green-light);
+  line-height: 1;
+}
+
+.previewStatusLabel {
+  margin-top: 0.4rem;
+  font-size: 11px;
+  color: var(--gray);
 }
 
 .previewDot {
@@ -322,7 +474,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
-  margin-top: 1rem;
+  margin-top: 1.15rem;
 }
 
 .previewMetric {
@@ -343,6 +495,55 @@
   margin-top: 0.45rem;
   font-size: 12px;
   color: var(--gray);
+}
+
+.previewInsights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.previewInsight {
+  border-radius: 16px;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background: rgb(255 255 255 / 0.02);
+  padding: 0.85rem;
+  font-size: 12px;
+  color: var(--white);
+}
+
+.previewTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  padding: 0 1.15rem 1.15rem;
+}
+
+.previewTab {
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.03);
+  color: var(--gray);
+  font-size: 12px;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.previewTab:hover {
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.previewTabActive {
+  color: var(--white);
+  border-color: rgb(34 168 98 / 0.35);
+  background: rgb(34 168 98 / 0.12);
 }
 
 .statsBar {
@@ -468,6 +669,190 @@
   margin: 0;
 }
 
+.roleStoryWrap {
+  margin-top: 3rem;
+}
+
+.roleTabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.03);
+}
+
+.roleTab {
+  border: 0;
+  background: transparent;
+  color: var(--gray);
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.25s,
+    transform 0.25s,
+    box-shadow 0.25s;
+}
+
+.roleTab:hover {
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.roleTabActive {
+  background: linear-gradient(180deg, rgb(34 168 98 / 0.28), rgb(34 168 98 / 0.12));
+  color: var(--white);
+  box-shadow: 0 12px 24px rgb(0 0 0 / 16%);
+}
+
+.roleStoryPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 1.5rem;
+  margin-top: 1.3rem;
+}
+
+.roleStoryContent,
+.rolePreview {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.02));
+  box-shadow:
+    0 24px 50px rgb(0 0 0 / 16%),
+    inset 0 1px 0 rgb(255 255 255 / 0.03);
+}
+
+.roleStoryContent {
+  padding: 1.75rem;
+}
+
+.roleStoryContent h3,
+.storyPanelCopy h3,
+.compareLeadCard h3 {
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin: 0 0 0.8rem;
+}
+
+.roleStoryContent p,
+.storyPanelCopy p,
+.compareLeadCard p {
+  margin: 0;
+  color: var(--gray);
+  font-size: 15px;
+}
+
+.roleHighlights,
+.storyBullets {
+  list-style: none;
+  margin: 1.3rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.roleHighlights li,
+.storyBullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--white);
+  font-size: 14px;
+}
+
+.roleHighlights li::before,
+.storyBullets li::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  margin-top: 0.35rem;
+  background: linear-gradient(180deg, var(--green-light), var(--green));
+  box-shadow: 0 0 0 5px rgb(34 168 98 / 0.12);
+  flex-shrink: 0;
+}
+
+.rolePreview {
+  padding: 1.25rem;
+}
+
+.rolePreviewHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  color: var(--white);
+  font-size: 14px;
+  margin-bottom: 1rem;
+}
+
+.rolePreviewPill {
+  border-radius: 999px;
+  border: 1px solid rgb(34 168 98 / 0.28);
+  background: rgb(34 168 98 / 0.1);
+  color: var(--green-light);
+  font-size: 11px;
+  padding: 0.4rem 0.6rem;
+}
+
+.rolePreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.roleMetricCard {
+  border-radius: 16px;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background: rgb(13 17 23 / 0.55);
+  padding: 0.95rem 0.85rem;
+}
+
+.roleMetricLabel {
+  font-size: 11px;
+  color: var(--gray);
+}
+
+.roleMetricValue {
+  margin-top: 0.5rem;
+  font-size: 18px;
+  color: var(--white);
+}
+
+.rolePreviewFeed {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.rolePreviewItem {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.03);
+  padding: 0.8rem 0.9rem;
+  color: var(--white);
+  font-size: 13px;
+}
+
+.rolePreviewItemDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--green-light);
+  box-shadow: 0 0 0 6px rgb(34 168 98 / 0.12);
+  flex-shrink: 0;
+}
+
 .aiSection {
   background: var(--dark2);
   border-top: 1px solid var(--border);
@@ -576,8 +961,101 @@
   color: var(--gray);
 }
 
+.storyToggleWrap {
+  margin-top: 3rem;
+}
+
+.storyToggle {
+  display: inline-flex;
+  gap: 0.75rem;
+  padding: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.03);
+}
+
+.storyToggleButton {
+  border: 0;
+  background: transparent;
+  color: var(--gray);
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    transform 0.2s;
+}
+
+.storyToggleButton:hover {
+  color: var(--white);
+}
+
+.storyToggleButtonActive {
+  background: linear-gradient(180deg, rgb(34 168 98 / 0.25), rgb(34 168 98 / 0.12));
+  color: var(--white);
+}
+
+.storyPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
+  gap: 1.5rem;
+  margin-top: 1.3rem;
+}
+
+.storyPanelCopy,
+.storyPanelVisual,
+.compareLeadCard {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.02));
+  padding: 1.6rem;
+}
+
+.storyPanelVisual {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0.85rem;
+}
+
+.storyChip {
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background: rgb(255 255 255 / 0.03);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 0.75rem 0.95rem;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.storyChip:hover {
+  transform: translateY(-2px);
+  border-color: rgb(255 255 255 / 0.16);
+}
+
+.storyChipActive {
+  border-color: rgb(34 168 98 / 0.35);
+  background: rgb(34 168 98 / 0.12);
+}
+
 .tableWrap {
   overflow-x: auto;
+}
+
+.compareLead {
+  margin-top: 3rem;
+}
+
+.compareLeadCard {
+  max-width: 780px;
 }
 
 .vsTable {
@@ -747,8 +1225,17 @@
 }
 
 .ctaBox {
-  max-width: 600px;
+  max-width: 720px;
   margin: 0 auto;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.02)),
+    radial-gradient(circle at top, rgb(34 168 98 / 0.08), transparent 42%);
+  box-shadow:
+    0 32px 60px rgb(0 0 0 / 20%),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  padding: 2rem;
 }
 
 .ctaBox h2 {
@@ -805,6 +1292,17 @@
   .previewMetrics {
     grid-template-columns: 1fr;
   }
+
+  .previewInsights,
+  .rolePreviewGrid,
+  .storyPanel,
+  .roleStoryPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .previewStoryHeader {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 600px) {
@@ -829,6 +1327,36 @@
   .ctaSection {
     padding-left: 1.25rem;
     padding-right: 1.25rem;
+  }
+
+  .previewFloatingCards {
+    justify-content: flex-start;
+  }
+
+  .previewChip {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .previewTabs {
+    flex-direction: column;
+  }
+
+  .previewTab,
+  .roleTab,
+  .storyToggleButton {
+    width: 100%;
+  }
+
+  .roleTabs,
+  .storyToggle {
+    display: grid;
+    width: 100%;
+  }
+
+  .rolePreviewHeader {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

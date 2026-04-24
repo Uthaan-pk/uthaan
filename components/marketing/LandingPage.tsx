@@ -165,8 +165,152 @@ const onboardingSteps = [
   },
 ]
 
+const heroPreviewCards = [
+  {
+    key: 'comments',
+    label: 'AI comments ready',
+    eyebrow: 'Teacher workflow',
+    title: 'AI drafts prepared for report comments',
+    summary: 'Generate editable class-level comment drafts, then let teachers review before anything reaches families.',
+    bullets: ['Bulk class generation', 'Teacher approval stays required', 'School plan limits still apply'],
+    stats: [
+      ['28', 'students drafted'],
+      ['1', 'class selected'],
+      ['Staff', 'review required'],
+    ],
+  },
+  {
+    key: 'attendance',
+    label: 'Attendance summary',
+    eyebrow: 'Admin visibility',
+    title: 'Spot attendance risk before it becomes a bigger problem',
+    summary: 'School staff can review repeated absences inside the app and follow up with context instead of digging through registers.',
+    bullets: ['Class-level summaries', 'Staff-only AI surface', 'Supports manual follow-up'],
+    stats: [
+      ['7', 'students flagged'],
+      ['3', 'classes reviewed'],
+      ['Live', 'inside app'],
+    ],
+  },
+  {
+    key: 'fees',
+    label: 'Fee records organized',
+    eyebrow: 'School operations',
+    title: 'Keep fees, ledgers, and defaulter tracking in one place',
+    summary: 'Replace scattered notebooks and separate software with a structured fee ledger linked to each student.',
+    bullets: ['Student-level ledgers', 'Cleaner defaulter lists', 'Admin-ready fee view'],
+    stats: [
+      ['Rs.', 'fees tracked'],
+      ['1', 'ledger per student'],
+      ['Clean', 'status view'],
+    ],
+  },
+  {
+    key: 'announcements',
+    label: 'Announcements sent',
+    eyebrow: 'Daily communication',
+    title: 'Share school updates from the same system your team already uses',
+    summary: 'Announcements live beside attendance, marks, and results so the school communicates from one operating layer.',
+    bullets: ['Central update feed', 'Role-based visibility', 'Less switching between tools'],
+    stats: [
+      ['All', 'school updates'],
+      ['4', 'role views'],
+      ['One', 'shared system'],
+    ],
+  },
+  {
+    key: 'demo',
+    label: 'Demo request received',
+    eyebrow: 'Guided onboarding',
+    title: 'New schools start with a guided rollout, not a blank dashboard',
+    summary: 'Your school requests a demo, Uthaan prepares the setup, and staff receive controlled access when onboarding is ready.',
+    bullets: ['Manual school setup', 'Admin + teacher logins', 'Pilot-friendly rollout'],
+    stats: [
+      ['4', 'setup steps'],
+      ['Pilot', 'plan available'],
+      ['Guided', 'onboarding'],
+    ],
+  },
+] as const
+
+const roleStories = {
+  admin: {
+    label: 'Admin',
+    eyebrow: 'School operations',
+    title: 'Run the school from one cleaner control layer',
+    body: 'School admins get visibility across attendance, fees, announcements, results, and staff-facing AI without jumping between scattered tools.',
+    highlights: ['Fee tracking and defaulter visibility', 'Attendance oversight across classes', 'Announcements and results in the same system'],
+    metrics: [
+      ['Fees', 'Ledger-ready'],
+      ['Results', 'School-wide'],
+      ['Audit', 'Tracked'],
+    ],
+  },
+  teacher: {
+    label: 'Teacher',
+    eyebrow: 'Classroom workflow',
+    title: 'Give teachers a faster, calmer daily workflow',
+    body: 'Teachers mark attendance, enter marks, manage assignments, and use staff-only AI comment tools without seeing parts of the app they do not need.',
+    highlights: ['Attendance linked to their own classes', 'Marks and report workflows in one place', 'AI report comments for staff only'],
+    metrics: [
+      ['Classes', 'Own only'],
+      ['Comments', 'AI-assisted'],
+      ['Work', 'Reduced'],
+    ],
+  },
+  parent: {
+    label: 'Parent',
+    eyebrow: 'Family visibility',
+    title: 'Parents get the updates they actually care about',
+    body: 'Parents can stay informed with attendance, results, and announcements through a cleaner role-based experience without extra confusion.',
+    highlights: ['Attendance visibility', 'Results access', 'School announcements in one view'],
+    metrics: [
+      ['Updates', 'Relevant'],
+      ['Results', 'Visible'],
+      ['Noise', 'Reduced'],
+    ],
+  },
+  student: {
+    label: 'Student',
+    eyebrow: 'Learner view',
+    title: 'Students get a simpler view of academic work',
+    body: 'Students see assignments, materials, and results in a role-specific experience rather than being exposed to staff controls.',
+    highlights: ['Assignments and materials', 'Results visibility', 'No exposure to staff-only tools'],
+    metrics: [
+      ['Tasks', 'Focused'],
+      ['Results', 'Accessible'],
+      ['AI', 'Not exposed'],
+    ],
+  },
+} as const
+
+const systemStories = {
+  before: {
+    label: 'Before Uthaan',
+    title: 'Scattered systems create operational drag',
+    body: 'Most schools are still stitching together WhatsApp groups, registers, spreadsheets, and notebooks. The work happens, but the system around it stays messy.',
+    chips: ['WhatsApp groups', 'Paper attendance', 'Fee notebooks', 'Spreadsheets', 'Scattered systems'],
+    bullets: ['Important records live in different places', 'Staff spend time rechecking basic information', 'School owners get less reliable visibility'],
+  },
+  after: {
+    label: 'After Uthaan',
+    title: 'One platform gives the school a cleaner operating system',
+    body: 'Uthaan brings attendance, fees, announcements, results, and staff AI tools into one role-based platform built for how Pakistani schools actually run.',
+    chips: ['One Uthaan platform', 'Role-based access', 'Cleaner records', 'Staff AI assistance', 'Guided onboarding'],
+    bullets: ['Admins, teachers, parents, and students see the right layer', 'Records become easier to trust and track', 'Staff save time without exposing AI to families'],
+  },
+} as const
+
+type HeroPreviewKey = (typeof heroPreviewCards)[number]['key']
+type RoleKey = keyof typeof roleStories
+type SystemStoryKey = keyof typeof systemStories
+
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState('features')
+  const [activeHeroCard, setActiveHeroCard] = useState<HeroPreviewKey>('comments')
+  const [activeRole, setActiveRole] = useState<RoleKey>('admin')
+  const [activeStory, setActiveStory] = useState<SystemStoryKey>('after')
+  const [activeStoryChip, setActiveStoryChip] = useState<string>(systemStories.after.chips[0])
 
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll(`.${styles.fadeIn}`))
@@ -213,10 +357,18 @@ export default function LandingPage() {
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    setActiveStoryChip(systemStories[activeStory].chips[0])
+  }, [activeStory])
+
   const staggerStyle = (index: number) =>
     ({
       '--stagger-delay': `${index * 90}ms`,
     }) as CSSProperties
+
+  const activeHeroPreview = heroPreviewCards.find((card) => card.key === activeHeroCard) ?? heroPreviewCards[0]
+  const activeRoleStory = roleStories[activeRole]
+  const activeSystemStory = systemStories[activeStory]
 
   return (
     <div className={`${styles.page} ${styles.sora} ${sora.variable} ${jetbrainsMono.variable}`}>
@@ -225,10 +377,26 @@ export default function LandingPage() {
           Uth<span>aan</span>
         </div>
         <ul className={styles.navLinks}>
-          <li><a href="#features" className={activeSection === 'features' ? styles.navLinkActive : ''}>Features</a></li>
-          <li><a href="#ai" className={activeSection === 'ai' ? styles.navLinkActive : ''}>AI</a></li>
-          <li><a href="#pricing" className={activeSection === 'pricing' ? styles.navLinkActive : ''}>Pricing</a></li>
-          <li><a href="#compare" className={activeSection === 'compare' ? styles.navLinkActive : ''}>Compare</a></li>
+          <li>
+            <a href="#features" className={activeSection === 'features' ? styles.navLinkActive : ''}>
+              Features
+            </a>
+          </li>
+          <li>
+            <a href="#ai" className={activeSection === 'ai' ? styles.navLinkActive : ''}>
+              AI
+            </a>
+          </li>
+          <li>
+            <a href="#pricing" className={activeSection === 'pricing' ? styles.navLinkActive : ''}>
+              Pricing
+            </a>
+          </li>
+          <li>
+            <a href="#compare" className={activeSection === 'compare' ? styles.navLinkActive : ''}>
+              Compare
+            </a>
+          </li>
         </ul>
         <div className={styles.navActions}>
           <Link href="/login" className={styles.navLogin}>
@@ -265,24 +433,74 @@ export default function LandingPage() {
           </a>
         </div>
         <div className={styles.heroPreview}>
-          <div className={styles.previewCard}>
-            <div className={styles.previewTopline}>
-              <span className={styles.previewDot} />
-              Uthaan operator-guided onboarding
+          <div className={styles.previewFloatingCards}>
+            {heroPreviewCards.map((card, index) => (
+              <button
+                key={card.key}
+                type="button"
+                className={`${styles.previewChip} ${activeHeroCard === card.key ? styles.previewChipActive : ''}`}
+                style={staggerStyle(index)}
+                onClick={() => setActiveHeroCard(card.key)}
+                aria-pressed={activeHeroCard === card.key}
+              >
+                <span className={styles.previewChipLabel}>{card.label}</span>
+                <span className={styles.previewChipHint}>Preview</span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.previewShell}>
+            <div className={styles.previewShellTop}>
+              <div className={styles.previewBrowserDots} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className={`${styles.previewUrl} ${styles.mono}`}>uthaan.app / school workspace</div>
             </div>
-            <div className={styles.previewMetrics}>
-              <div className={styles.previewMetric}>
-                <div className={`${styles.previewMetricValue} ${styles.mono}`}>4</div>
-                <div className={styles.previewMetricLabel}>roles</div>
+            <div className={styles.previewCard}>
+              <div className={styles.previewTopline}>
+                <span className={styles.previewDot} />
+                {activeHeroPreview.eyebrow}
               </div>
-              <div className={styles.previewMetric}>
-                <div className={`${styles.previewMetricValue} ${styles.mono}`}>PKT</div>
-                <div className={styles.previewMetricLabel}>school-ready</div>
+              <div className={styles.previewStory}>
+                <div className={styles.previewStoryHeader}>
+                  <div>
+                    <div className={styles.previewStoryTitle}>{activeHeroPreview.title}</div>
+                    <p className={styles.previewStorySummary}>{activeHeroPreview.summary}</p>
+                  </div>
+                  <div className={styles.previewStatusCard}>
+                    <div className={`${styles.previewStatusValue} ${styles.mono}`}>Live</div>
+                    <div className={styles.previewStatusLabel}>Product-led preview</div>
+                  </div>
+                </div>
+                <div className={styles.previewMetrics}>
+                  {activeHeroPreview.stats.map(([value, label]) => (
+                    <div key={label} className={styles.previewMetric}>
+                      <div className={`${styles.previewMetricValue} ${styles.mono}`}>{value}</div>
+                      <div className={styles.previewMetricLabel}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.previewInsights}>
+                  {activeHeroPreview.bullets.map((bullet) => (
+                    <div key={bullet} className={styles.previewInsight}>
+                      {bullet}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className={styles.previewMetric}>
-                <div className={`${styles.previewMetricValue} ${styles.mono}`}>AI</div>
-                <div className={styles.previewMetricLabel}>staff tools only</div>
-              </div>
+            </div>
+            <div className={styles.previewTabs}>
+              {heroPreviewCards.map((card) => (
+                <button
+                  key={card.key}
+                  type="button"
+                  className={`${styles.previewTab} ${activeHeroCard === card.key ? styles.previewTabActive : ''}`}
+                  onClick={() => setActiveHeroCard(card.key)}
+                >
+                  {card.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -323,6 +541,68 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className={`${styles.section} ${styles.fadeIn}`}>
+        <div className={`${styles.sectionTag} ${styles.mono}`}>Role-based product preview</div>
+        <h2 className={styles.sectionTitle}>Explore how each role experiences the platform</h2>
+        <p className={styles.sectionSub}>
+          Uthaan is not one crowded screen for everyone. Each role sees a cleaner layer built for the
+          work they actually need to do.
+        </p>
+
+        <div className={styles.roleStoryWrap}>
+          <div className={styles.roleTabs} role="tablist" aria-label="Role-based product preview">
+            {(Object.entries(roleStories) as [RoleKey, (typeof roleStories)[RoleKey]][]).map(([key, role]) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={activeRole === key}
+                className={`${styles.roleTab} ${activeRole === key ? styles.roleTabActive : ''}`}
+                onClick={() => setActiveRole(key)}
+              >
+                {role.label}
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.roleStoryPanel}>
+            <div className={styles.roleStoryContent}>
+              <div className={`${styles.sectionTag} ${styles.mono}`}>{activeRoleStory.eyebrow}</div>
+              <h3>{activeRoleStory.title}</h3>
+              <p>{activeRoleStory.body}</p>
+              <ul className={styles.roleHighlights}>
+                {activeRoleStory.highlights.map((highlight) => (
+                  <li key={highlight}>{highlight}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={styles.rolePreview}>
+              <div className={styles.rolePreviewHeader}>
+                <span>{activeRoleStory.label} workspace</span>
+                <span className={styles.rolePreviewPill}>Role-based access</span>
+              </div>
+              <div className={styles.rolePreviewGrid}>
+                {activeRoleStory.metrics.map(([label, value], index) => (
+                  <div key={label} className={styles.roleMetricCard} style={staggerStyle(index)}>
+                    <div className={styles.roleMetricLabel}>{label}</div>
+                    <div className={`${styles.roleMetricValue} ${styles.mono}`}>{value}</div>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.rolePreviewFeed}>
+                {activeRoleStory.highlights.map((highlight, index) => (
+                  <div key={highlight} className={styles.rolePreviewItem} style={staggerStyle(index)}>
+                    <span className={styles.rolePreviewItemDot} aria-hidden="true" />
+                    <span>{highlight}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div id="ai" className={styles.aiSection}>
         <div className={`${styles.aiInner} ${styles.fadeIn}`}>
           <div className={`${styles.sectionTag} ${styles.mono}`}>Artificial intelligence</div>
@@ -347,6 +627,57 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+
+      <section className={`${styles.section} ${styles.fadeIn}`}>
+        <div className={`${styles.sectionTag} ${styles.mono}`}>From scattered systems to one platform</div>
+        <h2 className={styles.sectionTitle}>Show school owners the operational difference</h2>
+        <p className={styles.sectionSub}>
+          The story is not just software features. It is the shift from disconnected routines to one
+          system your team can actually trust.
+        </p>
+
+        <div className={styles.storyToggleWrap}>
+          <div className={styles.storyToggle}>
+            {(Object.entries(systemStories) as [SystemStoryKey, (typeof systemStories)[SystemStoryKey]][]).map(
+              ([key, story]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`${styles.storyToggleButton} ${activeStory === key ? styles.storyToggleButtonActive : ''}`}
+                  onClick={() => setActiveStory(key)}
+                >
+                  {story.label}
+                </button>
+              )
+            )}
+          </div>
+
+          <div className={styles.storyPanel}>
+            <div className={styles.storyPanelCopy}>
+              <div className={`${styles.sectionTag} ${styles.mono}`}>{activeSystemStory.label}</div>
+              <h3>{activeSystemStory.title}</h3>
+              <p>{activeSystemStory.body}</p>
+              <ul className={styles.storyBullets}>
+                {activeSystemStory.bullets.map((bullet) => (
+                  <li key={bullet}>{bullet}</li>
+                ))}
+              </ul>
+            </div>
+            <div className={styles.storyPanelVisual}>
+              {activeSystemStory.chips.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  className={`${styles.storyChip} ${activeStoryChip === chip ? styles.storyChipActive : ''}`}
+                  onClick={() => setActiveStoryChip(chip)}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section id="onboarding" className={`${styles.section} ${styles.fadeIn}`}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>How onboarding works</div>
@@ -378,6 +709,17 @@ export default function LandingPage() {
           International platforms were built for Western schools. Your school has different needs.
         </p>
 
+        <div className={styles.compareLead}>
+          <div className={styles.compareLeadCard}>
+            <div className={`${styles.sectionTag} ${styles.mono}`}>Built for local realities</div>
+            <h3>Uthaan is trying to solve the full school workflow, not just classroom posting</h3>
+            <p>
+              Fees, attendance, results, announcements, school roles, and staff-facing AI belong in
+              the same product story for Pakistani private schools.
+            </p>
+          </div>
+        </div>
+
         <div className={styles.tableWrap}>
           <table className={styles.vsTable}>
             <thead>
@@ -390,14 +732,62 @@ export default function LandingPage() {
               </tr>
             </thead>
             <tbody>
-              <tr><td>Fee management</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
-              <tr><td>Pakistan / local context</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
-              <tr><td>AI report card comments</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
-              <tr><td>Attendance alert summaries</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
-              <tr><td>WhatsApp parent alerts</td><td className={`${styles.uthaanCol} ${styles.soonTag}`}>Planned</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td><td className={styles.cross}>No</td></tr>
-              <tr><td>Role-based access (4 roles)</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td>Partial</td><td className={styles.check}>Yes</td><td>Partial</td></tr>
-              <tr><td>Full audit log</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td className={styles.cross}>No</td><td className={styles.check}>Yes</td><td className={styles.cross}>No</td></tr>
-              <tr><td>Affordable for small schools</td><td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td><td>Free (limited)</td><td className={styles.cross}>Expensive</td><td>Free (limited)</td></tr>
+              <tr>
+                <td>Fee management</td>
+                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+              </tr>
+              <tr>
+                <td>Pakistan / local context</td>
+                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+              </tr>
+              <tr>
+                <td>AI report card comments</td>
+                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+              </tr>
+              <tr>
+                <td>Attendance alert summaries</td>
+                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+              </tr>
+              <tr>
+                <td>WhatsApp parent alerts</td>
+                <td className={`${styles.uthaanCol} ${styles.soonTag}`}>Planned</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.cross}>No</td>
+              </tr>
+              <tr>
+                <td>Role-based access (4 roles)</td>
+                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
+                <td>Partial</td>
+                <td className={styles.check}>Yes</td>
+                <td>Partial</td>
+              </tr>
+              <tr>
+                <td>Full audit log</td>
+                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
+                <td className={styles.cross}>No</td>
+                <td className={styles.check}>Yes</td>
+                <td className={styles.cross}>No</td>
+              </tr>
+              <tr>
+                <td>Affordable for small schools</td>
+                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
+                <td>Free (limited)</td>
+                <td className={styles.cross}>Expensive</td>
+                <td>Free (limited)</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -435,14 +825,18 @@ export default function LandingPage() {
 
       <div className={`${styles.ctaSection} ${styles.fadeIn}`}>
         <div className={styles.ctaBox}>
-          <h2>See how Uthaan would work for your school</h2>
+          <div className={`${styles.sectionTag} ${styles.mono}`}>Ready to explore Uthaan?</div>
+          <h2>Move your school from scattered tools to one cleaner platform</h2>
           <p>
-            Request a demo, tell us about your school, and we&apos;ll walk you through setup,
-            onboarding, and the right plan for your team.
+            Request a demo to start a guided rollout for your school, or log in if your team is
+            already using Uthaan.
           </p>
           <div className={styles.heroButtons}>
             <Link href="/demo" className={styles.btnPrimary}>
               Request a demo
+            </Link>
+            <Link href="/login" className={styles.btnSecondary}>
+              Existing user login
             </Link>
           </div>
         </div>

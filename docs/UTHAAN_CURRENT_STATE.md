@@ -52,6 +52,12 @@
 - Superadmin reviews them at `/superadmin/demo-requests`
 - Public users can insert requests only
 - Public users cannot read, update, or delete requests
+- Demo requests can include `requested_plan`:
+  - `not_sure`
+  - `starter`
+  - `growth`
+  - `pro`
+  - `enterprise`
 - This flow does not automatically:
   - create schools
   - create auth users
@@ -207,9 +213,10 @@
   4. school starts using app
 
 ## Business Model
-- Starter: `Rs. 8,000/month`, up to `200` students, core app, no AI
-- Growth: `Rs. 20,000/month`, up to `600` students, core + report comments + attendance alerts
-- Pro: `Rs. 40,000/month`, up to `1,500` students, more AI + higher limits
+- Pilot schools get `3 months free`, then choose a plan
+- Starter: `Rs. 12,000/month`, up to `200` students, core app, no AI
+- Growth: `Rs. 30,000/month`, up to `600` students, core + report comments + attendance alerts
+- Pro: `Rs. 65,000/month`, up to `1,500` students, more AI + higher limits
 - Enterprise: custom, `1,500+` students, custom setup / high limits
 - payment automation is not built yet
 - payments are expected to be manual first

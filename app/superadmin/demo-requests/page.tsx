@@ -14,12 +14,20 @@ type DemoRequestRow = {
   city: string | null
   student_count: number | null
   message: string | null
+  requested_plan: 'not_sure' | 'starter' | 'growth' | 'pro' | 'enterprise'
   status: DemoRequestStatus
   reviewed_at: string | null
   created_at: string
 }
 
 const STATUSES: DemoRequestStatus[] = ['new', 'contacted', 'approved', 'rejected', 'converted']
+const REQUESTED_PLAN_LABELS: Record<DemoRequestRow['requested_plan'], string> = {
+  not_sure: 'Not sure yet',
+  starter: 'Starter',
+  growth: 'Growth',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+}
 
 export default async function DemoRequestsPage() {
   const supabase = await createClient()
@@ -40,7 +48,7 @@ export default async function DemoRequestsPage() {
   const admin = createAdminClient()
   const { data } = await admin
     .from('demo_requests')
-    .select('id, school_name, contact_name, role_title, email, phone, city, student_count, message, status, reviewed_at, created_at')
+    .select('id, school_name, contact_name, role_title, email, phone, city, student_count, message, requested_plan, status, reviewed_at, created_at')
     .order('created_at', { ascending: false })
 
   const requests = (data ?? []) as DemoRequestRow[]
@@ -120,6 +128,10 @@ export default async function DemoRequestsPage() {
                           {request.student_count}
                         </div>
                       ) : null}
+                      <div>
+                        <span className="font-medium text-gray-900">Interested plan:</span>{' '}
+                        {REQUESTED_PLAN_LABELS[request.requested_plan]}
+                      </div>
                       <div>
                         <span className="font-medium text-gray-900">Requested:</span>{' '}
                         {new Date(request.created_at).toLocaleString('en-US', {

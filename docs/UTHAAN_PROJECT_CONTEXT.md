@@ -36,6 +36,12 @@
 - Superadmin reviews requests at `/superadmin/demo-requests`.
 - Public users can insert only.
 - Public users cannot read / update / delete requests.
+- Requests can include `requested_plan`:
+  - `not_sure`
+  - `starter`
+  - `growth`
+  - `pro`
+  - `enterprise`
 - This does not automatically create schools or auth users yet.
 - This does not implement payments.
 - This does not implement WhatsApp API.
@@ -177,9 +183,10 @@
 
 ## Business Model
 - Current pricing:
-  - Starter: `Rs. 8,000/month`, up to `200` students, core app, no AI
-  - Growth: `Rs. 20,000/month`, up to `600` students, core + report comments + attendance alerts
-  - Pro: `Rs. 40,000/month`, up to `1,500` students, more AI + higher limits
+  - Pilot schools: `3 months free`, then choose a plan
+  - Starter: `Rs. 12,000/month`, up to `200` students, core app, no AI
+  - Growth: `Rs. 30,000/month`, up to `600` students, core + report comments + attendance alerts
+  - Pro: `Rs. 65,000/month`, up to `1,500` students, more AI + higher limits
   - Enterprise: custom, `1,500+` students, custom setup / high limits
 - Payment automation is not built yet.
 - Payments are expected to be manual first.

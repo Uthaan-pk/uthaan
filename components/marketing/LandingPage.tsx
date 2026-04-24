@@ -117,14 +117,14 @@ const aiCards = [
 const pricingCards = [
   {
     plan: 'Starter',
-    amount: 'Rs. 8,000',
+    amount: 'Rs. 12,000',
     period: '/ month',
     students: 'Up to 200 students',
     features: ['Core school management', 'Attendance, marks, fees, announcements', 'Up to 4 user roles', 'No AI included'],
   },
   {
     plan: 'Growth',
-    amount: 'Rs. 20,000',
+    amount: 'Rs. 30,000',
     period: '/ month',
     students: 'Up to 600 students',
     features: ['Everything in Starter', 'AI report card comments', 'Attendance alert summaries', 'Priority support'],
@@ -132,7 +132,7 @@ const pricingCards = [
   },
   {
     plan: 'Pro',
-    amount: 'Rs. 40,000',
+    amount: 'Rs. 65,000',
     period: '/ month',
     students: 'Up to 1,500 students',
     features: ['Everything in Growth', 'Assignment feedback generator', 'Quiz generator when available', 'Higher AI limits'],
@@ -797,8 +797,8 @@ export default function LandingPage() {
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
-          Plans are assigned manually by superadmin today. AI access and monthly usage limits are
-          applied per school based on the selected plan.
+          Pilot schools get 3 months free, then choose a plan. Payments are still handled manually,
+          and AI access plus monthly limits are applied per school by superadmin.
         </p>
 
         <div className={styles.pricingGrid}>

@@ -107,6 +107,23 @@ export default function DemoRequestForm() {
           />
         </div>
 
+        <div>
+          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500">
+            Plan interested in
+          </label>
+          <select
+            name="requested_plan"
+            defaultValue="not_sure"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white focus:border-[#22a862] focus:outline-none"
+          >
+            <option value="not_sure">Not sure yet</option>
+            <option value="starter">Starter</option>
+            <option value="growth">Growth</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+
         <div className="md:col-span-2">
           <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500">
             Message

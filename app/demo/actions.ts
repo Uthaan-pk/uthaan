@@ -7,6 +7,9 @@ export type DemoRequestState = {
   success: boolean
 }
 
+const REQUESTED_PLANS = ['not_sure', 'starter', 'growth', 'pro', 'enterprise'] as const
+type RequestedPlan = (typeof REQUESTED_PLANS)[number]
+
 function clean(value: FormDataEntryValue | null) {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -23,7 +26,11 @@ export async function submitDemoRequest(
   const city = clean(formData.get('city'))
   const studentCountRaw = clean(formData.get('student_count'))
   const message = clean(formData.get('message'))
+  const requestedPlanRaw = clean(formData.get('requested_plan'))
   const website = clean(formData.get('website'))
+  const requestedPlan: RequestedPlan = REQUESTED_PLANS.includes(requestedPlanRaw as RequestedPlan)
+    ? (requestedPlanRaw as RequestedPlan)
+    : 'not_sure'
 
   if (website) {
     return { error: null, success: true }
@@ -67,6 +74,7 @@ export async function submitDemoRequest(
       city: city || null,
       student_count: studentCount,
       message: message || null,
+      requested_plan: requestedPlan,
     })
 
     if (error) {

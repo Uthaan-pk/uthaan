@@ -36,6 +36,13 @@ Uthaan is a school management platform for Pakistani private schools.
 - `school_features` is the source of truth for AI feature gating.
 - `schools.plan` is persisted and can be applied by superadmin.
 - Demo requests are manual-review only; they do not auto-create schools or users.
+- `demo_requests.requested_plan` stores public plan interest:
+  - `not_sure`
+  - `starter`
+  - `growth`
+  - `pro`
+  - `enterprise`
+- Pilot schools get 3 months free, then choose a paid plan.
 - Payment automation is not built yet.
 - WhatsApp Business API is not built yet.
 

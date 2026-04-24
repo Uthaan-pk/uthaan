@@ -1398,10 +1398,17 @@
   border: 1px solid rgb(34 168 98 / 0.4);
 }
 
-.priceCtaOutline:hover {
-  background: rgb(34 168 98 / 0.08);
-  border-color: var(--green-light);
+.priceCtaOutline:hover,
+.priceCtaOutline:focus-visible {
+  background: var(--green);
+  color: var(--white);
+  border-color: var(--green);
   transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgb(26 122 74 / 22%);
+}
+
+.priceCtaOutline:focus-visible {
+  outline: none;
 }
 
 .featured {

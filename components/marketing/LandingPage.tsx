@@ -171,9 +171,14 @@ export default function LandingPage() {
           <li><a href="#pricing">Pricing</a></li>
           <li><a href="#compare">Compare</a></li>
         </ul>
-        <Link href="/login" className={styles.navCta}>
-          Get a demo
-        </Link>
+        <div className={styles.navActions}>
+          <Link href="/login" className={styles.navLogin}>
+            Login
+          </Link>
+          <Link href="/demo" className={styles.navCta}>
+            Get a demo
+          </Link>
+        </div>
       </nav>
 
       <div className={styles.hero}>
@@ -190,7 +195,7 @@ export default function LandingPage() {
           school actually works — not how a Silicon Valley startup thinks it should.
         </p>
         <div className={styles.heroButtons}>
-          <Link href="/login" className={styles.btnPrimary}>
+          <Link href="/demo" className={styles.btnPrimary}>
             Start free pilot
           </Link>
           <a href="#features" className={styles.btnSecondary}>
@@ -315,7 +320,7 @@ export default function LandingPage() {
           <h2>Join the pilot programme</h2>
           <p>3 months free. Personal onboarding. Direct access to the development team. Locked-in pricing for life.</p>
           <div className={styles.heroButtons}>
-            <Link href="/login" className={styles.btnPrimary}>
+            <Link href="/demo" className={styles.btnPrimary}>
               Start free pilot
             </Link>
           </div>

@@ -128,12 +128,20 @@ export default async function SuperadminPage() {
           <span className="text-white/30 text-xs">·</span>
           <span className="text-white/60 text-xs font-medium uppercase tracking-widest">Superadmin</span>
         </div>
-        <a
-          href="/dashboard"
-          className="text-xs text-white/50 hover:text-white/80 transition-colors"
-        >
-          ← App
-        </a>
+        <div className="flex items-center gap-4">
+          <a
+            href="/superadmin/demo-requests"
+            className="text-xs text-white/50 hover:text-white/80 transition-colors"
+          >
+            Demo requests
+          </a>
+          <a
+            href="/dashboard"
+            className="text-xs text-white/50 hover:text-white/80 transition-colors"
+          >
+            ← App
+          </a>
+        </div>
       </header>
 
       {/* Impersonation banner */}

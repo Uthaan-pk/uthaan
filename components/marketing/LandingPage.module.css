@@ -37,6 +37,12 @@
   backdrop-filter: blur(12px);
 }
 
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
 .navLogo {
   font-size: 20px;
   font-weight: 700;
@@ -63,6 +69,16 @@
 }
 
 .navLinks a:hover {
+  color: var(--white);
+}
+
+.navLogin {
+  color: var(--gray);
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.navLogin:hover {
   color: var(--white);
 }
 
@@ -576,6 +592,10 @@
 @media (max-width: 600px) {
   .navLinks {
     display: none;
+  }
+
+  .navActions {
+    gap: 0.6rem;
   }
 
   .statsBar {

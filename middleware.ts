@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Paths that are always public (no auth / school check needed)
-const PUBLIC_PATHS = ['/login', '/auth', '/suspended', '/_next', '/favicon.ico']
+const PUBLIC_PATHS = ['/login', '/demo', '/auth', '/suspended', '/_next', '/favicon.ico']
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname.startsWith(p))

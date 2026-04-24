@@ -24,6 +24,9 @@ export type OnboardResult =
   | { success: true; credentials: OnboardCredentials }
   | { success: false; error: string }
 
+const DEMO_REQUEST_STATUSES = ['new', 'contacted', 'approved', 'rejected', 'converted'] as const
+export type DemoRequestStatus = (typeof DEMO_REQUEST_STATUSES)[number]
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function generatePassword(): string {
@@ -60,6 +63,36 @@ async function assertSuperadmin() {
     .single()
 
   if (roleData?.role !== 'superadmin') redirect('/dashboard')
+}
+
+export async function updateDemoRequestStatus(formData: FormData) {
+  await assertSuperadmin()
+
+  const id = String(formData.get('id') ?? '').trim()
+  const status = String(formData.get('status') ?? '').trim() as DemoRequestStatus
+
+  if (!id || !DEMO_REQUEST_STATUSES.includes(status)) {
+    redirect('/superadmin/demo-requests')
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  const admin = createAdminClient()
+  await admin
+    .from('demo_requests')
+    .update({
+      status,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: user.id,
+    })
+    .eq('id', id)
+
+  redirect('/superadmin/demo-requests')
 }
 
 // ── Actions ────────────────────────────────────────────────────────────────

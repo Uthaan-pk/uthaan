@@ -433,74 +433,85 @@ export default function LandingPage() {
           </a>
         </div>
         <div className={styles.heroPreview}>
-          <div className={styles.previewShell}>
-            <div className={styles.previewShellTop}>
-              <div className={styles.previewBrowserDots} aria-hidden="true">
-                <span />
-                <span />
-                <span />
+          <div className={styles.previewFloatingCards}>
+            {heroPreviewCards.map((card, index) => (
+              <button
+                key={card.key}
+                type="button"
+                className={`${styles.previewChip} ${activeHeroCard === card.key ? styles.previewChipActive : ''}`}
+                style={staggerStyle(index)}
+                onClick={() => setActiveHeroCard(card.key)}
+                aria-pressed={activeHeroCard === card.key}
+              >
+                <span className={styles.previewChipLabel}>{card.label}</span>
+                <span className={styles.previewChipHint}>Preview</span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.deviceStage}>
+            <div className={styles.deviceGlow} aria-hidden="true" />
+            <div className={styles.deviceLid} aria-hidden="true">
+              <div className={styles.deviceLidInner}>
+                <div className={styles.deviceLidBar} />
               </div>
-              <div className={`${styles.previewUrl} ${styles.mono}`}>uthaan.app / school workspace</div>
-              <div className={styles.previewShellBadge}>Live preview</div>
             </div>
-            <div className={styles.previewChipRail}>
-              {heroPreviewCards.map((card, index) => (
-                <button
-                  key={card.key}
-                  type="button"
-                  className={`${styles.previewChip} ${activeHeroCard === card.key ? styles.previewChipActive : ''}`}
-                  style={staggerStyle(index)}
-                  onClick={() => setActiveHeroCard(card.key)}
-                  aria-pressed={activeHeroCard === card.key}
-                >
-                  <span className={styles.previewChipLabel}>{card.label}</span>
-                </button>
-              ))}
+            <div className={styles.deviceBase} aria-hidden="true">
+              <div className={styles.deviceTrackpad} />
             </div>
-            <div className={styles.previewCard}>
-              <div className={styles.previewTopline}>
-                <span className={styles.previewDot} />
-                {activeHeroPreview.eyebrow}
-              </div>
-              <div className={styles.previewStory}>
-                <div className={styles.previewStoryHeader}>
-                  <div>
-                    <div className={styles.previewStoryTitle}>{activeHeroPreview.title}</div>
-                    <p className={styles.previewStorySummary}>{activeHeroPreview.summary}</p>
-                  </div>
-                  <div className={styles.previewStatusCard}>
-                    <div className={`${styles.previewStatusValue} ${styles.mono}`}>Live</div>
-                    <div className={styles.previewStatusLabel}>Product-led preview</div>
-                  </div>
+            <div className={styles.previewShell}>
+              <div className={styles.previewShellTop}>
+                <div className={styles.previewBrowserDots} aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
                 </div>
-                <div className={styles.previewMetrics}>
-                  {activeHeroPreview.stats.map(([value, label]) => (
-                    <div key={label} className={styles.previewMetric}>
-                      <div className={`${styles.previewMetricValue} ${styles.mono}`}>{value}</div>
-                      <div className={styles.previewMetricLabel}>{label}</div>
+                <div className={`${styles.previewUrl} ${styles.mono}`}>uthaan.app / school workspace</div>
+              </div>
+              <div className={styles.previewCard}>
+                <div className={styles.previewTopline}>
+                  <span className={styles.previewDot} />
+                  {activeHeroPreview.eyebrow}
+                </div>
+                <div className={styles.previewStory}>
+                  <div className={styles.previewStoryHeader}>
+                    <div>
+                      <div className={styles.previewStoryTitle}>{activeHeroPreview.title}</div>
+                      <p className={styles.previewStorySummary}>{activeHeroPreview.summary}</p>
                     </div>
-                  ))}
-                </div>
-                <div className={styles.previewInsights}>
-                  {activeHeroPreview.bullets.map((bullet) => (
-                    <div key={bullet} className={styles.previewInsight}>
-                      {bullet}
+                    <div className={styles.previewStatusCard}>
+                      <div className={`${styles.previewStatusValue} ${styles.mono}`}>Live</div>
+                      <div className={styles.previewStatusLabel}>Product-led preview</div>
                     </div>
-                  ))}
+                  </div>
+                  <div className={styles.previewMetrics}>
+                    {activeHeroPreview.stats.map(([value, label]) => (
+                      <div key={label} className={styles.previewMetric}>
+                        <div className={`${styles.previewMetricValue} ${styles.mono}`}>{value}</div>
+                        <div className={styles.previewMetricLabel}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={styles.previewInsights}>
+                    {activeHeroPreview.bullets.map((bullet) => (
+                      <div key={bullet} className={styles.previewInsight}>
+                        {bullet}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className={styles.previewTabs}>
-              {heroPreviewCards.map((card) => (
-                <button
-                  key={card.key}
-                  type="button"
-                  className={`${styles.previewTab} ${activeHeroCard === card.key ? styles.previewTabActive : ''}`}
-                  onClick={() => setActiveHeroCard(card.key)}
-                >
-                  {card.label}
-                </button>
-              ))}
+              <div className={styles.previewTabs}>
+                {heroPreviewCards.map((card) => (
+                  <button
+                    key={card.key}
+                    type="button"
+                    className={`${styles.previewTab} ${activeHeroCard === card.key ? styles.previewTabActive : ''}`}
+                    onClick={() => setActiveHeroCard(card.key)}
+                  >
+                    {card.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

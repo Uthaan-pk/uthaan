@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { Fragment } from 'react'
@@ -129,18 +130,32 @@ export default async function SuperadminPage() {
           <span className="text-white/60 text-xs font-medium uppercase tracking-widest">Superadmin</span>
         </div>
         <div className="flex items-center gap-4">
-          <a
+          <Link
+            href="/"
+            className="text-xs text-white/50 hover:text-white/80 transition-colors"
+          >
+            View website
+          </Link>
+          <Link
             href="/superadmin/demo-requests"
             className="text-xs text-white/50 hover:text-white/80 transition-colors"
           >
             Demo requests
-          </a>
+          </Link>
           <a
             href="/dashboard"
             className="text-xs text-white/50 hover:text-white/80 transition-colors"
           >
             ← App
           </a>
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              className="text-xs text-white/50 hover:text-red-300 transition-colors"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </header>
 

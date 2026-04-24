@@ -492,6 +492,16 @@ export default function Sidebar({
             </div>
           </div>
 
+          <Link
+            href="/"
+            onClick={close}
+            className={`mt-3 block px-2 py-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/5 transition-colors ${
+              isUrdu ? 'text-sm' : 'text-xs'
+            }`}
+          >
+            View website
+          </Link>
+
           <form action="/auth/signout" method="post" className="mt-3">
             <button
               className={`w-full hover:text-red-400 hover:bg-white/5 transition-colors text-left px-2 py-2 rounded-lg text-white/50 ${

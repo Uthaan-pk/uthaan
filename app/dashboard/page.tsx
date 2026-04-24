@@ -14,6 +14,17 @@ import {
 import { CURRENT_YEAR, TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 import { HelpButton } from '@/components/HelpButton'
+import {
+  ArrowRight,
+  Bell,
+  CalendarCheck2,
+  ClipboardList,
+  FileText,
+  GraduationCap,
+  Megaphone,
+  ShieldCheck,
+  Users,
+} from 'lucide-react'
 
 const SCHOOL_TIME_ZONE = 'Asia/Karachi'
 
@@ -30,6 +41,161 @@ function getSchoolWeekdayName(now = new Date()) {
     weekday: 'long',
     timeZone: SCHOOL_TIME_ZONE,
   }).format(now)
+}
+
+function DashboardHero({
+  eyebrow,
+  title,
+  description,
+  badge,
+  actions,
+  stats,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+  badge?: string
+  actions?: React.ReactNode
+  stats: Array<{ label: string; value: string | number; tone?: 'default' | 'alert' | 'success' }>
+}) {
+  return (
+    <section className="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-[0_10px_40px_rgba(16,24,40,0.06)]">
+      <div className="bg-[linear-gradient(135deg,#f4fbf6_0%,#ffffff_55%,#f7faf8_100%)] px-5 py-6 sm:px-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-2xl">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5d7a63]">
+              {eyebrow}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-[2rem]">
+                {title}
+              </h2>
+              {badge ? (
+                <span className="inline-flex items-center rounded-full border border-[#6fcf6f]/25 bg-[#6fcf6f]/10 px-3 py-1 text-xs font-medium text-[#1a7a4a]">
+                  {badge}
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-gray-500 sm:text-[15px]">
+              {description}
+            </p>
+          </div>
+
+          {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className={`rounded-2xl border px-4 py-4 ${
+                stat.tone === 'alert'
+                  ? 'border-amber-200 bg-amber-50/70'
+                  : stat.tone === 'success'
+                    ? 'border-green-200 bg-green-50/70'
+                    : 'border-white/70 bg-white/80'
+              }`}
+            >
+              <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                {stat.label}
+              </div>
+              <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+                {stat.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function DashboardSection({
+  title,
+  description,
+  children,
+  action,
+}: {
+  title: string
+  description?: string
+  children: React.ReactNode
+  action?: React.ReactNode
+}) {
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-gray-900">{title}</div>
+          {description ? <div className="mt-1 text-sm text-gray-500">{description}</div> : null}
+        </div>
+        {action}
+      </div>
+      <div className="mt-4">{children}</div>
+    </section>
+  )
+}
+
+function ActionTile({
+  href,
+  eyebrow,
+  title,
+  body,
+  icon,
+}: {
+  href: string
+  eyebrow: string
+  title: string
+  body: string
+  icon: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-white"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="rounded-xl border border-[#6fcf6f]/15 bg-[#6fcf6f]/10 p-2 text-[#1a7a4a]">
+          {icon}
+        </div>
+        <ArrowRight className="mt-1 h-4 w-4 text-gray-300 transition-colors group-hover:text-gray-500" />
+      </div>
+      <div className="mt-4 text-[11px] font-medium uppercase tracking-wide text-gray-500">{eyebrow}</div>
+      <div className="mt-1 text-sm font-medium text-gray-900">{title}</div>
+      <div className="mt-1 text-sm leading-6 text-gray-500">{body}</div>
+    </Link>
+  )
+}
+
+function SignalCard({
+  href,
+  label,
+  value,
+  helper,
+  tone = 'default',
+}: {
+  href: string
+  label: string
+  value: number | string
+  helper: string
+  tone?: 'default' | 'danger' | 'warning'
+}) {
+  const toneClass =
+    tone === 'danger'
+      ? 'border-red-200 bg-red-50/75'
+      : tone === 'warning'
+        ? 'border-amber-200 bg-amber-50/75'
+        : 'border-gray-200 bg-[#fafcf9]'
+
+  return (
+    <Link
+      href={href}
+      className={`rounded-2xl border px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300 ${toneClass}`}
+    >
+      <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{label}</div>
+      <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{value}</div>
+      <div className="mt-1 text-xs leading-5 text-gray-500">{helper}</div>
+    </Link>
+  )
 }
 
 export default async function DashboardPage() {
@@ -688,117 +854,135 @@ export default async function DashboardPage() {
 
           <main className="uthaan-page-content">
             <div className="max-w-6xl space-y-6">
-              <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
-                <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Control centre
-                      </div>
-                      <div className="mt-2 text-2xl font-semibold text-gray-900">
-                        School dashboard
-                      </div>
-                      <div className="mt-1 text-sm text-gray-500">
-                        Review the issues that need attention first, then jump into the right workflow.
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Link href="/students" className="uthaan-button-secondary text-xs">Students</Link>
-                      <Link href="/attendance" className="uthaan-button-secondary text-xs">Attendance</Link>
-                      <Link href="/announcements" className="uthaan-button-secondary text-xs">Announcements</Link>
-                      <Link href="/marks" className="uthaan-button-secondary text-xs">Results</Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <DashboardHero
+                eyebrow="Control centre"
+                title="School dashboard"
+                description="Review the school’s biggest operational issues first, then move directly into the right workflow without hunting across pages."
+                badge="Admin overview"
+                actions={
+                  <>
+                    <Link href="/students" className="uthaan-button-secondary text-xs">Students</Link>
+                    <Link href="/attendance" className="uthaan-button-secondary text-xs">Attendance</Link>
+                    <Link href="/announcements" className="uthaan-button-secondary text-xs">Announcements</Link>
+                    <Link href="/marks" className="uthaan-button-secondary text-xs">Results</Link>
+                  </>
+                }
+                stats={[
+                  { label: 'Total students', value: totalStudents },
+                  { label: 'Overdue fees', value: overdueFeeStudentIds.size, tone: overdueFeeStudentIds.size > 0 ? 'alert' : 'default' },
+                  { label: 'Attendance watchlist', value: studentsWithHighAbsences, tone: studentsWithHighAbsences > 0 ? 'alert' : 'default' },
+                ]}
+              />
 
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_1fr]">
                 <div className="space-y-4">
-                  <div className="bg-white rounded-xl border border-gray-100 p-5">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-semibold text-gray-900">
-                          Needs attention
-                        </div>
-                        <div className="mt-1 text-sm text-gray-500">
-                          High-priority issues based on current school data.
-                        </div>
-                      </div>
+                  <DashboardSection
+                    title="Needs attention"
+                    description="High-priority issues surfaced from current school records."
+                  >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <SignalCard
+                        href="/fees"
+                        label="Overdue fees"
+                        value={overdueFeeStudentIds.size}
+                        helper="Students with overdue balances"
+                        tone={overdueFeeStudentIds.size > 0 ? 'danger' : 'default'}
+                      />
+                      <SignalCard
+                        href="/attendance/low"
+                        label="Low attendance"
+                        value={studentsWithHighAbsences}
+                        helper="Below 75% attendance"
+                        tone={studentsWithHighAbsences > 0 ? 'warning' : 'default'}
+                      />
+                      <SignalCard
+                        href="/marks"
+                        label="Failing students"
+                        value={studentsFailing}
+                        helper="One or more subjects below pass"
+                        tone={studentsFailing > 0 ? 'danger' : 'default'}
+                      />
                     </div>
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      <Link href="/fees" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${overdueFeeStudentIds.size > 0 ? 'bg-red-50 border-red-200' : 'bg-[#fafcf9] border-gray-100'}`}>
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Overdue fees</div>
-                        <div className="mt-1 text-2xl font-semibold text-gray-900">{overdueFeeStudentIds.size}</div>
-                        <div className="mt-1 text-xs text-gray-500">Students with overdue balances</div>
-                      </Link>
-                      <Link href="/attendance/low" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${studentsWithHighAbsences > 0 ? 'bg-amber-50 border-amber-200' : 'bg-[#fafcf9] border-gray-100'}`}>
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Low attendance</div>
-                        <div className="mt-1 text-2xl font-semibold text-gray-900">{studentsWithHighAbsences}</div>
-                        <div className="mt-1 text-xs text-gray-500">Below 75% attendance</div>
-                      </Link>
-                      <Link href="/marks" className={`rounded-xl border px-4 py-4 transition-colors hover:border-gray-200 ${studentsFailing > 0 ? 'bg-red-50 border-red-200' : 'bg-[#fafcf9] border-gray-100'}`}>
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Failing students</div>
-                        <div className="mt-1 text-2xl font-semibold text-gray-900">{studentsFailing}</div>
-                        <div className="mt-1 text-xs text-gray-500">One or more subjects below pass</div>
-                      </Link>
-                    </div>
-                  </div>
+                  </DashboardSection>
 
-                  <div className="bg-white rounded-xl border border-gray-100 p-5">
-                    <div className="text-sm font-semibold text-gray-900">
-                      Quick actions
+                  <DashboardSection
+                    title="Quick actions"
+                    description="Jump into the workflows school operators use most."
+                  >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <ActionTile
+                        href="/admin"
+                        eyebrow={t.adminPanel}
+                        title="Manage students and parents"
+                        body="Open the operational admin area for records, linking, and imports."
+                        icon={<Users className="h-4 w-4" />}
+                      />
+                      <ActionTile
+                        href="/admin/leaves"
+                        eyebrow="Leave management"
+                        title="Approve leave requests"
+                        body="Review full-day and early-leave items that need action."
+                        icon={<CalendarCheck2 className="h-4 w-4" />}
+                      />
+                      <ActionTile
+                        href="/announcements"
+                        eyebrow="Announcements"
+                        title="Post a school update"
+                        body="Send a clean update to staff and families from one place."
+                        icon={<Megaphone className="h-4 w-4" />}
+                      />
+                      <ActionTile
+                        href="/marks"
+                        eyebrow="Results"
+                        title="Review grades and report cards"
+                        body="Open grade workflows and check final performance summaries."
+                        icon={<GraduationCap className="h-4 w-4" />}
+                      />
                     </div>
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <Link href="/admin" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">{t.adminPanel}</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">Manage students and parents</div>
-                      </Link>
-                      <Link href="/admin/leaves" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Leave management</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">Approve full-day and early leave</div>
-                      </Link>
-                      <Link href="/announcements" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Announcements</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">Post updates for families and staff</div>
-                      </Link>
-                      <Link href="/marks" className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-4 hover:border-gray-200">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Results</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">Review final grades and report cards</div>
-                      </Link>
-                    </div>
-                  </div>
+                  </DashboardSection>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="bg-white rounded-xl border border-gray-100 p-5">
-                    <div className="text-sm font-semibold text-gray-900">Snapshot</div>
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">{t.totalStudents}</div>
-                        <div className="mt-1 text-2xl font-semibold text-gray-900">{totalStudents}</div>
+                  <DashboardSection
+                    title="Operating snapshot"
+                    description="A quick read of the school’s current health."
+                  >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                          <Users className="h-3.5 w-3.5" />
+                          {t.totalStudents}
+                        </div>
+                        <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{totalStudents}</div>
                       </div>
-                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Overdue fees</div>
-                        <div className="mt-1 text-2xl font-semibold text-gray-900">{overdueFeeStudentIds.size}</div>
+                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                          <ClipboardList className="h-3.5 w-3.5" />
+                          Overdue fees
+                        </div>
+                        <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{overdueFeeStudentIds.size}</div>
                       </div>
-                      <div className="rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-500">Attendance watchlist</div>
-                        <div className="mt-1 text-2xl font-semibold text-gray-900">{studentsWithHighAbsences}</div>
+                      <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          Attendance watchlist
+                        </div>
+                        <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">{studentsWithHighAbsences}</div>
                       </div>
                     </div>
-                  </div>
+                  </DashboardSection>
 
                   {recentAnnouncements.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                      <div className="px-5 py-4 border-b border-gray-50">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {t.recentAnnouncements}
-                        </div>
-                      </div>
-                      <div className="divide-y divide-gray-50">
+                    <DashboardSection
+                      title={t.recentAnnouncements}
+                      description="Latest school communications posted from the admin side."
+                    >
+                      <div className="space-y-2">
                         {recentAnnouncements.map((a) => (
-                          <div key={a.id} className="px-5 py-3.5 flex items-center gap-3">
-                            <div className="h-2 w-2 rounded-full bg-[#6fcf6f] flex-shrink-0" />
+                          <div key={a.id} className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-[#fafcf9] px-4 py-3.5">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6fcf6f]/10 text-[#1a7a4a]">
+                              <Bell className="h-4 w-4" />
+                            </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-sm font-medium text-gray-900">{a.title}</div>
                             </div>
@@ -808,7 +992,7 @@ export default async function DashboardPage() {
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </DashboardSection>
                   )}
                 </div>
               </div>
@@ -911,140 +1095,141 @@ export default async function DashboardPage() {
 
         <main className="uthaan-page-content">
           <div className="max-w-5xl space-y-6">
-
-            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
-              <div className="bg-gradient-to-r from-[#f8fbf8] via-white to-white px-5 py-5">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Morning briefing
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold text-gray-900">
-                      {todayDisplay}
-                    </div>
-                    <div className="mt-1 text-sm text-gray-500">
-                      Review classes, attendance follow-up, and grading work in one place.
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
-                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Classes today</div>
-                      <div className="mt-1 text-xl font-semibold text-gray-900">{classesTodayCount}</div>
-                    </div>
-                    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
-                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Attendance</div>
-                      <div className="mt-1 text-xl font-semibold text-gray-900">{attendanceNotTakenCount}</div>
-                    </div>
-                    <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
-                      <div className="text-[11px] uppercase tracking-wide text-gray-500">Need grading</div>
-                      <div className="mt-1 text-xl font-semibold text-gray-900">{ungraded}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <DashboardHero
+              eyebrow="Morning briefing"
+              title={todayDisplay}
+              description="Review your classes, attendance follow-up, and grading workload from one calm staff dashboard."
+              badge="Teacher overview"
+              actions={
+                <>
+                  <Link href="/attendance" className="uthaan-button-secondary text-xs">Attendance</Link>
+                  <Link href="/marks" className="uthaan-button-secondary text-xs">Gradebook</Link>
+                  <Link href="/announcements" className="uthaan-button-secondary text-xs">Announcements</Link>
+                </>
+              }
+              stats={[
+                { label: 'Classes today', value: classesTodayCount },
+                { label: 'Attendance to mark', value: attendanceNotTakenCount, tone: attendanceNotTakenCount > 0 ? 'alert' : 'success' },
+                { label: 'Need grading', value: ungraded, tone: ungraded > 0 ? 'alert' : 'default' },
+              ]}
+            />
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.95fr]">
               <div className="space-y-4">
-                <div>
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
-                    My classes today
-                  </div>
+                <DashboardSection
+                  title="My classes today"
+                  description="Today’s schedule, with a direct handoff into attendance when needed."
+                >
                   {classesToday.length > 0 ? (
                     <div className="space-y-2">
-                  {classesToday.map((cls) => (
-                    <div
-                      key={`${cls.class_num}-${cls.period}`}
-                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center"
-                    >
-                      <span className="text-sm font-medium text-gray-900 flex-1">
-                        {cls.subject}
-                        <span className="text-gray-400 font-normal"> · Class {cls.class_num}</span>
-                        <span className="text-gray-400 font-normal"> · {cls.start_time?.slice(0, 5)}–{cls.end_time?.slice(0, 5)}</span>
-                      </span>
-                      {attendanceMarked ? (
-                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
-                          Done
-                        </span>
-                      ) : (
-                        <Link
-                          href="/attendance"
-                          className="text-[11px] font-medium px-3 py-1 rounded-lg bg-[#1a2e1a] text-white hover:bg-[#2a3e2a] transition-colors"
+                      {classesToday.map((cls) => (
+                        <div
+                          key={`${cls.class_num}-${cls.period}`}
+                          className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-[#fafcf9] px-4 py-3 sm:flex-row sm:items-center"
                         >
-                          Mark attendance
-                        </Link>
-                      )}
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6fcf6f]/10 text-[#1a7a4a]">
+                            <CalendarCheck2 className="h-4 w-4" />
+                          </div>
+                          <span className="flex-1 text-sm font-medium text-gray-900">
+                            {cls.subject}
+                            <span className="font-normal text-gray-400"> · Class {cls.class_num}</span>
+                            <span className="font-normal text-gray-400"> · {cls.start_time?.slice(0, 5)}–{cls.end_time?.slice(0, 5)}</span>
+                          </span>
+                          {attendanceMarked ? (
+                            <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-[11px] font-medium text-green-700">
+                              Attendance done
+                            </span>
+                          ) : (
+                            <Link
+                              href="/attendance"
+                              className="uthaan-button-primary text-[11px]"
+                            >
+                              Mark attendance
+                            </Link>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
                   ) : (
-                    <div className="bg-white rounded-xl border border-gray-100 px-4 py-6 text-center text-sm text-gray-400">
+                    <div className="rounded-2xl border border-gray-100 bg-[#fafcf9] px-4 py-8 text-center text-sm text-gray-400">
                       No classes scheduled for today
                     </div>
                   )}
-                </div>
+                </DashboardSection>
 
                 {needsGradingList.length > 0 && (
-                  <div>
-                    <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-3">
-                      Needs grading
-                    </div>
+                  <DashboardSection
+                    title="Needs grading"
+                    description="Assignments waiting for teacher review right now."
+                  >
                     <div className="space-y-2">
-                  {needsGradingList.map((item) => (
-                    <div
-                      key={item.title}
-                      className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center"
-                    >
-                      <span className="text-sm text-gray-900 flex-1">
-                        {item.title}
-                        <span className="text-gray-400"> · Class {item.class_num} · {item.count} submission{item.count !== 1 ? 's' : ''} pending</span>
-                      </span>
-                      <Link
-                        href="/marks"
-                        className="text-[11px] font-medium text-[#1a2e1a] hover:underline flex-shrink-0"
-                      >
-                        Gradebook →
-                      </Link>
+                      {needsGradingList.map((item) => (
+                        <div
+                          key={item.title}
+                          className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-[#fafcf9] px-4 py-3 sm:flex-row sm:items-center"
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6fcf6f]/10 text-[#1a7a4a]">
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <span className="flex-1 text-sm text-gray-900">
+                            {item.title}
+                            <span className="text-gray-400"> · Class {item.class_num} · {item.count} submission{item.count !== 1 ? 's' : ''} pending</span>
+                          </span>
+                          <Link
+                            href="/marks"
+                            className="text-[11px] font-medium text-[#1a2e1a] hover:underline"
+                          >
+                            Open gradebook →
+                          </Link>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                    </div>
-                  </div>
+                  </DashboardSection>
                 )}
               </div>
 
               <div className="space-y-4">
-                <div className="bg-white rounded-xl border border-gray-100 p-5">
-                  <div className="text-sm font-semibold text-gray-900">
-                    Quick actions
+                <DashboardSection
+                  title="Quick actions"
+                  description="The staff workflows most likely to matter today."
+                >
+                  <div className="space-y-3">
+                    <ActionTile
+                      href="/attendance"
+                      eyebrow="Attendance"
+                      title="Mark today’s attendance"
+                      body="Record status for current classes without leaving the dashboard flow."
+                      icon={<CalendarCheck2 className="h-4 w-4" />}
+                    />
+                    <ActionTile
+                      href="/marks"
+                      eyebrow="Gradebook"
+                      title="Open marks and grading"
+                      body="Review pending work, update scores, and continue result prep."
+                      icon={<FileText className="h-4 w-4" />}
+                    />
+                    <ActionTile
+                      href="/announcements"
+                      eyebrow="Announcements"
+                      title="Review school updates"
+                      body="Check the latest notices or post a new one for students and families."
+                      icon={<Megaphone className="h-4 w-4" />}
+                    />
                   </div>
-                  <div className="mt-4 space-y-2">
-                    <Link href="/attendance" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
-                      <span>Mark attendance</span>
-                      <span className="text-gray-400">→</span>
-                    </Link>
-                    <Link href="/marks" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
-                      <span>Open gradebook</span>
-                      <span className="text-gray-400">→</span>
-                    </Link>
-                    <Link href="/announcements" className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 text-sm font-medium text-gray-800 hover:border-gray-200">
-                      <span>School announcements</span>
-                      <span className="text-gray-400">→</span>
-                    </Link>
-                  </div>
-                </div>
+                </DashboardSection>
 
                 {recentAnnouncements.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    <div className="px-5 py-4 border-b border-gray-50">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {t.recentAnnouncements}
-                      </div>
-                    </div>
-                    <div className="divide-y divide-gray-50">
+                  <DashboardSection
+                    title={t.recentAnnouncements}
+                    description="The latest school messages visible from your side."
+                  >
+                    <div className="space-y-2">
                       {recentAnnouncements.map((a) => (
-                        <div key={a.id} className="px-5 py-3.5 flex items-center gap-3">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#6fcf6f] flex-shrink-0" />
-                          <div className="text-sm text-gray-900 flex-1">
+                        <div key={a.id} className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-[#fafcf9] px-4 py-3.5">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6fcf6f]/10 text-[#1a7a4a]">
+                            <Bell className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1 text-sm text-gray-900">
                             {a.title}
                           </div>
                           <div className="text-xs text-gray-500">
@@ -1053,7 +1238,7 @@ export default async function DashboardPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </DashboardSection>
                 )}
               </div>
             </div>

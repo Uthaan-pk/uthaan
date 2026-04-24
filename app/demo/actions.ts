@@ -7,13 +7,6 @@ export type DemoRequestState = {
   success: boolean
 }
 
-const initialState: DemoRequestState = {
-  error: null,
-  success: false,
-}
-
-export { initialState }
-
 function clean(value: FormDataEntryValue | null) {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -63,21 +56,34 @@ export async function submitDemoRequest(
     studentCount = parsed
   }
 
-  const supabase = await createClient()
-  const { error } = await supabase.from('demo_requests').insert({
-    school_name: schoolName,
-    contact_name: contactName,
-    role_title: roleTitle || null,
-    email,
-    phone: phone || null,
-    city: city || null,
-    student_count: studentCount,
-    message: message || null,
-  })
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase.from('demo_requests').insert({
+      school_name: schoolName,
+      contact_name: contactName,
+      role_title: roleTitle || null,
+      email,
+      phone: phone || null,
+      city: city || null,
+      student_count: studentCount,
+      message: message || null,
+    })
 
-  if (error) {
+    if (error) {
+      console.error('Demo request insert failed', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      })
+      return {
+        error: 'Could not save your request right now. Please try again.',
+        success: false,
+      }
+    }
+  } catch (error) {
+    console.error('Demo request submit crashed', error)
     return {
-      error: 'Could not save your request right now. Please try again.',
+      error: 'Something went wrong while submitting your request. Please try again.',
       success: false,
     }
   }

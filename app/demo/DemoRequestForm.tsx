@@ -2,7 +2,12 @@
 
 import Link from 'next/link'
 import { useActionState } from 'react'
-import { initialState, submitDemoRequest } from './actions'
+import { submitDemoRequest, type DemoRequestState } from './actions'
+
+const initialState: DemoRequestState = {
+  error: null,
+  success: false,
+}
 
 export default function DemoRequestForm() {
   const [state, formAction, pending] = useActionState(submitDemoRequest, initialState)

@@ -995,7 +995,7 @@ export default function LandingPage() {
                 <Link
                   href={`/demo?plan=${card.plan.toLowerCase()}`}
                   onClick={(event) => event.stopPropagation()}
-                  className={`${styles.priceCta} ${card.featured ? styles.priceCtaPrimary : styles.priceCtaOutline}`}
+                  className={`${styles.priceCta} ${styles.priceCtaPrimary}`}
                 >
                   {card.plan === 'Enterprise' ? 'Talk to us' : 'Request demo'}
                   <ChevronRight size={14} />

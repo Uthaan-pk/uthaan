@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { CommandPalette } from './CommandPalette'
 import { createClient } from '@/lib/supabase/client'
@@ -22,34 +22,67 @@ export function CommandPaletteProvider({
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [userCtx, setUserCtx] = useState<PaletteUserCtx | null>(initialUserCtx)
+  const supabase = createClient()
 
-  // Fetch role once on mount
-  useEffect(() => {
-    if (initialUserCtx) return
-
-    async function load() {
-      try {
-        const supabase = createClient()
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        if (!user) return
-
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role, school_id')
-          .eq('user_id', user.id)
-          .single()
-
-        if (data) {
-          setUserCtx({ role: data.role as string, schoolId: data.school_id as string | null })
-        }
-      } catch {
-        // Not logged in — palette stays hidden
+  const loadUserCtx = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        setUserCtx(null)
+        return null
       }
+
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role, school_id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!data) {
+        setUserCtx(null)
+        return null
+      }
+
+      const nextCtx = {
+        role: data.role as string,
+        schoolId: data.school_id as string | null,
+      }
+      setUserCtx(nextCtx)
+      return nextCtx
+    } catch {
+      return null
     }
-    load()
+  }, [supabase])
+
+  // Keep local state aligned when the server-seeded context changes after navigation.
+  useEffect(() => {
+    setUserCtx(initialUserCtx)
   }, [initialUserCtx])
+
+  // Fetch role on mount when there is no server seed yet.
+  useEffect(() => {
+    if (!initialUserCtx) {
+      void loadUserCtx()
+    }
+  }, [initialUserCtx, loadUserCtx])
+
+  // Recover immediately after client-side login/logout without requiring refresh.
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setUserCtx(null)
+        setIsOpen(false)
+        return
+      }
+      void loadUserCtx()
+    })
+
+    return () => subscription.unsubscribe()
+  }, [loadUserCtx, supabase])
 
   // Global Cmd+K / Ctrl+K listener — skip when focus is inside a text field
   useEffect(() => {
@@ -65,13 +98,28 @@ export function CommandPaletteProvider({
         return
       }
       e.preventDefault()
-      if (userCtx) setIsOpen((v) => !v)
+      if (userCtx) {
+        setIsOpen((v) => !v)
+        return
+      }
+      void loadUserCtx().then((ctx) => {
+        if (ctx) setIsOpen(true)
+      })
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [userCtx])
+  }, [loadUserCtx, userCtx])
 
-  const open = () => userCtx && setIsOpen(true)
+  const open = useCallback(() => {
+    if (userCtx) {
+      setIsOpen(true)
+      return
+    }
+    void loadUserCtx().then((ctx) => {
+      if (ctx) setIsOpen(true)
+    })
+  }, [loadUserCtx, userCtx])
+
   const close = () => setIsOpen(false)
 
   return (

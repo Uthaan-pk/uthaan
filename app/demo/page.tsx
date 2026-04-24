@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import DemoRequestForm from './DemoRequestForm'
 
@@ -52,7 +53,9 @@ export default function DemoPage() {
                 Required: school name, contact name, and email.
               </p>
             </div>
-            <DemoRequestForm />
+            <Suspense fallback={null}>
+              <DemoRequestForm />
+            </Suspense>
           </section>
         </div>
       </div>

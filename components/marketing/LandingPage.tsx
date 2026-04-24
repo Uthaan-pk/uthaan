@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { JetBrains_Mono, Sora } from 'next/font/google'
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import styles from './LandingPage.module.css'
 
 const sora = Sora({
@@ -367,6 +367,8 @@ type RoleKey = keyof typeof roleStories
 type SystemStoryKey = keyof typeof systemStories
 
 export default function LandingPage() {
+  const featurePreviewRef = useRef<HTMLDivElement>(null)
+
   const [activeSection, setActiveSection] = useState('features')
   const [activeFeatureCard, setActiveFeatureCard] = useState<FeatureCardKey>('students')
   const [activeHeroCard, setActiveHeroCard] = useState<HeroPreviewKey>('comments')
@@ -597,7 +599,12 @@ export default function LandingPage() {
                 type="button"
                 className={`${styles.featureCard} ${styles.staggerItem} ${activeFeatureCard === card.key ? styles.featureCardActive : ''}`}
                 style={staggerStyle(index)}
-                onClick={() => setActiveFeatureCard(card.key)}
+                onClick={() => {
+                  setActiveFeatureCard(card.key)
+                  if (window.innerWidth <= 700) {
+                    featurePreviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                  }
+                }}
                 aria-pressed={activeFeatureCard === card.key}
               >
                 <div className={styles.featureIcon}>{card.icon}</div>
@@ -607,7 +614,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className={styles.featurePreviewPanel}>
+          <div ref={featurePreviewRef} className={`${styles.featurePreviewPanel} ${styles.featurePreviewSticky}`}>
             <div className={styles.featurePreviewTop}>
               <div className={`${styles.sectionTag} ${styles.mono}`}>{activeFeaturePreview.previewEyebrow}</div>
               <div className={styles.featurePreviewStatus}>Selected feature</div>
@@ -905,9 +912,10 @@ export default function LandingPage() {
 
         <div className={styles.pricingGrid}>
           {pricingCards.map((card, index) => (
-            <div
+            <Link
               key={card.plan}
-              className={`${styles.priceCard} ${styles.staggerItem} ${card.featured ? styles.featured : ''}`}
+              href={`/demo?plan=${card.plan.toLowerCase()}`}
+              className={`${styles.priceCard} ${styles.priceCardLink} ${styles.staggerItem} ${card.featured ? styles.featured : styles.priceCardHover}`}
               style={staggerStyle(index)}
             >
               {card.featured ? <div className={styles.featuredBadge}>Most popular</div> : null}
@@ -920,7 +928,7 @@ export default function LandingPage() {
                   <li key={feature}>{feature}</li>
                 ))}
               </ul>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

@@ -693,6 +693,14 @@
   padding: 1.4rem;
 }
 
+.featurePreviewSticky {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+}
+
 .featurePreviewTop {
   display: flex;
   justify-content: space-between;
@@ -1297,6 +1305,21 @@
   border-color: rgb(255 255 255 / 0.14);
 }
 
+.priceCardLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Non-featured cards get a green tint + scale instead of the generic lift */
+.priceCardHover:hover {
+  border-color: rgb(34 168 98 / 0.3);
+  background: rgb(34 168 98 / 0.04);
+  transform: scale(1.01);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+
 .featured {
   border-color: var(--green);
   box-shadow:
@@ -1444,6 +1467,12 @@
 }
 
 @media (max-width: 700px) {
+  .featurePreviewSticky {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+
   .aiGrid {
     grid-template-columns: 1fr;
   }

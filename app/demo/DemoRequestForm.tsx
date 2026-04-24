@@ -2,7 +2,15 @@
 
 import Link from 'next/link'
 import { useActionState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { submitDemoRequest, type DemoRequestState } from './actions'
+
+const VALID_PLAN_PARAMS = ['starter', 'growth', 'pro', 'enterprise', 'not_sure'] as const
+type ValidPlanParam = (typeof VALID_PLAN_PARAMS)[number]
+
+function toValidPlan(value: string | null): ValidPlanParam {
+  return VALID_PLAN_PARAMS.includes(value as ValidPlanParam) ? (value as ValidPlanParam) : 'not_sure'
+}
 
 const initialState: DemoRequestState = {
   error: null,
@@ -10,6 +18,9 @@ const initialState: DemoRequestState = {
 }
 
 export default function DemoRequestForm() {
+  const searchParams = useSearchParams()
+  const preselectedPlan = toValidPlan(searchParams.get('plan'))
+
   const [state, formAction, pending] = useActionState(submitDemoRequest, initialState)
 
   return (
@@ -113,7 +124,7 @@ export default function DemoRequestForm() {
           </label>
           <select
             name="requested_plan"
-            defaultValue="not_sure"
+            defaultValue={preselectedPlan}
             className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white focus:border-[#22a862] focus:outline-none"
           >
             <option value="not_sure">Not sure yet</option>

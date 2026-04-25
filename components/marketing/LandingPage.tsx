@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import { JetBrains_Mono, Sora } from 'next/font/google'
+import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock } from 'lucide-react'
+import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import styles from './LandingPage.module.css'
 
@@ -14,6 +14,13 @@ const sora = Sora({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-landing-mono',
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  weight: '400',
+  variable: '--font-instrument-serif',
 })
 
 const featureCards = [
@@ -216,7 +223,7 @@ const pricingCards = [
   {
     plan: 'Enterprise',
     amount: 'Custom',
-    period: '\u00A0',
+    period: ' ',
     annualAmount: 'Custom annual contract',
     students: '1,500+ students',
     features: ['Multi-campus/custom setup', 'High AI limits', 'Dedicated onboarding', 'Custom rollout support'],
@@ -245,74 +252,6 @@ const onboardingSteps = [
     body: 'You begin with guided onboarding support instead of being left to figure it out alone.',
   },
 ]
-
-const heroPreviewCards = [
-  {
-    key: 'comments',
-    label: 'AI comments ready',
-    eyebrow: 'Teacher workflow',
-    title: 'AI drafts prepared for report comments',
-    summary: 'Generate editable class-level comment drafts, then let teachers review before anything reaches families.',
-    bullets: ['Bulk class generation', 'Teacher approval stays required', 'School plan limits still apply'],
-    stats: [
-      ['28', 'students drafted'],
-      ['1', 'class selected'],
-      ['Staff', 'review required'],
-    ],
-  },
-  {
-    key: 'attendance',
-    label: 'Attendance summary',
-    eyebrow: 'Admin visibility',
-    title: 'Spot attendance risk before it becomes a bigger problem',
-    summary: 'School staff can review repeated absences inside the app and follow up with context instead of digging through registers.',
-    bullets: ['Class-level summaries', 'Staff-only AI surface', 'Supports manual follow-up'],
-    stats: [
-      ['7', 'students flagged'],
-      ['3', 'classes reviewed'],
-      ['Live', 'inside app'],
-    ],
-  },
-  {
-    key: 'fees',
-    label: 'Fee records organized',
-    eyebrow: 'School operations',
-    title: 'Keep fees, ledgers, and defaulter tracking in one place',
-    summary: 'Replace scattered notebooks and separate software with a structured fee ledger linked to each student.',
-    bullets: ['Student-level ledgers', 'Cleaner defaulter lists', 'Admin-ready fee view'],
-    stats: [
-      ['Rs.', 'fees tracked'],
-      ['1', 'ledger per student'],
-      ['Clean', 'status view'],
-    ],
-  },
-  {
-    key: 'announcements',
-    label: 'Announcements sent',
-    eyebrow: 'Daily communication',
-    title: 'Share school updates from the same system your team already uses',
-    summary: 'Announcements live beside attendance, marks, and results so the school communicates from one operating layer.',
-    bullets: ['Central update feed', 'Role-based visibility', 'Less switching between tools'],
-    stats: [
-      ['All', 'school updates'],
-      ['4', 'role views'],
-      ['One', 'shared system'],
-    ],
-  },
-  {
-    key: 'demo',
-    label: 'Demo request received',
-    eyebrow: 'Guided onboarding',
-    title: 'New schools start with a guided rollout, not a blank dashboard',
-    summary: 'Your school requests a demo, Uthaan prepares the setup, and staff receive controlled access when onboarding is ready.',
-    bullets: ['Manual school setup', 'Admin + teacher logins', 'Pilot-friendly rollout'],
-    stats: [
-      ['4', 'setup steps'],
-      ['Pilot', 'plan available'],
-      ['Guided', 'onboarding'],
-    ],
-  },
-] as const
 
 const roleStories = {
   admin: {
@@ -382,21 +321,383 @@ const systemStories = {
   },
 } as const
 
-type HeroPreviewKey = (typeof heroPreviewCards)[number]['key']
 type FeatureCardKey = (typeof featureCards)[number]['key']
 type RoleKey = keyof typeof roleStories
 type SystemStoryKey = keyof typeof systemStories
 
+// ── Dashboard card roster data ──────────────────────────────────────────────
+const rosterStudents = [
+  { initials: 'AK', name: 'Aisha Khan',   cls: 'Class 5-A', dot: 'Green'  },
+  { initials: 'HM', name: 'Hamza Malik',  cls: 'Class 5-A', dot: 'Green'  },
+  { initials: 'SR', name: 'Sara Raza',    cls: 'Class 5-B', dot: 'Amber'  },
+  { initials: 'ZA', name: 'Zaid Ahmad',   cls: 'Class 5-A', dot: 'Red'    },
+  { initials: 'NF', name: 'Noor Fatima',  cls: 'Class 5-B', dot: 'Green'  },
+]
+
+const AI_MESSAGE = 'Hamza shows steady improvement in mathematics this term.'
+
+// ── Activity ticker data ─────────────────────────────────────────────────────
+const tickerItems = [
+  { action: 'AI comment drafted',        detail: 'Class 5',        time: 'just now' },
+  { action: 'Fee marked paid',           detail: 'Lahore Grammar', time: '2m ago'   },
+  { action: 'Attendance summary sent',   detail: '3 classes',      time: '5m ago'   },
+]
+
+// ── Compare table data ───────────────────────────────────────────────────────
+type CellValue = 'yes' | 'no' | 'partial' | 'planned'
+
+type CompareRow = {
+  label: string
+  uthaan: CellValue
+  google: CellValue
+  canvas: CellValue
+  classDojo: CellValue
+}
+
+type CompetitorKey = 'google' | 'canvas' | 'classDojo'
+
+const compareFeatures: CompareRow[] = [
+  { label: 'Fee management',            uthaan: 'yes', google: 'no',      canvas: 'no',      classDojo: 'no'      },
+  { label: 'Pakistan / local context',  uthaan: 'yes', google: 'no',      canvas: 'no',      classDojo: 'no'      },
+  { label: 'AI report card comments',   uthaan: 'yes', google: 'no',      canvas: 'no',      classDojo: 'no'      },
+  { label: 'Attendance alert summaries',uthaan: 'yes', google: 'no',      canvas: 'no',      classDojo: 'no'      },
+  { label: 'WhatsApp parent alerts',    uthaan: 'planned', google: 'no',  canvas: 'no',      classDojo: 'no'      },
+  { label: 'Role-based access (4 roles)',uthaan: 'yes', google: 'partial', canvas: 'yes',    classDojo: 'partial' },
+  { label: 'Full audit log',            uthaan: 'yes', google: 'no',      canvas: 'yes',     classDojo: 'no'      },
+  { label: 'Affordable for small schools',uthaan: 'yes', google: 'partial',canvas: 'no',     classDojo: 'partial' },
+]
+
+const competitors: { name: string; key: CompetitorKey }[] = [
+  { name: 'Google Classroom', key: 'google'    },
+  { name: 'Canvas',           key: 'canvas'    },
+  { name: 'ClassDojo',        key: 'classDojo' },
+]
+
+function CompareCell({ value, isUthaan = false }: { value: CellValue; isUthaan?: boolean }) {
+  if (value === 'yes')
+    return (
+      <span className={`${styles.compareCell} ${styles.compareCellYes} ${isUthaan ? styles.compareCellUthaan : ''}`}>
+        <CheckCircle2 size={14} aria-hidden="true" /><span>Yes</span>
+      </span>
+    )
+  if (value === 'no')
+    return (
+      <span className={`${styles.compareCell} ${styles.compareCellNo}`}>
+        <Minus size={14} aria-hidden="true" /><span>No</span>
+      </span>
+    )
+  if (value === 'planned')
+    return (
+      <span className={`${styles.compareCell} ${styles.compareCellPlanned}`}>
+        <Clock size={14} aria-hidden="true" /><span>Planned</span>
+      </span>
+    )
+  // partial
+  return (
+    <span className={`${styles.compareCell} ${styles.compareCellPartial}`}>
+      <Clock size={14} aria-hidden="true" /><span>Partial</span>
+    </span>
+  )
+}
+
+// ── Role mock UI components ───────────────────────────────────────────────────
+
+const adminDefaulters = [
+  { name: 'Hamza Malik',  cls: 'Class 5-A', amount: 'Rs. 2,400' },
+  { name: 'Sara Raza',    cls: 'Class 6-B', amount: 'Rs. 4,800' },
+  { name: 'Zaid Ahmad',   cls: 'Class 7-A', amount: 'Rs. 2,400' },
+]
+
+function AdminMock({ active }: { active: boolean }) {
+  const [visible, setVisible] = useState(0)
+  useEffect(() => {
+    if (!active) { setVisible(0); return }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) { setVisible(adminDefaulters.length); return }
+    const timers = adminDefaulters.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
+    return () => timers.forEach(clearTimeout)
+  }, [active])
+  return (
+    <div className={styles.roleMock}>
+      <div className={styles.roleMockHeader}>
+        <span>Fee defaulters</span>
+        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeRed}`}>12 outstanding</span>
+      </div>
+      {adminDefaulters.map((d, i) => (
+        <div
+          key={d.name}
+          className={`${styles.roleMockRow} ${i < visible ? styles.roleMockRowVisible : ''}`}
+          style={{ '--mock-delay': `${i * 60}ms` } as CSSProperties}
+        >
+          <span className={styles.roleMockName}>{d.name}</span>
+          <span className={styles.roleMockMeta}>{d.cls}</span>
+          <span className={styles.roleMockAmount}>{d.amount}</span>
+          <span className={styles.roleMockTag}>Overdue</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const teacherStudents = ['Aisha', 'Hamza', 'Sara', 'Zaid', 'Noor']
+const teacherDays = ['Mon', 'Tue', 'Wed']
+const teacherGrid: Array<Array<'Green' | 'Amber' | 'Red'>> = [
+  ['Green', 'Green', 'Green'],
+  ['Green', 'Amber', 'Green'],
+  ['Green', 'Green', 'Red'],
+  ['Amber', 'Green', 'Green'],
+  ['Green', 'Green', 'Green'],
+]
+
+function TeacherMock({ active }: { active: boolean }) {
+  const [visible, setVisible] = useState(0)
+  useEffect(() => {
+    if (!active) { setVisible(0); return }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) { setVisible(teacherStudents.length); return }
+    const timers = teacherStudents.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
+    return () => timers.forEach(clearTimeout)
+  }, [active])
+  return (
+    <div className={styles.roleMock}>
+      <div className={styles.roleMockHeader}>
+        <span>Attendance · Class 5-A</span>
+        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeGreen}`}>Today</span>
+      </div>
+      <div className={styles.teacherGrid}>
+        <div className={styles.teacherGridHeader}>
+          <span />
+          {teacherDays.map((d) => (
+            <span key={d} className={styles.teacherDayLabel}>{d}</span>
+          ))}
+        </div>
+        {teacherStudents.map((name, i) => (
+          <div
+            key={name}
+            className={`${styles.teacherRow} ${i < visible ? styles.roleMockRowVisible : ''}`}
+            style={{ '--mock-delay': `${i * 60}ms` } as CSSProperties}
+          >
+            <span className={styles.teacherName}>{name}</span>
+            {teacherGrid[i].map((dot, j) => (
+              <span key={j} className={`${styles.attendDot} ${styles[`dot${dot}`]}`} aria-label={dot} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const parentNotifs = [
+  { color: 'Green' as const, text: 'Hamza marked present',     time: '8:15 am'    },
+  { color: 'Amber' as const, text: 'Fee due in 4 days',        time: 'Yesterday'  },
+  { color: 'Blue'  as const, text: 'Term 2 results published', time: '2 days ago' },
+]
+
+function ParentMock({ active }: { active: boolean }) {
+  const [visible, setVisible] = useState(0)
+  useEffect(() => {
+    if (!active) { setVisible(0); return }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) { setVisible(parentNotifs.length); return }
+    const timers = parentNotifs.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
+    return () => timers.forEach(clearTimeout)
+  }, [active])
+  return (
+    <div className={styles.roleMock}>
+      <div className={styles.roleMockHeader}>
+        <span>Notifications</span>
+        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeBlue}`}>3 new</span>
+      </div>
+      {parentNotifs.map((n, i) => (
+        <div
+          key={n.text}
+          className={`${styles.roleMockRow} ${styles.parentNotifRow} ${i < visible ? styles.roleMockRowVisible : ''}`}
+          style={{ '--mock-delay': `${i * 60}ms` } as CSSProperties}
+        >
+          <span className={`${styles.notifDot} ${styles[`notifDot${n.color}`]}`} aria-hidden="true" />
+          <span className={styles.roleMockName}>{n.text}</span>
+          <span className={styles.roleMockMeta}>{n.time}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const studentSubjects = [
+  { name: 'Maths',   score: 83 },
+  { name: 'Science', score: 71 },
+  { name: 'English', score: 90 },
+  { name: 'Urdu',    score: 68 },
+]
+
+function StudentMock({ active }: { active: boolean }) {
+  const [widths, setWidths] = useState([0, 0, 0, 0])
+  useEffect(() => {
+    if (!active) { setWidths([0, 0, 0, 0]); return }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) { setWidths(studentSubjects.map((s) => s.score)); return }
+    const timers = studentSubjects.map((s, i) =>
+      setTimeout(() => setWidths((prev) => { const next = [...prev]; next[i] = s.score; return next }), 60 * i)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [active])
+  return (
+    <div className={styles.roleMock}>
+      <div className={styles.roleMockHeader}>
+        <span>Term 2 Results</span>
+        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeGreen}`}>Published</span>
+      </div>
+      {studentSubjects.map((s, i) => (
+        <div key={s.name} className={styles.studentSubjectRow}>
+          <div className={styles.studentSubjectTop}>
+            <span className={styles.teacherName}>{s.name}</span>
+            <span className={`${styles.roleMockAmount} ${styles.mono}`}>
+              {s.score}<span className={styles.roleMockMeta}>/100</span>
+            </span>
+          </div>
+          <div className={styles.studentBarTrack}>
+            <div
+              className={styles.studentBarFill}
+              style={{ width: `${widths[i]}%`, transitionDelay: `${i * 60}ms` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Animated dashboard card ──────────────────────────────────────────────────
+function HeroDashboardCard() {
+  const [visibleRows, setVisibleRows] = useState(0)
+  const [feeCount, setFeeCount] = useState(0)
+  const [typedText, setTypedText] = useState('')
+
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (reduced) {
+      setVisibleRows(rosterStudents.length)
+      setFeeCount(12400)
+      setTypedText(AI_MESSAGE)
+      return
+    }
+
+    // Row 1: stagger each roster row in
+    const rowTimers = rosterStudents.map((_, i) =>
+      setTimeout(() => setVisibleRows(i + 1), 200 + i * 80)
+    )
+
+    // Row 2: count up fee via requestAnimationFrame
+    const feeTarget = 12400
+    const feeDuration = 1200
+    const feeDelay = 600
+    let rafId: number
+    const origin = performance.now()
+
+    const tick = (now: number) => {
+      const elapsed = now - origin - feeDelay
+      if (elapsed < 0) { rafId = requestAnimationFrame(tick); return }
+      const progress = Math.min(elapsed / feeDuration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setFeeCount(Math.round(eased * feeTarget))
+      if (progress < 1) rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+
+    // Row 3: character-by-character typing
+    let charIndex = 0
+    let typeTimer: ReturnType<typeof setTimeout>
+
+    const typeNext = () => {
+      charIndex++
+      setTypedText(AI_MESSAGE.slice(0, charIndex))
+      if (charIndex < AI_MESSAGE.length) typeTimer = setTimeout(typeNext, 30)
+    }
+    const startTypeTimer = setTimeout(typeNext, 1100)
+
+    return () => {
+      rowTimers.forEach(clearTimeout)
+      cancelAnimationFrame(rafId)
+      clearTimeout(startTypeTimer)
+      clearTimeout(typeTimer)
+    }
+  }, [])
+
+  return (
+    <div className={styles.heroDashCard}>
+      {/* Browser chrome bar */}
+      <div className={styles.dashChrome}>
+        <div className={styles.dashDots} aria-hidden="true">
+          <span /><span /><span />
+        </div>
+        <span className={`${styles.dashUrl} ${styles.mono}`}>uthaan.app / school workspace</span>
+      </div>
+
+      {/* Row 1: Attendance register */}
+      <div className={styles.dashSection}>
+        <div className={styles.dashLabel}>Class 5 · Attendance register</div>
+        <div className={styles.rosterList}>
+          {rosterStudents.map((s, i) => (
+            <div
+              key={s.initials}
+              className={`${styles.rosterRow} ${i < visibleRows ? styles.rosterRowVisible : ''}`}
+              style={{ '--row-delay': `${i * 80}ms` } as CSSProperties}
+            >
+              <span className={styles.rosterAvatar}>{s.initials}</span>
+              <span className={styles.rosterName}>{s.name}</span>
+              <span className={styles.rosterCls}>{s.cls}</span>
+              <span className={`${styles.attendDot} ${styles[`dot${s.dot}`]}`} aria-label={s.dot} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Row 2: Fee collection */}
+      <div className={styles.dashSection}>
+        <div className={styles.dashLabel}>Fee collection · today</div>
+        <div className={styles.feeRow}>
+          <span className={`${styles.feeAmount} ${styles.mono}`}>
+            Rs.&nbsp;{feeCount.toLocaleString('en-PK')}
+          </span>
+          <span className={styles.feeTag}>collected today</span>
+        </div>
+      </div>
+
+      {/* Row 3: AI comment typing */}
+      <div className={styles.dashSection}>
+        <div className={styles.dashLabel}>AI comment draft · Hamza Malik</div>
+        <div className={styles.aiTypingRow}>
+          <span className={styles.aiIcon} aria-hidden="true">✦</span>
+          <span className={styles.aiTypedText}>
+            {typedText}
+            <span className={styles.cursor} aria-hidden="true" />
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const featurePreviewRef = useRef<HTMLDivElement>(null)
+  const roleSectionRef = useRef<HTMLElement>(null)
+  const compareGridRef = useRef<HTMLDivElement>(null)
+  const compareMobileRef = useRef<HTMLDivElement>(null)
 
   const [expandedPlan, setExpandedPlan] = useState<string | null>('Growth')
   const [activeSection, setActiveSection] = useState('features')
   const [activeFeatureCard, setActiveFeatureCard] = useState<FeatureCardKey>('students')
-  const [activeHeroCard, setActiveHeroCard] = useState<HeroPreviewKey>('comments')
   const [activeRole, setActiveRole] = useState<RoleKey>('admin')
+  const [roleAutoPlay, setRoleAutoPlay] = useState(true)
+  const [roleInView, setRoleInView] = useState(false)
   const [activeStory, setActiveStory] = useState<SystemStoryKey>('after')
   const [activeStoryChip, setActiveStoryChip] = useState<string>(systemStories.after.chips[0])
+  const [tickerIndex, setTickerIndex] = useState(0)
+  const [compareInView, setCompareInView] = useState(false)
+  const [pulsedCol, setPulsedCol] = useState<string | null>(null)
+  const [swipeHintDismissed, setSwipeHintDismissed] = useState(false)
 
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll(`.${styles.fadeIn}`))
@@ -447,18 +748,65 @@ export default function LandingPage() {
     setActiveStoryChip(systemStories[activeStory].chips[0])
   }, [activeStory])
 
+  // Activity ticker rotation
+  useEffect(() => {
+    const id = setInterval(
+      () => setTickerIndex((i) => (i + 1) % tickerItems.length),
+      4000
+    )
+    return () => clearInterval(id)
+  }, [])
+
+  // Role section viewport detection
+  useEffect(() => {
+    const el = roleSectionRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => setRoleInView(entry.isIntersecting),
+      { threshold: 0.3 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  // Role auto-cycle (5s, pauses when not in view or user interacted)
+  useEffect(() => {
+    if (!roleInView || !roleAutoPlay) return
+    const roleKeys = Object.keys(roleStories) as RoleKey[]
+    const id = setInterval(() => {
+      setActiveRole((cur) => {
+        const idx = roleKeys.indexOf(cur)
+        return roleKeys[(idx + 1) % roleKeys.length]
+      })
+    }, 5000)
+    return () => clearInterval(id)
+  }, [roleInView, roleAutoPlay])
+
+  // Compare grid stagger reveal
+  useEffect(() => {
+    const el = compareGridRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setCompareInView(true) },
+      { threshold: 0.1 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   const staggerStyle = (index: number) =>
     ({
       '--stagger-delay': `${index * 90}ms`,
     }) as CSSProperties
 
   const activeFeaturePreview = featureCards.find((card) => card.key === activeFeatureCard) ?? featureCards[0]
-  const activeHeroPreview = heroPreviewCards.find((card) => card.key === activeHeroCard) ?? heroPreviewCards[0]
   const activeRoleStory = roleStories[activeRole]
   const activeSystemStory = systemStories[activeStory]
 
   return (
-    <div className={`${styles.page} ${styles.sora} ${sora.variable} ${jetbrainsMono.variable}`}>
+    <div
+      className={`${styles.page} ${styles.sora} ${sora.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable}`}
+    >
       <nav className={styles.nav}>
         <div className={styles.navLogo}>
           Uth<span>aan</span>
@@ -499,21 +847,29 @@ export default function LandingPage() {
       </nav>
 
       <div className={styles.hero}>
-        <div className={styles.heroGlow} aria-hidden="true" />
-        <div className={styles.heroGrid} aria-hidden="true" />
+        {/* SVG grain overlay — fixed, pointer-events none */}
+        <svg aria-hidden="true" className={styles.heroGrain}>
+          <filter id="hero-grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.68" numOctaves="3" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#hero-grain)" />
+        </svg>
+
         <div className={`${styles.heroBadge} ${styles.mono}`}>Pilot programme open — April 2026</div>
+
         <h1>
-          School management
+          School software, built for
           <br />
-          for <span className={styles.accent}>Pakistani</span>
-          <br />
-          schools
+          the schools{' '}
+          <em className={styles.serifItalic}>we know.</em>
         </h1>
+
         <p>
-          Uthaan is built for Pakistani private schools, with onboarding support from setup to
-          launch. One platform for administrators, teachers, parents, and students, shaped around
-          how your school actually works.
+          Uthaan is a calmer operating system for Pakistani private schools — attendance, fees,
+          results, announcements, and staff AI in one role-aware platform.
         </p>
+
         <div className={styles.heroButtons}>
           <Link href="/demo" className={styles.btnPrimary}>
             Request a demo
@@ -522,93 +878,29 @@ export default function LandingPage() {
             See features
           </a>
         </div>
-        <div className={styles.heroPreview}>
-          <div className={styles.previewFloatingCards}>
-            {heroPreviewCards.map((card, index) => (
-              <button
-                key={card.key}
-                type="button"
-                className={`${styles.previewChip} ${activeHeroCard === card.key ? styles.previewChipActive : ''}`}
-                style={staggerStyle(index)}
-                onClick={() => setActiveHeroCard(card.key)}
-                aria-pressed={activeHeroCard === card.key}
-              >
-                <span className={styles.previewChipLabel}>{card.label}</span>
-                <span className={styles.previewChipHint}>Preview</span>
-              </button>
-            ))}
-          </div>
-          <div className={styles.previewShell}>
-            <div className={styles.previewShellTop}>
-              <div className={styles.previewBrowserDots} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className={`${styles.previewUrl} ${styles.mono}`}>uthaan.app / school workspace</div>
-            </div>
-            <div className={styles.previewCard}>
-              <div className={styles.previewTopline}>
-                <span className={styles.previewDot} />
-                {activeHeroPreview.eyebrow}
-              </div>
-              <div className={styles.previewStory}>
-                <div className={styles.previewStoryHeader}>
-                  <div>
-                    <div className={styles.previewStoryTitle}>{activeHeroPreview.title}</div>
-                    <p className={styles.previewStorySummary}>{activeHeroPreview.summary}</p>
-                  </div>
-                  <div className={styles.previewStatusCard}>
-                    <div className={`${styles.previewStatusValue} ${styles.mono}`}>Live</div>
-                    <div className={styles.previewStatusLabel}>Product-led preview</div>
-                  </div>
-                </div>
-                <div className={styles.previewMetrics}>
-                  {activeHeroPreview.stats.map(([value, label]) => (
-                    <div key={label} className={styles.previewMetric}>
-                      <div className={`${styles.previewMetricValue} ${styles.mono}`}>{value}</div>
-                      <div className={styles.previewMetricLabel}>{label}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className={styles.previewInsights}>
-                  {activeHeroPreview.bullets.map((bullet) => (
-                    <div key={bullet} className={styles.previewInsight}>
-                      {bullet}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className={styles.previewTabs}>
-              {heroPreviewCards.map((card) => (
-                <button
-                  key={card.key}
-                  type="button"
-                  className={`${styles.previewTab} ${activeHeroCard === card.key ? styles.previewTabActive : ''}`}
-                  onClick={() => setActiveHeroCard(card.key)}
-                >
-                  {card.label}
-                </button>
-              ))}
-            </div>
-          </div>
+
+        <div className={styles.heroDashWrap}>
+          <HeroDashboardCard />
         </div>
       </div>
 
-      <div className={styles.statsBar}>
-        {[
-          ['4', 'User roles'],
-          ['3', 'AI features live'],
-          ['PKT', 'Pakistan timezone'],
-          ['100%', 'Cloud-based'],
-          ['Rs. 0', 'Pilot cost (3 months)'],
-        ].map(([num, label]) => (
-          <div key={label} className={styles.stat}>
-            <div className={`${styles.statNum} ${styles.mono}`}>{num}</div>
-            <div className={styles.statLabel}>{label}</div>
-          </div>
-        ))}
+      {/* Activity ticker */}
+      <div className={styles.activityTicker} aria-live="polite" aria-atomic="true">
+        <div className={styles.tickerTrack}>
+          {tickerItems.map((item, i) => (
+            <div
+              key={item.action}
+              className={`${styles.tickerItem} ${i === tickerIndex ? styles.tickerItemActive : ''}`}
+              aria-hidden={i !== tickerIndex}
+            >
+              <span className={styles.tickerAction}>{item.action}</span>
+              <span className={styles.tickerSep} aria-hidden="true">·</span>
+              <span className={styles.tickerDetail}>{item.detail}</span>
+              <span className={styles.tickerSep} aria-hidden="true">·</span>
+              <span className={styles.tickerTime}>{item.time}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <section id="features" className={`${styles.section} ${styles.fadeIn}`}>
@@ -675,7 +967,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className={`${styles.section} ${styles.fadeIn}`}>
+      <section
+        ref={roleSectionRef}
+        className={`${styles.section} ${styles.fadeIn}`}
+        onPointerDown={() => setRoleAutoPlay(false)}
+      >
         <div className={`${styles.sectionTag} ${styles.mono}`}>Role-based product preview</div>
         <h2 className={styles.sectionTitle}>Explore how each role experiences the platform</h2>
         <p className={styles.sectionSub}>
@@ -692,14 +988,17 @@ export default function LandingPage() {
                 role="tab"
                 aria-selected={activeRole === key}
                 className={`${styles.roleTab} ${activeRole === key ? styles.roleTabActive : ''}`}
-                onClick={() => setActiveRole(key)}
+                onClick={() => { setActiveRole(key); setRoleAutoPlay(false) }}
               >
                 {role.label}
+                {activeRole === key && roleAutoPlay && (
+                  <span key={`${key}-bar`} className={styles.roleTabProgress} aria-hidden="true" />
+                )}
               </button>
             ))}
           </div>
 
-          <div className={styles.roleStoryPanel}>
+          <div key={activeRole} className={`${styles.roleStoryPanel} ${styles.roleContentEnter}`}>
             <div className={styles.roleStoryContent}>
               <div className={`${styles.sectionTag} ${styles.mono}`}>{activeRoleStory.eyebrow}</div>
               <h3>{activeRoleStory.title}</h3>
@@ -716,22 +1015,10 @@ export default function LandingPage() {
                 <span>{activeRoleStory.label} workspace</span>
                 <span className={styles.rolePreviewPill}>Role-based access</span>
               </div>
-              <div className={styles.rolePreviewGrid}>
-                {activeRoleStory.metrics.map(([label, value], index) => (
-                  <div key={label} className={styles.roleMetricCard} style={staggerStyle(index)}>
-                    <div className={styles.roleMetricLabel}>{label}</div>
-                    <div className={`${styles.roleMetricValue} ${styles.mono}`}>{value}</div>
-                  </div>
-                ))}
-              </div>
-              <div className={styles.rolePreviewFeed}>
-                {activeRoleStory.highlights.map((highlight, index) => (
-                  <div key={highlight} className={styles.rolePreviewItem} style={staggerStyle(index)}>
-                    <span className={styles.rolePreviewItemDot} aria-hidden="true" />
-                    <span>{highlight}</span>
-                  </div>
-                ))}
-              </div>
+              {activeRole === 'admin'   && <AdminMock   active />}
+              {activeRole === 'teacher' && <TeacherMock active />}
+              {activeRole === 'parent'  && <ParentMock  active />}
+              {activeRole === 'student' && <StudentMock active />}
             </div>
           </div>
         </div>
@@ -863,76 +1150,71 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className={styles.tableWrap}>
-          <table className={styles.vsTable}>
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th className={styles.uthaanCol}>Uthaan</th>
-                <th>Google Classroom</th>
-                <th>Canvas</th>
-                <th>ClassDojo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Fee management</td>
-                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-              </tr>
-              <tr>
-                <td>Pakistan / local context</td>
-                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-              </tr>
-              <tr>
-                <td>AI report card comments</td>
-                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-              </tr>
-              <tr>
-                <td>Attendance alert summaries</td>
-                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-              </tr>
-              <tr>
-                <td>WhatsApp parent alerts</td>
-                <td className={`${styles.uthaanCol} ${styles.soonTag}`}>Planned</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.cross}>No</td>
-              </tr>
-              <tr>
-                <td>Role-based access (4 roles)</td>
-                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
-                <td>Partial</td>
-                <td className={styles.check}>Yes</td>
-                <td>Partial</td>
-              </tr>
-              <tr>
-                <td>Full audit log</td>
-                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
-                <td className={styles.cross}>No</td>
-                <td className={styles.check}>Yes</td>
-                <td className={styles.cross}>No</td>
-              </tr>
-              <tr>
-                <td>Affordable for small schools</td>
-                <td className={`${styles.uthaanCol} ${styles.check}`}>Yes</td>
-                <td>Free (limited)</td>
-                <td className={styles.cross}>Expensive</td>
-                <td>Free (limited)</td>
-              </tr>
-            </tbody>
-          </table>
+        {/* Desktop grid */}
+        <div
+          ref={compareGridRef}
+          className={`${styles.compareGrid} ${compareInView ? styles.compareGridVisible : ''}`}
+        >
+          <div className={styles.compareHeaderRow}>
+            <div className={styles.compareFeatureCol} />
+            {['Uthaan', 'Google Classroom', 'Canvas', 'ClassDojo'].map((col, i) => (
+              <div key={col} className={`${styles.compareColHeader} ${i === 0 ? styles.compareColHeaderUthaan : ''}`}>
+                {col}
+              </div>
+            ))}
+          </div>
+          {compareFeatures.map((row, i) => (
+            <div
+              key={row.label}
+              className={styles.compareRow}
+              style={{ '--row-i': i } as CSSProperties}
+            >
+              <div className={styles.compareFeatureLabel}>{row.label}</div>
+              <CompareCell value={row.uthaan} isUthaan />
+              <CompareCell value={row.google} />
+              <CompareCell value={row.canvas} />
+              <CompareCell value={row.classDojo} />
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile swipe layout */}
+        <div
+          ref={compareMobileRef}
+          className={styles.compareMobileScroll}
+          onScroll={() => setSwipeHintDismissed(true)}
+        >
+          {!swipeHintDismissed && (
+            <div className={styles.swipeHint} aria-hidden="true">swipe →</div>
+          )}
+          <div className={styles.compareMobileUthaanCol}>
+            <div className={`${styles.compareMobileColHeader} ${styles.compareMobileColHeaderUthaan}`}>
+              Uthaan
+            </div>
+            {compareFeatures.map((f) => (
+              <div key={f.label} className={styles.compareMobileRow}>
+                <span className={styles.compareMobileFeatureLabel}>{f.label}</span>
+                <CompareCell value={f.uthaan} isUthaan />
+              </div>
+            ))}
+          </div>
+          {competitors.map((comp) => (
+            <div
+              key={comp.name}
+              className={`${styles.compareMobileCompetitorCol} ${pulsedCol === comp.name ? styles.compareMobileColPulse : ''}`}
+              onClick={() => {
+                setPulsedCol(comp.name)
+                setTimeout(() => setPulsedCol(null), 400)
+              }}
+            >
+              <div className={styles.compareMobileColHeader}>{comp.name}</div>
+              {compareFeatures.map((f) => (
+                <div key={f.label} className={styles.compareMobileRow}>
+                  <CompareCell value={f[comp.key]} />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </section>
 

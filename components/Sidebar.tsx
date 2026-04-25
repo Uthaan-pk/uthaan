@@ -18,6 +18,8 @@ import {
   CreditCard,
   BarChart2,
   Search,
+  Receipt,
+  DollarSign,
 } from 'lucide-react'
 import { useCommandPalette } from './CommandPaletteProvider'
 
@@ -134,6 +136,7 @@ export default function Sidebar({
 
   const isTeacher = role === 'teacher'
   const isAdmin = role === 'admin'
+  const isAccountant = role === 'accountant'
   const isStaff = isTeacher || isAdmin
   const isParent = role === 'parent'
   const canSeeResults = isTeacher || isAdmin || role === 'student' || isParent
@@ -341,6 +344,82 @@ export default function Sidebar({
                 onClose={close}
                 isUrdu={isUrdu}
                 icon={<Clock className={`w-4 h-4 shrink-0 ${pathname === '/timetable' ? '' : 'opacity-60'}`} />}
+              />
+
+              <p
+                className={`text-white/30 px-2 mt-4 mb-2 ${
+                  isUrdu
+                    ? 'text-xs tracking-normal'
+                    : 'text-[10px] uppercase tracking-widest'
+                }`}
+              >
+                {isUrdu ? 'فنانس' : 'Finance'}
+              </p>
+
+              <NavItem
+                label={isUrdu ? 'اخراجات کی منظوری' : 'Expense Approvals'}
+                href="/admin/expenses/approvals"
+                active={pathname.startsWith('/admin/expenses')}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Receipt className={`w-4 h-4 shrink-0 ${pathname.startsWith('/admin/expenses') ? '' : 'opacity-60'}`} />}
+              />
+            </>
+          ) : isAccountant ? (
+            <>
+              <NavItem
+                label={isUrdu ? 'ڈیش بورڈ' : 'Dashboard'}
+                href="/accounting"
+                active={pathname === '/accounting'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<LayoutDashboard className={`w-4 h-4 shrink-0 ${pathname === '/accounting' ? '' : 'opacity-60'}`} />}
+              />
+
+              <p
+                className={`text-white/30 px-2 mt-4 mb-2 ${
+                  isUrdu
+                    ? 'text-xs tracking-normal'
+                    : 'text-[10px] uppercase tracking-widest'
+                }`}
+              >
+                {isUrdu ? 'فنانس' : 'Finance'}
+              </p>
+
+              <NavItem
+                label={isUrdu ? 'فیس وصولی' : 'Fee Collection'}
+                href="/accounting/fees"
+                active={pathname === '/accounting/fees'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<CreditCard className={`w-4 h-4 shrink-0 ${pathname === '/accounting/fees' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
+                label={isUrdu ? 'واجب الادا فیس' : 'Outstanding Fees'}
+                href="/accounting/outstanding"
+                active={pathname === '/accounting/outstanding'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<DollarSign className={`w-4 h-4 shrink-0 ${pathname === '/accounting/outstanding' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
+                label={isUrdu ? 'اخراجات' : 'Expenses'}
+                href="/accounting/expenses"
+                active={pathname === '/accounting/expenses'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<Receipt className={`w-4 h-4 shrink-0 ${pathname === '/accounting/expenses' ? '' : 'opacity-60'}`} />}
+              />
+
+              <NavItem
+                label={isUrdu ? 'رپورٹس' : 'Reports'}
+                href="/accounting/reports"
+                active={pathname === '/accounting/reports'}
+                onClose={close}
+                isUrdu={isUrdu}
+                icon={<BarChart2 className={`w-4 h-4 shrink-0 ${pathname === '/accounting/reports' ? '' : 'opacity-60'}`} />}
               />
             </>
           ) : isParent ? (

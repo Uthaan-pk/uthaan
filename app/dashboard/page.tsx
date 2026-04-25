@@ -27,6 +27,8 @@ import {
   ShieldCheck,
   Users,
   Wallet,
+  Receipt,
+  TrendingDown,
 } from 'lucide-react'
 
 const SCHOOL_TIME_ZONE = 'Asia/Karachi'
@@ -1108,6 +1110,10 @@ export default async function DashboardPage() {
 
   const today = new Date().toISOString().split('T')[0]
 
+  if (role === 'accountant') {
+    redirect('/accounting')
+  }
+
   if (effectiveRole === 'admin') {
     const [
       studentsRes,
@@ -1117,6 +1123,7 @@ export default async function DashboardPage() {
       weightsRes,
       announcementsRes,
       timetableRes,
+      expensesRes,
     ] = await Promise.all([
       supabase
         .from('students')
@@ -1124,7 +1131,7 @@ export default async function DashboardPage() {
         .eq('is_active', true),
       supabase
         .from('fees')
-        .select('student_id, paid, due_date'),
+        .select('student_id, paid, due_date, amount, paid_at'),
       supabase
         .from('attendance_logs')
         .select('student_id, status, day')
@@ -1147,6 +1154,9 @@ export default async function DashboardPage() {
         .from('timetable')
         .select('class_num, day, period')
         .eq('day', getSchoolWeekdayName()),
+      supabase
+        .from('petty_expenses')
+        .select('status, amount, approved_at'),
     ])
 
     const students = studentsRes.data ?? []
@@ -1273,6 +1283,59 @@ export default async function DashboardPage() {
       .sort((a, b) => a.attendance - b.attendance)
       .slice(0, 5)
 
+    // ── Financial snapshot ───────────────────────────────────────────────────
+    const allFees = feesRes.data ?? []
+    const thisMonth = today.slice(0, 7)
+
+    const collectedToday = allFees
+      .filter((f) => f.paid && (f.paid_at as string | null)?.slice(0, 10) === today)
+      .reduce((s, f) => s + Number(f.amount ?? 0), 0)
+    const collectedThisMonth = allFees
+      .filter((f) => f.paid && (f.paid_at as string | null)?.slice(0, 7) === thisMonth)
+      .reduce((s, f) => s + Number(f.amount ?? 0), 0)
+    const totalOutstandingAmount = allFees
+      .filter((f) => !f.paid && (f.due_date as string) < today)
+      .reduce((s, f) => s + Number(f.amount ?? 0), 0)
+
+    const allExpenses = expensesRes.data ?? []
+    const pendingExpensesCount = allExpenses.filter((e) => e.status === 'pending_approval').length
+    const approvedExpensesThisMonth = allExpenses
+      .filter((e) => e.status === 'approved' && (e.approved_at as string | null)?.slice(0, 7) === thisMonth)
+      .reduce((s, e) => s + Number(e.amount ?? 0), 0)
+    const netThisMonth = collectedThisMonth - approvedExpensesThisMonth
+
+    const fmt = (n: number) =>
+      `Rs ${Math.round(n).toLocaleString('en-PK', { maximumFractionDigits: 0 })}`
+
+    // ── Withdrawal risk (computed live: overdue fees ≥ 2 AND attendance < 75%) ──
+    const overdueMonthsByStudent = new Map<string, number>()
+    allFees.forEach((f) => {
+      if (!f.paid && (f.due_date as string) < today) {
+        overdueMonthsByStudent.set(
+          f.student_id,
+          (overdueMonthsByStudent.get(f.student_id) ?? 0) + 1,
+        )
+      }
+    })
+
+    const withdrawalRiskStudents = students
+      .filter((s) => {
+        const overdueMonths = overdueMonthsByStudent.get(s.id) ?? 0
+        const att = attMap[s.id]
+        return overdueMonths >= 2 && att !== null && att !== undefined && att < 75
+      })
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        classNum: s.class_num,
+        overdueMonths: overdueMonthsByStudent.get(s.id) ?? 0,
+        attendancePct: attMap[s.id] ?? 0,
+      }))
+      .sort((a, b) => b.overdueMonths - a.overdueMonths)
+
+    const withdrawalRiskCount = withdrawalRiskStudents.length
+    const topRiskStudents = withdrawalRiskStudents.slice(0, 5)
+
     return (
       <div className="uthaan-page-shell">
         <Sidebar
@@ -1317,13 +1380,44 @@ export default async function DashboardPage() {
                 ]}
               />
 
+              {/* Financial snapshot — school-owner view */}
+              <DashboardSection
+                title="Financial snapshot"
+                description="Fee collections, approved expenses, and net movement for this month."
+                action={
+                  <a href="/admin/expenses/approvals" className="text-xs font-medium text-[#1a2e1a] hover:underline">
+                    {pendingExpensesCount > 0 ? `${pendingExpensesCount} pending →` : 'Expense approvals →'}
+                  </a>
+                }
+              >
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="rounded-2xl border border-green-200 bg-green-50/70 px-4 py-4">
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Collected this month</div>
+                    <div className="mt-2 text-xl font-semibold tracking-tight text-green-700">{fmt(collectedThisMonth)}</div>
+                    <div className="mt-1 text-xs text-gray-500">Today: {fmt(collectedToday)}</div>
+                  </div>
+                  <div className={`rounded-2xl border px-4 py-4 ${totalOutstandingAmount > 0 ? 'border-amber-200 bg-amber-50/70' : 'border-gray-200 bg-[#fafcf9]'}`}>
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Outstanding fees</div>
+                    <div className={`mt-2 text-xl font-semibold tracking-tight ${totalOutstandingAmount > 0 ? 'text-amber-700' : 'text-gray-900'}`}>{fmt(totalOutstandingAmount)}</div>
+                    <div className="mt-1 text-xs text-gray-500">Overdue balances across all students</div>
+                  </div>
+                  <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Approved expenses this month</div>
+                    <div className="mt-2 text-xl font-semibold tracking-tight text-gray-900">{fmt(approvedExpensesThisMonth)}</div>
+                    <div className={`mt-1 text-xs ${netThisMonth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      Net: {netThisMonth >= 0 ? '+' : ''}{fmt(netThisMonth)}
+                    </div>
+                  </div>
+                </div>
+              </DashboardSection>
+
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_1fr]">
                 <div className="space-y-4">
                   <DashboardSection
                     title="Needs attention"
                     description="High-priority issues surfaced from current school records."
                   >
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
                       <SignalCard
                         href="/fees"
                         label="Fee risk"
@@ -1351,6 +1445,13 @@ export default async function DashboardPage() {
                         value={classesMissingAttendance.length}
                         helper="Classes without attendance today"
                         tone={classesMissingAttendance.length > 0 ? 'warning' : 'default'}
+                      />
+                      <SignalCard
+                        href="/admin/expenses/approvals"
+                        label="Pending expenses"
+                        value={pendingExpensesCount}
+                        helper="Expense requests awaiting approval"
+                        tone={pendingExpensesCount > 0 ? 'warning' : 'default'}
                       />
                     </div>
 
@@ -1429,6 +1530,52 @@ export default async function DashboardPage() {
                     </div>
                   </DashboardSection>
 
+                  {/* Withdrawal risk watchlist */}
+                  <DashboardSection
+                    title="Withdrawal risk"
+                    description="Students flagged for both overdue fees (2+ months) and low attendance (<75%). These students may need a parent call."
+                  >
+                    {withdrawalRiskCount > 0 ? (
+                      <div className="space-y-2">
+                        {topRiskStudents.map((student) => (
+                          <div
+                            key={student.id}
+                            className="flex items-center justify-between gap-3 rounded-xl border border-red-100 bg-red-50/60 px-4 py-3"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <TrendingDown className="h-4 w-4 shrink-0 text-red-500" />
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-medium text-gray-900">
+                                  {student.name}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Class {student.classNum}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">
+                                {student.overdueMonths}mo overdue
+                              </span>
+                              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                {student.attendancePct}% att.
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {withdrawalRiskCount > 5 && (
+                          <div className="px-2 pt-1 text-xs text-gray-500">
+                            +{withdrawalRiskCount - 5} more students at risk — review fees and attendance for full list.
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-gray-200 bg-[#fafcf9] px-4 py-8 text-center text-sm text-gray-500">
+                        No students currently meet the withdrawal risk criteria (2+ overdue fee months and attendance below 75%).
+                      </div>
+                    )}
+                  </DashboardSection>
+
                   <DashboardSection
                     title="Quick actions"
                     description="Jump into the operational workflows school admins actually use each day."
@@ -1475,6 +1622,13 @@ export default async function DashboardPage() {
                         title="Check class coverage"
                         body="Review today’s scheduled classes and any gaps in operating coverage."
                         icon={<Clock3 className="h-4 w-4" />}
+                      />
+                      <ActionTile
+                        href="/admin/expenses/approvals"
+                        eyebrow="Finance"
+                        title="Review expense approvals"
+                        body="Approve or reject petty expense requests from your school accountant."
+                        icon={<Receipt className="h-4 w-4" />}
                       />
                     </div>
                   </DashboardSection>

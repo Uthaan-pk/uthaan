@@ -108,10 +108,10 @@ export default function FoundersPage() {
 
       <section className={styles.section}>
         <div
-          className="grid items-start gap-8 lg:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]"
+          className={`${styles.founderIntroGrid} grid items-start gap-8 lg:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]`}
         >
           <div
-            className="overflow-hidden rounded-[28px] border border-[rgba(34,168,98,0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] shadow-[0_28px_56px_rgba(0,0,0,0.22)]"
+            className={`${styles.founderPhotoCard} overflow-hidden rounded-[28px] border border-[rgba(34,168,98,0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] shadow-[0_28px_56px_rgba(0,0,0,0.22)]`}
           >
             <div className="relative aspect-[4/5] w-full overflow-hidden">
               <Image
@@ -143,7 +143,7 @@ export default function FoundersPage() {
               </p>
             </div>
 
-            <div className="space-y-4 rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-6 shadow-[0_22px_40px_rgba(0,0,0,0.16)]">
+            <div className={`${styles.founderQuoteCard} space-y-4 rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-6 shadow-[0_22px_40px_rgba(0,0,0,0.16)]`}>
               <p className="text-base leading-7 text-[#c8d1d9]">
                 Uthaan is my attempt to build the school platform Pakistani schools actually
                 deserve, practical enough for daily use, modern enough for the future, and careful
@@ -173,7 +173,7 @@ export default function FoundersPage() {
       <section className={styles.section}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>Values</div>
         <h2 className={styles.sectionTitle}>What the product is trying to stand for.</h2>
-        <div className="mt-12 grid gap-px overflow-hidden rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.08)] md:grid-cols-2 xl:grid-cols-3">
+        <div className={`${styles.founderValuesGrid} mt-12 grid gap-px overflow-hidden rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.08)] md:grid-cols-2 xl:grid-cols-3`}>
           {valueCards.map((card) => (
             <div
               key={card.title}
@@ -187,7 +187,7 @@ export default function FoundersPage() {
       </section>
 
       <section className={styles.section}>
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(300px,0.95fr)]">
+        <div className={`${styles.founderTrustGrid} grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(300px,0.95fr)]`}>
           <div>
             <div className={`${styles.sectionTag} ${styles.mono}`}>Built carefully, not carelessly</div>
             <h2 className={styles.sectionTitle}>Trust has to be earned in school software.</h2>
@@ -197,7 +197,7 @@ export default function FoundersPage() {
               WhatsApp are not presented as live unless they are actually live.
             </p>
           </div>
-          <div className="rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-6 shadow-[0_24px_44px_rgba(0,0,0,0.18)]">
+          <div className={`${styles.founderTrustPanel} rounded-[24px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-6 shadow-[0_24px_44px_rgba(0,0,0,0.18)]`}>
             <ul className="grid gap-3">
               {trustPoints.map((point) => (
                 <li

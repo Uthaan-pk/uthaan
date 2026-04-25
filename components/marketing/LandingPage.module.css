@@ -19,6 +19,10 @@
   box-sizing: border-box;
 }
 
+.page {
+  overflow-x: clip;
+}
+
 .page a {
   text-decoration: none;
 }
@@ -69,12 +73,14 @@
   font-size: 14px;
   transition:
     color 0.2s,
-    opacity 0.2s;
+    opacity 0.2s,
+    text-shadow 0.2s;
   position: relative;
 }
 
 .navLinks a:hover {
   color: var(--white);
+  text-shadow: 0 0 22px rgb(34 168 98 / 0.18);
 }
 
 .navLinkActive {
@@ -96,11 +102,18 @@
 .navLogin {
   color: var(--gray);
   font-size: 14px;
-  transition: color 0.2s;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
 
 .navLogin:hover {
   color: var(--white);
+  background: rgb(255 255 255 / 0.035);
 }
 
 .navCta,
@@ -112,13 +125,18 @@
 
 .navCta {
   padding: 8px 20px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   transition:
     background 0.2s,
     transform 0.2s,
-    box-shadow 0.2s;
+    box-shadow 0.2s,
+    border-color 0.2s;
   box-shadow: 0 12px 24px rgb(26 122 74 / 20%);
 }
 
@@ -251,6 +269,10 @@
   padding: 14px 32px;
   border-radius: 10px;
   font-size: 15px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition:
     transform 0.2s,
     box-shadow 0.2s,
@@ -285,6 +307,15 @@
   width: min(100%, 980px);
   animation: heroEnter 1000ms ease both;
   animation-delay: 330ms;
+  will-change: transform;
+}
+
+.heroPreview:hover .previewShell {
+  transform: translateY(-3px);
+  box-shadow:
+    0 46px 96px rgb(0 0 0 / 32%),
+    0 0 0 1px rgb(34 168 98 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
 .previewFloatingCards {
@@ -348,6 +379,10 @@
     0 40px 90px rgb(0 0 0 / 28%),
     inset 0 1px 0 rgb(255 255 255 / 0.05);
   backdrop-filter: blur(12px);
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.3s ease;
 }
 
 .previewShellTop {
@@ -526,6 +561,7 @@
   color: var(--gray);
   font-size: 12px;
   padding: 0.55rem 0.8rem;
+  min-height: 44px;
   border-radius: 999px;
   cursor: pointer;
   transition:
@@ -578,6 +614,7 @@
   padding: 6.5rem 2rem;
   max-width: 1100px;
   margin: 0 auto;
+  scroll-margin-top: 80px;
 }
 
 .sectionTag {
@@ -629,17 +666,19 @@
   background: var(--dark2);
   padding: 2rem;
   transition:
-    background 0.25s,
-    transform 0.25s,
-    box-shadow 0.25s,
-    border-color 0.25s;
+    background 0.28s ease,
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.02);
 }
 
 .featureCard:hover {
   background: rgb(26 122 74 / 6%);
-  transform: translateY(-6px);
-  box-shadow: 0 24px 40px rgb(0 0 0 / 18%);
+  transform: translateY(-4px);
+  box-shadow:
+    0 22px 38px rgb(0 0 0 / 18%),
+    inset 0 0 0 1px rgb(34 168 98 / 0.12);
   cursor: pointer;
 }
 
@@ -855,6 +894,7 @@
   background: transparent;
   color: var(--gray);
   padding: 0.8rem 1rem;
+  min-height: 44px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -1026,6 +1066,7 @@
   border-bottom: 1px solid var(--border);
   padding: 6rem 2rem;
   position: relative;
+  scroll-margin-top: 80px;
 }
 
 .aiInner {
@@ -1053,17 +1094,13 @@
   background: var(--dark2);
   padding: 1.5rem;
   transition:
-    transform 0.25s,
     border-color 0.25s,
-    box-shadow 0.25s,
     background 0.25s;
 }
 
 .onboardingCard:hover {
-  transform: translateY(-6px);
-  border-color: rgb(34 168 98 / 0.35);
+  border-color: rgb(34 168 98 / 0.2);
   background: rgb(25 34 44 / 0.96);
-  box-shadow: 0 24px 40px rgb(0 0 0 / 16%);
 }
 
 .onboardingStep {
@@ -1086,17 +1123,15 @@
   position: relative;
   overflow: hidden;
   transition:
-    transform 0.25s,
-    box-shadow 0.25s,
     border-color 0.25s,
-    background 0.25s;
+    background 0.25s,
+    box-shadow 0.25s;
 }
 
 .aiCard:hover {
-  transform: translateY(-6px);
-  border-color: rgb(34 168 98 / 0.28);
+  border-color: rgb(34 168 98 / 0.18);
   background: rgb(255 255 255 / 0.02);
-  box-shadow: 0 24px 42px rgb(0 0 0 / 18%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
 }
 
 .aiCard::before {
@@ -1146,6 +1181,7 @@
   background: transparent;
   color: var(--gray);
   padding: 0.8rem 1rem;
+  min-height: 44px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -1195,6 +1231,9 @@
   color: var(--white);
   border-radius: 999px;
   padding: 0.75rem 0.95rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   font-size: 13px;
   cursor: pointer;
   transition:
@@ -1215,6 +1254,7 @@
 
 .tableWrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .compareLead {
@@ -1324,16 +1364,16 @@
   overflow: visible;
   isolation: isolate;
   transition:
-    transform 0.25s,
-    box-shadow 0.25s,
-    border-color 0.25s,
-    background 0.25s;
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    background 0.3s ease;
 }
 
 .priceCard:hover {
-  transform: translateY(-6px);
+  transform: translateY(-5px);
   box-shadow:
-    0 24px 42px rgb(0 0 0 / 22%),
+    0 22px 40px rgb(0 0 0 / 22%),
     0 0 0 1px rgb(34 168 98 / 0.12);
   border-color: rgb(34 168 98 / 0.2);
   background:
@@ -1343,10 +1383,11 @@
 
 .priceCard:focus-visible {
   outline: none;
-  transform: translateY(-6px);
+  transform: translateY(-5px);
   box-shadow:
     0 24px 42px rgb(0 0 0 / 22%),
-    0 0 0 1px rgb(34 168 98 / 0.16);
+    0 0 0 2px rgb(34 168 98 / 0.48),
+    0 0 0 6px rgb(34 168 98 / 0.1);
   border-color: rgb(34 168 98 / 0.26);
   background:
     linear-gradient(180deg, rgb(34 168 98 / 0.08), rgb(255 255 255 / 0.02)),
@@ -1360,15 +1401,14 @@
   cursor: pointer;
 }
 
-/* Non-featured cards get a green tint + scale instead of the generic lift */
 .priceCardHover:hover {
   border-color: rgb(34 168 98 / 0.34);
   background:
     linear-gradient(180deg, rgb(34 168 98 / 0.1), rgb(34 168 98 / 0.03)),
     var(--dark2);
-  transform: translateY(-8px);
+  transform: translateY(-5px);
   box-shadow:
-    0 26px 48px rgb(0 0 0 / 24%),
+    0 24px 44px rgb(0 0 0 / 24%),
     0 0 0 1px rgb(34 168 98 / 0.16);
 }
 
@@ -1377,10 +1417,11 @@
   background:
     linear-gradient(180deg, rgb(34 168 98 / 0.11), rgb(34 168 98 / 0.04)),
     var(--dark2);
-  transform: translateY(-8px);
+  transform: translateY(-5px);
   box-shadow:
     0 26px 48px rgb(0 0 0 / 24%),
-    0 0 0 1px rgb(34 168 98 / 0.2);
+    0 0 0 2px rgb(34 168 98 / 0.48),
+    0 0 0 6px rgb(34 168 98 / 0.1);
 }
 
 .priceCardChevron {
@@ -1389,7 +1430,7 @@
   right: 1.75rem;
   color: var(--gray);
   transition:
-    transform 0.3s ease,
+    transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1),
     color 0.2s ease;
 }
 
@@ -1452,6 +1493,22 @@
   outline: none;
 }
 
+.featuredPriceCta {
+  background: var(--green);
+  color: var(--white);
+  border: 1px solid var(--green);
+  box-shadow: 0 8px 22px rgb(26 122 74 / 26%);
+}
+
+.featuredPriceCta:hover,
+.featuredPriceCta:focus-visible {
+  background: var(--green-light);
+  border-color: var(--green-light);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgb(34 168 98 / 32%);
+  outline: none;
+}
+
 .featured {
   border-color: var(--green);
   box-shadow:
@@ -1465,10 +1522,41 @@
   background:
     linear-gradient(180deg, rgb(34 168 98 / 0.13), rgb(34 168 98 / 0.04)),
     var(--dark2);
-  transform: translateY(-8px);
+  transform: translateY(-5px);
   box-shadow:
     0 0 0 1px rgb(34 168 98 / 0.24),
     0 30px 56px rgb(26 122 74 / 0.22);
+}
+
+.featured:focus-visible {
+  box-shadow:
+    0 30px 56px rgb(26 122 74 / 0.22),
+    0 0 0 2px rgb(34 168 98 / 0.52),
+    0 0 0 6px rgb(34 168 98 / 0.12);
+}
+
+.featureCard:focus-visible {
+  outline: none;
+  box-shadow:
+    0 22px 38px rgb(0 0 0 / 18%),
+    inset 0 0 0 2px rgb(34 168 98 / 0.55),
+    inset 0 0 0 6px rgb(34 168 98 / 0.08);
+}
+
+.navLinks a:focus-visible,
+.navLogin:focus-visible,
+.navCta:focus-visible,
+.btnPrimary:focus-visible,
+.btnSecondary:focus-visible,
+.priceCta:focus-visible,
+.storyChip:focus-visible,
+.storyToggleButton:focus-visible,
+.roleTab:focus-visible,
+.previewChip:focus-visible,
+.previewTab:focus-visible {
+  outline: 2px solid rgb(34 168 98 / 0.72);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgb(34 168 98 / 0.1);
 }
 
 .featuredBadge {
@@ -1524,14 +1612,22 @@
   max-height: 0;
   overflow: hidden;
   opacity: 0;
+  transform: translateY(-4px);
+  visibility: hidden;
   transition:
-    max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.25s ease;
+    max-height 0.42s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.24s ease,
+    transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 0.42s;
+  will-change: max-height, opacity, transform;
 }
 
 .planContextExpanded {
   max-height: 320px;
   opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 .planContextSep {
@@ -1636,12 +1732,33 @@
   font-size: 13px;
 }
 
+.midpageCta {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 2.25rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  background: linear-gradient(180deg, rgb(34 168 98 / 0.04), transparent);
+}
+
+.midpageCtaText {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.3px;
+}
+
 .fadeIn {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(18px);
   transition:
-    opacity 0.7s ease,
-    transform 0.7s ease;
+    opacity 0.58s ease,
+    transform 0.58s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: var(--stagger-delay, 0ms);
+  will-change: opacity, transform;
 }
 
 .visible {
@@ -1661,7 +1778,131 @@
   font-family: var(--font-landing-sora);
 }
 
+@media (min-width: 901px) {
+  .heroPreview {
+    animation:
+      heroEnter 1000ms ease both 330ms,
+      dashboardFloat 8s ease-in-out 1.4s infinite;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    min-height: auto;
+    padding-top: 7.25rem;
+    padding-bottom: 3.5rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(48px, 8vw, 68px);
+  }
+
+  .heroPreview {
+    margin-top: 2.5rem;
+  }
+
+  .section,
+  .aiSection {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+
+  .pricingGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .heroBadge,
+  .hero h1,
+  .hero p,
+  .heroButtons,
+  .heroPreview {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+
+  .fadeIn {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .staggerItem {
+    transition-delay: 0ms;
+  }
+}
+
 @media (max-width: 700px) {
+  .nav {
+    padding: 0.85rem 1rem;
+  }
+
+  .hero {
+    min-height: auto;
+    justify-content: flex-start;
+  }
+
+  .heroGlow {
+    height: 240px;
+    filter: blur(14px);
+  }
+
+  .heroGrid {
+    background-size: 34px 34px;
+  }
+
+  .hero h1 {
+    max-width: 12ch;
+    font-size: clamp(40px, 11vw, 58px);
+    line-height: 0.98;
+    letter-spacing: -2px;
+  }
+
+  .hero p {
+    max-width: 34rem;
+    margin-bottom: 2rem;
+    font-size: 15px;
+  }
+
+  .heroPreview {
+    margin-top: 2rem;
+  }
+
+  .previewFloatingCards {
+    display: none;
+  }
+
+  .previewShell {
+    border-radius: 20px;
+  }
+
+  .previewShellTop {
+    gap: 0.7rem;
+    padding: 0.7rem 0.8rem;
+  }
+
+  .previewUrl {
+    font-size: 10px;
+  }
+
+  .previewCard {
+    padding: 0.85rem;
+  }
+
+  .previewStory {
+    border-radius: 18px;
+    padding: 0.9rem;
+  }
+
+  .previewStoryTitle {
+    font-size: clamp(21px, 7vw, 28px);
+    letter-spacing: -0.025em;
+  }
+
+  .previewStatusCard {
+    min-width: 0;
+    width: 100%;
+  }
+
   .featurePreviewSticky {
     position: static;
     max-height: none;
@@ -1679,6 +1920,7 @@
 
   .previewMetrics {
     grid-template-columns: 1fr;
+    gap: 0.65rem;
   }
 
   .previewInsights,
@@ -1691,46 +1933,180 @@
   .previewStoryHeader {
     flex-direction: column;
   }
+
+  .featureExperience {
+    gap: 0;
+  }
+
+  .featurePreviewPanel {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 18px;
+  }
+
+  .featurePreviewStats {
+    gap: 0.65rem;
+  }
+
+  .roleStoryPanel,
+  .storyPanel {
+    gap: 1rem;
+  }
+
+  .pricingGrid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 0.9rem;
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding: 0.85rem 1.25rem 0.35rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .priceCard {
+    flex: 0 0 min(86vw, 340px);
+    scroll-snap-align: start;
+  }
+
+  .priceCard:hover,
+  .priceCard:focus-visible,
+  .priceCardHover:hover,
+  .priceCardHover:focus-visible,
+  .featured:hover,
+  .featured:focus-visible {
+    transform: none;
+  }
+
+  .founderIntroGrid,
+  .founderTrustGrid {
+    gap: 1.25rem;
+  }
 }
 
 @media (max-width: 600px) {
+  .nav {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .navLogo {
+    font-size: 18px;
+  }
+
   .navLinks {
     display: none;
   }
 
   .navActions {
-    gap: 0.6rem;
+    gap: 0.45rem;
+  }
+
+  .navLogin,
+  .navCta {
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  .navCta {
+    padding: 8px 12px;
   }
 
   .statsBar {
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding: 1.75rem 1.25rem;
+  }
+
+  .stat:last-child {
+    grid-column: 1 / -1;
   }
 
   .hero {
-    padding: 7rem 1.25rem 3.5rem;
+    padding: 6.25rem 1.25rem 3rem;
   }
 
-  .section,
-  .aiSection,
-  .ctaSection {
+  .heroBadge {
+    margin-bottom: 1.25rem;
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .hero h1 {
+    margin-bottom: 1rem;
+  }
+
+  .heroButtons {
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .heroButtons .btnPrimary,
+  .heroButtons .btnSecondary {
+    width: 100%;
+  }
+
+  .section {
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
     padding-left: 1.25rem;
     padding-right: 1.25rem;
   }
 
-  .previewFloatingCards {
-    justify-content: flex-start;
+  .sectionTitle,
+  .ctaBox h2 {
+    font-size: clamp(26px, 8vw, 34px);
+    letter-spacing: -0.6px;
+    line-height: 1.08;
   }
 
-  .previewChip {
-    width: 100%;
-    justify-content: space-between;
+  .sectionSub,
+  .ctaBox p {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .sectionTag {
+    margin-bottom: 0.75rem;
+    font-size: 11px;
+    letter-spacing: 1.4px;
+  }
+
+  .aiSection {
+    padding: 3.5rem 1.25rem;
+  }
+
+  .ctaSection {
+    padding-top: 3.5rem;
+    padding-bottom: 4rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .ctaBox {
+    border-radius: 18px;
+    padding: 1.25rem;
+  }
+
+  .midpageCta {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 2rem 1.25rem;
+    text-align: center;
   }
 
   .previewTabs {
-    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0 0.85rem 0.85rem;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .previewTab,
+  .previewTab {
+    flex: 0 0 auto;
+  }
+
   .roleTab,
   .storyToggleButton {
     width: 100%;
@@ -1746,6 +2122,226 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .featureGrid,
+  .aiGrid,
+  .onboardingGrid {
+    margin-top: 2rem;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+    border-radius: 14px;
+  }
+
+  .featureCard,
+  .aiCard,
+  .onboardingCard {
+    padding: 1.2rem;
+  }
+
+  .featureIcon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0.75rem;
+  }
+
+  .featureCard h3,
+  .onboardingCard h3,
+  .aiCard h3 {
+    font-size: 15px;
+  }
+
+  .roleTabs,
+  .storyToggle {
+    border-radius: 18px;
+  }
+
+  .roleStoryContent,
+  .rolePreview,
+  .storyPanelCopy,
+  .storyPanelVisual,
+  .compareLeadCard {
+    border-radius: 18px;
+    padding: 1.15rem;
+  }
+
+  .storyPanelVisual {
+    gap: 0.65rem;
+  }
+
+  .storyChip {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .compareLead,
+  .vsTable,
+  .pricingGrid,
+  .storyToggleWrap,
+  .roleStoryWrap {
+    margin-top: 2rem;
+  }
+
+  .pricingAnnualNote {
+    border-radius: 14px;
+    padding: 0.9rem;
+  }
+
+  .priceCard {
+    padding: 1.35rem;
+    border-radius: 14px;
+  }
+
+  .priceCardChevron {
+    top: 1.35rem;
+    right: 1.35rem;
+  }
+
+  .priceAmount {
+    font-size: 28px;
+  }
+
+  .priceStudents {
+    margin-bottom: 1rem;
+  }
+
+  .planContextExpanded {
+    max-height: 420px;
+  }
+
+  .founderPhotoCard,
+  .founderQuoteCard,
+  .founderValuesGrid,
+  .founderTrustPanel {
+    border-radius: 18px !important;
+  }
+
+  .founderQuoteCard,
+  .founderTrustPanel {
+    padding: 1.15rem !important;
+  }
+
+  .founderValuesGrid {
+    margin-top: 2rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: clamp(36px, 11vw, 48px);
+    letter-spacing: -1.2px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .previewInsights {
+    grid-template-columns: 1fr;
+  }
+
+  .previewMetric,
+  .featurePreviewStat,
+  .roleMetricCard {
+    padding: 0.85rem;
+  }
+
+  .previewMetricValue {
+    font-size: 24px;
+  }
+
+  .midpageCtaText {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .navLogin {
+    display: none;
+  }
+
+  .hero {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .section,
+  .aiSection,
+  .ctaSection {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .pricingGrid {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .heroBadge,
+  .hero h1,
+  .hero p,
+  .heroButtons,
+  .heroPreview {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+
+  .fadeIn {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .staggerItem {
+    transition-delay: 0ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroBadge,
+  .hero h1,
+  .hero p,
+  .heroButtons,
+  .heroPreview,
+  .heroPreview .previewShell {
+    animation: none;
+  }
+
+  .fadeIn {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .staggerItem {
+    transition-delay: 0ms;
+  }
+
+  .planContext {
+    transition: none;
+    will-change: auto;
+  }
+
+  .previewChip:hover,
+  .featureCard:hover,
+  .featureCardActive,
+  .onboardingCard:hover,
+  .aiCard:hover,
+  .priceCard:hover,
+  .priceCardHover:hover,
+  .featured:hover,
+  .btnPrimary:hover,
+  .btnSecondary:hover,
+  .storyChip:hover,
+  .featuredPriceCta:hover,
+  .priceCtaOutline:hover {
+    transform: none;
+  }
 }
 
 @keyframes heroEnter {
@@ -1756,5 +2352,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes dashboardFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
   }
 }

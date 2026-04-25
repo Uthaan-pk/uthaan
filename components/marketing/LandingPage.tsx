@@ -836,6 +836,15 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <div className={styles.midpageCta}>
+        <span className={styles.midpageCtaText}>
+          Ready to move your school onto one platform?
+        </span>
+        <Link href="/demo" className={styles.btnPrimary}>
+          Request a demo
+        </Link>
+      </div>
+
       <section id="compare" className={`${styles.section} ${styles.fadeIn}`}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>Comparison</div>
         <h2 className={styles.sectionTitle}>Why not Google Classroom or Canvas?</h2>
@@ -998,7 +1007,7 @@ export default function LandingPage() {
                 <Link
                   href={`/demo?plan=${card.plan.toLowerCase()}`}
                   onClick={(event) => event.stopPropagation()}
-                  className={`${styles.priceCta} ${styles.priceCtaOutline}`}
+                  className={`${styles.priceCta} ${card.featured ? styles.featuredPriceCta : styles.priceCtaOutline}`}
                 >
                   {card.plan === 'Enterprise' ? 'Talk to us' : 'Request demo'}
                   <ChevronRight size={14} />

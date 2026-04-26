@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock } from 'lucide-react'
 import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useInView, useReducedMotion } from '@/lib/motion'
 import styles from './LandingPage.module.css'
 
 const sora = Sora({
@@ -411,9 +412,15 @@ const adminDefaulters = [
 function AdminMock({ active }: { active: boolean }) {
   const [visible, setVisible] = useState(0)
   useEffect(() => {
-    if (!active) { setVisible(0); return }
+    if (!active) {
+      const timer = setTimeout(() => setVisible(0), 0)
+      return () => clearTimeout(timer)
+    }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) { setVisible(adminDefaulters.length); return }
+    if (reduced) {
+      const timer = setTimeout(() => setVisible(adminDefaulters.length), 0)
+      return () => clearTimeout(timer)
+    }
     const timers = adminDefaulters.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
     return () => timers.forEach(clearTimeout)
   }, [active])
@@ -452,9 +459,15 @@ const teacherGrid: Array<Array<'Green' | 'Amber' | 'Red'>> = [
 function TeacherMock({ active }: { active: boolean }) {
   const [visible, setVisible] = useState(0)
   useEffect(() => {
-    if (!active) { setVisible(0); return }
+    if (!active) {
+      const timer = setTimeout(() => setVisible(0), 0)
+      return () => clearTimeout(timer)
+    }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) { setVisible(teacherStudents.length); return }
+    if (reduced) {
+      const timer = setTimeout(() => setVisible(teacherStudents.length), 0)
+      return () => clearTimeout(timer)
+    }
     const timers = teacherStudents.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
     return () => timers.forEach(clearTimeout)
   }, [active])
@@ -497,9 +510,15 @@ const parentNotifs = [
 function ParentMock({ active }: { active: boolean }) {
   const [visible, setVisible] = useState(0)
   useEffect(() => {
-    if (!active) { setVisible(0); return }
+    if (!active) {
+      const timer = setTimeout(() => setVisible(0), 0)
+      return () => clearTimeout(timer)
+    }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) { setVisible(parentNotifs.length); return }
+    if (reduced) {
+      const timer = setTimeout(() => setVisible(parentNotifs.length), 0)
+      return () => clearTimeout(timer)
+    }
     const timers = parentNotifs.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
     return () => timers.forEach(clearTimeout)
   }, [active])
@@ -534,9 +553,15 @@ const studentSubjects = [
 function StudentMock({ active }: { active: boolean }) {
   const [widths, setWidths] = useState([0, 0, 0, 0])
   useEffect(() => {
-    if (!active) { setWidths([0, 0, 0, 0]); return }
+    if (!active) {
+      const timer = setTimeout(() => setWidths([0, 0, 0, 0]), 0)
+      return () => clearTimeout(timer)
+    }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) { setWidths(studentSubjects.map((s) => s.score)); return }
+    if (reduced) {
+      const timer = setTimeout(() => setWidths(studentSubjects.map((s) => s.score)), 0)
+      return () => clearTimeout(timer)
+    }
     const timers = studentSubjects.map((s, i) =>
       setTimeout(() => setWidths((prev) => { const next = [...prev]; next[i] = s.score; return next }), 60 * i)
     )
@@ -685,6 +710,18 @@ export default function LandingPage() {
   const roleSectionRef = useRef<HTMLElement>(null)
   const compareGridRef = useRef<HTMLDivElement>(null)
   const compareMobileRef = useRef<HTMLDivElement>(null)
+  const reducedMotion = useReducedMotion()
+  const { ref: heroRef, isInView: heroInView } = useInView<HTMLDivElement>({
+    threshold: 0.05,
+    initialInView: true,
+  })
+  const { ref: pricingRef, isInView: pricingHasBeenSeen } = useInView<HTMLElement>({
+    threshold: 0.25,
+    once: true,
+  })
+  const { ref: footerRef, isInView: footerInView } = useInView<HTMLElement>({
+    rootMargin: '0px 0px -10% 0px',
+  })
 
   const [expandedPlan, setExpandedPlan] = useState<string | null>('Growth')
   const [activeSection, setActiveSection] = useState('features')
@@ -802,6 +839,7 @@ export default function LandingPage() {
   const activeFeaturePreview = featureCards.find((card) => card.key === activeFeatureCard) ?? featureCards[0]
   const activeRoleStory = roleStories[activeRole]
   const activeSystemStory = systemStories[activeStory]
+  const showMobileCta = !heroInView && !footerInView
 
   return (
     <div
@@ -846,7 +884,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <div className={styles.hero}>
+      <div ref={heroRef} className={styles.hero}>
         {/* SVG grain overlay — fixed, pointer-events none */}
         <svg aria-hidden="true" className={styles.heroGrain}>
           <filter id="hero-grain">
@@ -1218,7 +1256,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className={`${styles.section} ${styles.fadeIn}`}>
+      <section ref={pricingRef} id="pricing" className={`${styles.section} ${styles.fadeIn}`}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
@@ -1252,7 +1290,13 @@ export default function LandingPage() {
                 }}
                 aria-expanded={isExpanded}
               >
-                {card.featured ? <div className={styles.featuredBadge}>Most popular</div> : null}
+                {card.featured ? (
+                  <div
+                    className={`${styles.featuredBadge} ${pricingHasBeenSeen && !reducedMotion ? styles.featuredBadgePulse : ''}`}
+                  >
+                    Most popular
+                  </div>
+                ) : null}
                 <ChevronDown
                   size={15}
                   className={`${styles.priceCardChevron} ${isExpanded ? styles.priceCardChevronExpanded : ''}`}
@@ -1319,7 +1363,16 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <footer className={styles.footer}>
+      <div className={`${styles.mobileStickyCta} ${showMobileCta ? styles.mobileStickyCtaVisible : ''}`}>
+        <Link href="/demo" className={styles.mobileStickyPrimary}>
+          Request demo
+        </Link>
+        <Link href="/login" className={styles.mobileStickySecondary}>
+          Existing users
+        </Link>
+      </div>
+
+      <footer ref={footerRef} className={styles.footer}>
         <p>Uthaan — School management, simplified &nbsp;·&nbsp; uthaan-one.vercel.app</p>
       </footer>
     </div>

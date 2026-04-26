@@ -1,3 +1,16 @@
+# Saturday Morning Marketing Polish Pack
+
+## Plan
+
+- [ ] 1. Add lightweight client motion hooks in `lib/motion.ts` with `prefers-reduced-motion` handling.
+- [ ] 2. Improve `/demo` form submit UX: disabled fields/buttons, loading indicator, duplicate-submit guard.
+- [ ] 3. Add mobile-only sticky CTA bar to the landing page using hero/footer visibility.
+- [ ] 4. Verify `/` remains publicly reachable for logged-in users without auth/middleware changes.
+- [ ] 5. Polish pricing hover/tap states and make “Most popular” pulse once on first visibility.
+- [ ] 6. Run `npm run lint`, `npx tsc --noEmit`, inspect 390px behavior, and record `git diff --stat`.
+
+---
+
 # Hero Rebuild — Premium Landing Page
 
 ## Tasks

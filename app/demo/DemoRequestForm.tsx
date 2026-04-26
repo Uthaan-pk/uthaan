@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { submitDemoRequest, type DemoRequestState } from './actions'
 
@@ -20,11 +20,31 @@ const initialState: DemoRequestState = {
 export default function DemoRequestForm() {
   const searchParams = useSearchParams()
   const preselectedPlan = toValidPlan(searchParams.get('plan'))
+  const submitLockedRef = useRef(false)
 
   const [state, formAction, pending] = useActionState(submitDemoRequest, initialState)
+  const formDisabled = pending || state.success
+
+  useEffect(() => {
+    if (!pending && !state.success) {
+      submitLockedRef.current = false
+    }
+  }, [pending, state.success])
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={formAction}
+      className="space-y-4"
+      aria-busy={pending}
+      onSubmit={(event) => {
+        if (submitLockedRef.current) {
+          event.preventDefault()
+          return
+        }
+
+        submitLockedRef.current = true
+      }}
+    >
       <input
         type="text"
         name="website"
@@ -42,8 +62,9 @@ export default function DemoRequestForm() {
           <input
             name="school_name"
             required
+            disabled={formDisabled}
             placeholder="Al Noor School"
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
@@ -54,8 +75,9 @@ export default function DemoRequestForm() {
           <input
             name="contact_name"
             required
+            disabled={formDisabled}
             placeholder="Ayesha Khan"
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
@@ -65,8 +87,9 @@ export default function DemoRequestForm() {
           </label>
           <input
             name="role_title"
+            disabled={formDisabled}
             placeholder="Principal / Admin"
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
@@ -78,8 +101,9 @@ export default function DemoRequestForm() {
             type="email"
             name="email"
             required
+            disabled={formDisabled}
             placeholder="you@school.com"
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
@@ -89,8 +113,9 @@ export default function DemoRequestForm() {
           </label>
           <input
             name="phone"
+            disabled={formDisabled}
             placeholder="+92 300 1234567"
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
@@ -100,8 +125,9 @@ export default function DemoRequestForm() {
           </label>
           <input
             name="city"
+            disabled={formDisabled}
             placeholder="Lahore"
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
@@ -113,8 +139,9 @@ export default function DemoRequestForm() {
             type="number"
             min="0"
             name="student_count"
+            disabled={formDisabled}
             placeholder="350"
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
@@ -125,7 +152,8 @@ export default function DemoRequestForm() {
           <select
             name="requested_plan"
             defaultValue={preselectedPlan}
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white focus:border-[#22a862] focus:outline-none"
+            disabled={formDisabled}
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           >
             <option value="not_sure">Not sure yet</option>
             <option value="starter">Starter</option>
@@ -142,8 +170,9 @@ export default function DemoRequestForm() {
           <textarea
             name="message"
             rows={5}
+            disabled={formDisabled}
             placeholder="Tell us a little about your school or what you want to see in the demo."
-            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none"
+            className="w-full rounded-xl border border-white/10 bg-[#0f151d] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#22a862] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
       </div>
@@ -163,10 +192,19 @@ export default function DemoRequestForm() {
       <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
           type="submit"
-          disabled={pending}
-          className="rounded-xl bg-[#1a7a4a] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#22a862] disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={formDisabled}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1a7a4a] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#22a862] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending ? 'Submitting…' : 'Request demo'}
+          {pending ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden="true" />
+              Submitting…
+            </>
+          ) : state.success ? (
+            'Request sent'
+          ) : (
+            'Request demo'
+          )}
         </button>
         <Link
           href="/login"

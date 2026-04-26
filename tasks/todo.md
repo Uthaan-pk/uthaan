@@ -1,3 +1,16 @@
+# Mobile-First Landing Refinement Pass
+
+## Plan
+
+- [x] 1. Tighten `<768px` hero scale: smaller spacing, slightly calmer dashboard visual, no empty-feeling first screen.
+- [x] 2. Recompose feature section on mobile: selected preview first, compact feature cards below, tighter preview stats/rows.
+- [x] 3. Recompose role-preview on mobile: mock preview first, compact copy/card rhythm, preserve role interactions.
+- [x] 4. Rework pricing mobile from horizontal carousel to one card per row with tighter padding, rhythm, and tap states.
+- [x] 5. Reduce comparison/story/product section density below 768px while preserving swipe compare behavior.
+- [x] 6. Verify no horizontal overflow and run `npm run build`.
+
+---
+
 # Saturday Morning Marketing Polish Pack
 
 ## Plan

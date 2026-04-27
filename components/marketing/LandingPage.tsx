@@ -787,7 +787,7 @@ export default function LandingPage() {
   })
 
   const [expandedPlan, setExpandedPlan] = useState<string | null>('Growth')
-  const [activeSection, setActiveSection] = useState('features')
+  const [activeSection, setActiveSection] = useState<string | null>('features')
   const [activeFeatureCard, setActiveFeatureCard] = useState<FeatureCardKey>('students')
   const [activeRole, setActiveRole] = useState<RoleKey>('admin')
   const [roleAutoPlay, setRoleAutoPlay] = useState(true)
@@ -818,30 +818,59 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
-    const ids = ['features', 'ai', 'pricing', 'compare']
-    const sections = ids
-      .map((id) => document.getElementById(id))
-      .filter((section): section is HTMLElement => section !== null)
+    const sectionTargets = [
+      { id: 'features', nav: 'features' },
+      { id: 'ai', nav: 'ai' },
+      { id: 'compare', nav: 'compare' },
+      { id: 'pricing', nav: 'pricing' },
+      { id: 'founder-preview', nav: 'founders' },
+      { id: 'final-cta', nav: null },
+    ]
+    const sections = sectionTargets
+      .map(({ id, nav }) => {
+        const element = document.getElementById(id)
+        return element ? { element, nav } : null
+      })
+      .filter((section): section is { element: HTMLElement; nav: string | null } => section !== null)
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+    const updateActiveSection = () => {
+      const bandTop = window.innerHeight * 0.35
+      const bandBottom = window.innerHeight * 0.55
+      const visibleSections = sections
+        .map((section) => {
+          const rect = section.element.getBoundingClientRect()
+          const overlap = Math.max(0, Math.min(rect.bottom, bandBottom) - Math.max(rect.top, bandTop))
+          return { nav: section.nav, overlap }
+        })
+        .filter((section) => section.overlap > 0)
 
-        if (visible?.target?.id) {
-          setActiveSection(visible.target.id)
-        }
-      },
+      if (visibleSections.some((section) => section.nav === null)) {
+        setActiveSection(null)
+        return
+      }
+
+      const visible = visibleSections.sort((a, b) => b.overlap - a.overlap)[0]
+
+      setActiveSection(visible?.nav ?? null)
+    }
+
+    const observer = new IntersectionObserver(updateActiveSection,
       {
         rootMargin: '-35% 0px -45% 0px',
         threshold: [0.15, 0.4, 0.7],
       }
     )
 
-    sections.forEach((section) => observer.observe(section))
+    sections.forEach((section) => observer.observe(section.element))
+    updateActiveSection()
+    window.addEventListener('scroll', updateActiveSection, { passive: true })
+    window.addEventListener('resize', updateActiveSection)
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', updateActiveSection)
+      window.removeEventListener('resize', updateActiveSection)
+    }
   }, [])
 
   useEffect(() => {
@@ -934,7 +963,7 @@ export default function LandingPage() {
             </a>
           </li>
           <li>
-            <Link href="/founders">Founders</Link>
+            <Link href="/founders" className={activeSection === 'founders' ? styles.navLinkActive : ''}>Founders</Link>
           </li>
         </ul>
         <div className={styles.navActions}>
@@ -1448,7 +1477,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className={`${styles.founderPreviewSection} ${styles.fadeIn}`} aria-labelledby="founder-preview-title">
+      <section id="founder-preview" className={`${styles.founderPreviewSection} ${styles.fadeIn}`} aria-labelledby="founder-preview-title">
         <div className={styles.founderPreviewCard}>
           <div className={styles.founderPreviewCopy}>
             <div className={`${styles.sectionTag} ${styles.mono}`}>Founder story</div>
@@ -1467,7 +1496,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <div className={`${styles.ctaSection} ${styles.fadeIn}`}>
+      <div id="final-cta" className={`${styles.ctaSection} ${styles.fadeIn}`}>
         <div className={styles.ctaBox}>
           <div className={`${styles.sectionTag} ${styles.mono}`}>Ready to explore Uthaan?</div>
           <h2>Move your school from scattered tools to one cleaner platform</h2>

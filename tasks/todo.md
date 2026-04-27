@@ -1,3 +1,15 @@
+# Mobile Practicality Follow-Up Pass
+
+## Plan
+
+- [x] 1. Tighten `<768px` section rhythm, card padding, gaps, and inner card typography so dense sections scan faster.
+- [x] 2. Shorten mobile product preview and role mock cards, especially teacher/role workspace rows and empty visual height.
+- [x] 3. Make the sticky mobile CTA less intrusive while preserving safe-area support and 44px touch targets.
+- [x] 4. Replace the mobile comparison spreadsheet feel with compact phone-first comparison cards while leaving desktop unchanged.
+- [x] 5. Recheck mobile pricing density, horizontal overflow, TypeScript, and `npm run build`.
+
+---
+
 # Mobile-First Landing Refinement Pass
 
 ## Plan

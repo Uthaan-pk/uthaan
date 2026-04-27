@@ -2784,6 +2784,524 @@
   }
 }
 
+/* ── Mobile practicality follow-up — keep desktop untouched ─────────────── */
+
+@media (max-width: 767px) {
+  .hero {
+    padding: 5.35rem 1rem 2.1rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.9rem, 8.8vw, 2.35rem);
+    margin-bottom: 0.75rem;
+  }
+
+  .heroDashWrap {
+    max-width: 340px;
+    margin-top: 1.25rem;
+  }
+
+  .section,
+  .aiSection {
+    padding: 2.35rem 1rem;
+  }
+
+  .ctaSection {
+    padding: 2.6rem 1rem 3.2rem;
+  }
+
+  .sectionTitle,
+  .ctaBox h2 {
+    font-size: clamp(1.42rem, 6.6vw, 1.85rem);
+  }
+
+  .sectionSub,
+  .ctaBox p {
+    max-width: 34rem;
+    font-size: 13px;
+    line-height: 1.52;
+  }
+
+  .sectionTag {
+    margin-bottom: 0.48rem;
+    font-size: 9px;
+    letter-spacing: 0.09em;
+  }
+
+  .featureExperience,
+  .roleStoryWrap,
+  .storyToggleWrap,
+  .compareLead {
+    margin-top: 1.15rem;
+  }
+
+  .featureExperience,
+  .roleStoryPanel,
+  .storyPanel,
+  .aiGrid,
+  .onboardingGrid {
+    gap: 0.65rem;
+  }
+
+  .featurePreviewPanel,
+  .rolePreview,
+  .roleStoryContent,
+  .storyPanelCopy,
+  .storyPanelVisual,
+  .compareLeadCard,
+  .aiCard,
+  .onboardingCard {
+    padding: 0.78rem;
+    border-radius: 13px;
+  }
+
+  .featurePreviewTop {
+    gap: 0.45rem;
+  }
+
+  .featurePreviewStatus,
+  .rolePreviewPill,
+  .aiBadge {
+    font-size: 9px;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .featurePreviewTitle,
+  .roleStoryContent h3,
+  .storyPanelCopy h3,
+  .compareLeadCard h3,
+  .aiCard h3,
+  .onboardingCard h3 {
+    font-size: 1.06rem;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+
+  .featurePreviewSummary,
+  .roleStoryContent p,
+  .storyPanelCopy p,
+  .compareLeadCard p,
+  .aiCard p,
+  .onboardingCard p {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .featurePreviewSummary {
+    display: -webkit-box;
+    margin-top: 0.45rem;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .featurePreviewStats {
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+  }
+
+  .featurePreviewStat {
+    padding: 0.5rem 0.35rem;
+    border-radius: 10px;
+  }
+
+  .featurePreviewStatValue {
+    font-size: 14px;
+  }
+
+  .featurePreviewStatLabel {
+    font-size: 8.5px;
+  }
+
+  .featurePreviewScreen {
+    margin-top: 0.55rem;
+    border-radius: 12px;
+  }
+
+  .featurePreviewScreenBar {
+    display: none;
+  }
+
+  .featurePreviewRows {
+    gap: 0.35rem;
+    padding: 0.5rem;
+  }
+
+  .featurePreviewRow {
+    gap: 0.45rem;
+    padding: 0.48rem 0.55rem;
+    border-radius: 9px;
+    font-size: 11.5px;
+  }
+
+  .featureCard {
+    grid-template-columns: 30px minmax(0, 1fr);
+    min-height: 74px;
+    column-gap: 0.68rem;
+    padding: 0.72rem;
+  }
+
+  .featureIcon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .featureIcon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .featureCard h3 {
+    font-size: 13px;
+  }
+
+  .featureCard p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 11.5px;
+    line-height: 1.38;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .roleTabs {
+    gap: 0.45rem;
+  }
+
+  .roleTab {
+    min-height: 44px;
+    padding: 0.58rem 0.8rem;
+    font-size: 12px;
+  }
+
+  .rolePreviewHeader,
+  .roleMockHeader {
+    margin-bottom: 0.45rem;
+    font-size: 11px;
+  }
+
+  .roleMock {
+    margin-top: 0.42rem;
+    gap: 0.32rem;
+  }
+
+  .roleMockBadge {
+    padding: 2px 7px;
+    font-size: 9.5px;
+  }
+
+  .roleMockRow,
+  .studentSubjectRow {
+    gap: 0.42rem;
+    padding: 0.46rem 0.52rem;
+    border-radius: 9px;
+    font-size: 11px;
+  }
+
+  .teacherGrid {
+    gap: 0.3rem;
+  }
+
+  .teacherGridHeader,
+  .teacherRow {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 24px);
+    gap: 0.25rem;
+  }
+
+  .teacherGridHeader {
+    padding: 0 0.55rem;
+  }
+
+  .teacherRow {
+    padding: 0.42rem 0.52rem;
+    border-radius: 8px;
+  }
+
+  .teacherName,
+  .roleMockAmount {
+    font-size: 11px;
+  }
+
+  .roleMockMeta,
+  .teacherDayLabel {
+    font-size: 9.5px;
+  }
+
+  .roleMockTag {
+    display: none;
+  }
+
+  .studentSubjectRow {
+    gap: 0.24rem;
+  }
+
+  .studentBarTrack {
+    height: 3px;
+  }
+
+  .roleHighlights,
+  .storyBullets {
+    margin-top: 0.7rem;
+    gap: 0.42rem;
+  }
+
+  .roleHighlights li,
+  .storyBullets li {
+    font-size: 11.5px;
+    line-height: 1.36;
+  }
+
+  .storyChip {
+    min-height: 44px;
+    padding: 0.5rem 0.62rem;
+    font-size: 11.5px;
+  }
+
+  .onboardingStep,
+  .planContextLabel {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .pricingGrid {
+    gap: 0.65rem;
+    margin-top: 1.05rem;
+  }
+
+  .priceCard {
+    padding: 0.82rem;
+    border-radius: 12px;
+  }
+
+  .featuredBadge {
+    top: -7px;
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  .pricePlan {
+    margin-bottom: 0.32rem;
+    font-size: 10px;
+  }
+
+  .priceAmount {
+    font-size: 22px;
+  }
+
+  .pricePeriod,
+  .priceAnnualLine,
+  .priceStudents,
+  .priceAnnualSummary,
+  .planContextText {
+    font-size: 11.5px;
+    line-height: 1.38;
+  }
+
+  .priceFeatures {
+    gap: 0.3rem;
+  }
+
+  .priceFeatures li {
+    gap: 0.45rem;
+    font-size: 11.5px;
+    line-height: 1.32;
+  }
+
+  .priceAnnualSummary {
+    margin-top: 0.58rem;
+  }
+
+  .planContextSep {
+    margin: 0.62rem 0;
+  }
+
+  .priceCta {
+    min-height: 44px;
+    margin-top: 0.7rem;
+    font-size: 12px;
+  }
+
+  .pricingAnnualNote {
+    margin-top: 0.72rem;
+    padding: 0.62rem;
+  }
+
+  .pricingAnnualLead,
+  .pricingPilotNote,
+  .pricingAnnualMeta {
+    font-size: 11px;
+    line-height: 1.38;
+  }
+
+  .compareMobileScroll {
+    display: none;
+  }
+
+  .compareMobileCards {
+    display: grid;
+    gap: 0.68rem;
+    margin-top: 1rem;
+  }
+
+  .compareMobileSummaryCard,
+  .compareMobileCard {
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: rgb(255 255 255 / 0.025);
+    overflow: hidden;
+  }
+
+  .compareMobileSummaryCard {
+    padding: 0.8rem;
+    border-color: rgb(34 168 98 / 0.24);
+    background: linear-gradient(180deg, rgb(34 168 98 / 0.1), rgb(255 255 255 / 0.025));
+  }
+
+  .compareMobileCardKicker,
+  .compareMobileCardHeader span {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  .compareMobileSummaryCard h3 {
+    margin: 0.24rem 0 0.65rem;
+    font-size: 1.02rem;
+    line-height: 1.18;
+    color: var(--white);
+  }
+
+  .compareMobileSummaryList,
+  .compareMobileCardRows {
+    display: grid;
+    gap: 0;
+  }
+
+  .compareMobileSummaryRow,
+  .compareMobileCardRow {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.55rem 0;
+    border-top: 1px solid rgb(255 255 255 / 0.07);
+  }
+
+  .compareMobileSummaryRow:first-child,
+  .compareMobileCardRow:first-child {
+    border-top: none;
+  }
+
+  .compareMobileSummaryRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .compareMobileSummaryRow > span,
+  .compareMobileCardFeature {
+    min-width: 0;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--white);
+  }
+
+  .compareMobileCardHeader {
+    display: grid;
+    gap: 0.14rem;
+    padding: 0.68rem 0.78rem;
+    border-bottom: 1px solid var(--border);
+    background: rgb(255 255 255 / 0.02);
+  }
+
+  .compareMobileCardHeader strong {
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--white);
+  }
+
+  .compareMobileLegend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0.5rem 0.78rem 0;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  .compareMobileCardRows {
+    padding: 0.1rem 0.78rem;
+  }
+
+  .compareMobileCardCells {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .compareMobileCards .compareCell {
+    min-height: 30px;
+    justify-content: center;
+    border-left: 0;
+    border-radius: 999px;
+    padding: 0.36rem 0.45rem;
+    font-size: 10.5px;
+  }
+
+  .mobileStickyCta {
+    left: 1rem;
+    right: auto;
+    bottom: calc(0.55rem + env(safe-area-inset-bottom));
+    width: min(220px, calc(100vw - 2rem));
+    grid-template-columns: 1fr auto;
+    gap: 0.25rem;
+    padding: 0.32rem;
+    border-radius: 999px;
+  }
+
+  .mobileStickyPrimary,
+  .mobileStickySecondary {
+    min-height: 44px;
+    border-radius: 999px;
+    font-size: 11.5px;
+  }
+
+  .mobileStickyPrimary {
+    padding: 0 0.82rem;
+  }
+
+  .mobileStickySecondary {
+    width: 44px;
+    padding: 0;
+    overflow: hidden;
+    color: transparent;
+  }
+
+  .mobileStickySecondary::before {
+    content: "Login";
+    color: var(--gray);
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: clamp(1.88rem, 8.8vw, 2.25rem);
+  }
+
+  .hero p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .mobileStickyCta {
+    width: min(198px, calc(100vw - 2rem));
+  }
+}
+
 /* ── prefers-reduced-motion ──────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -3149,6 +3667,10 @@
   display: none;
 }
 
+.compareMobileCards {
+  display: none;
+}
+
 .compareHeaderRow {
   grid-column: 1 / -1;
   display: grid;
@@ -3387,5 +3909,344 @@
 
   .swipeHint {
     animation: none;
+  }
+}
+
+/* ── Final mobile compactness overrides for late-defined mocks/compare ───── */
+
+@media (max-width: 767px) {
+  .roleMock {
+    margin-top: 0.42rem;
+    gap: 0.32rem;
+  }
+
+  .roleMockHeader {
+    margin-bottom: 0.45rem;
+    font-size: 11px;
+  }
+
+  .roleMockBadge {
+    padding: 2px 7px;
+    font-size: 9.5px;
+  }
+
+  .roleMockRow,
+  .studentSubjectRow {
+    gap: 0.42rem;
+    padding: 0.46rem 0.52rem;
+    border-radius: 9px;
+    font-size: 11px;
+  }
+
+  .teacherGrid {
+    gap: 0.3rem;
+  }
+
+  .teacherGridHeader,
+  .teacherRow {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 24px);
+    gap: 0.25rem;
+  }
+
+  .teacherGridHeader {
+    padding: 0 0.55rem;
+  }
+
+  .teacherRow {
+    padding: 0.42rem 0.52rem;
+    border-radius: 8px;
+  }
+
+  .teacherName,
+  .roleMockAmount {
+    font-size: 11px;
+  }
+
+  .roleMockMeta,
+  .teacherDayLabel {
+    font-size: 9.5px;
+  }
+
+  .roleMockTag {
+    display: none;
+  }
+
+  .studentSubjectRow {
+    gap: 0.24rem;
+  }
+
+  .studentBarTrack {
+    height: 3px;
+  }
+
+  .compareMobileScroll {
+    display: none;
+  }
+
+  .compareMobileCards {
+    display: grid;
+    gap: 0.68rem;
+    margin-top: 1rem;
+  }
+
+  .compareMobileSummaryCard,
+  .compareMobileCard {
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: rgb(255 255 255 / 0.025);
+    overflow: hidden;
+  }
+
+  .compareMobileSummaryCard {
+    padding: 0.8rem;
+    border-color: rgb(34 168 98 / 0.24);
+    background: linear-gradient(180deg, rgb(34 168 98 / 0.1), rgb(255 255 255 / 0.025));
+  }
+
+  .compareMobileCardKicker,
+  .compareMobileCardHeader span {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  .compareMobileSummaryCard h3 {
+    margin: 0.24rem 0 0.65rem;
+    font-size: 1.02rem;
+    line-height: 1.18;
+    color: var(--white);
+  }
+
+  .compareMobileSummaryList,
+  .compareMobileCardRows {
+    display: grid;
+    gap: 0;
+  }
+
+  .compareMobileSummaryRow,
+  .compareMobileCardRow {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.55rem 0;
+    border-top: 1px solid rgb(255 255 255 / 0.07);
+  }
+
+  .compareMobileSummaryRow:first-child,
+  .compareMobileCardRow:first-child {
+    border-top: none;
+  }
+
+  .compareMobileSummaryRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .compareMobileSummaryRow > span,
+  .compareMobileCardFeature {
+    min-width: 0;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--white);
+  }
+
+  .compareMobileCardHeader {
+    display: grid;
+    gap: 0.14rem;
+    padding: 0.68rem 0.78rem;
+    border-bottom: 1px solid var(--border);
+    background: rgb(255 255 255 / 0.02);
+  }
+
+  .compareMobileCardHeader strong {
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--white);
+  }
+
+  .compareMobileLegend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0.5rem 0.78rem 0;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  .compareMobileCardRows {
+    padding: 0.1rem 0.78rem;
+  }
+
+  .compareMobileCardCells {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .compareMobileCards .compareCell {
+    min-height: 30px;
+    justify-content: center;
+    border-left: 0;
+    border-radius: 999px;
+    padding: 0.36rem 0.45rem;
+    font-size: 10.5px;
+  }
+
+  .featurePreviewPanel,
+  .rolePreview,
+  .roleStoryContent,
+  .storyPanelCopy,
+  .storyPanelVisual,
+  .compareLeadCard,
+  .aiCard,
+  .onboardingCard,
+  .priceCard {
+    padding: 0.68rem;
+  }
+
+  .featurePreviewTitle,
+  .roleStoryContent h3,
+  .storyPanelCopy h3,
+  .compareLeadCard h3,
+  .aiCard h3,
+  .onboardingCard h3 {
+    font-size: 0.98rem;
+    line-height: 1.14;
+  }
+
+  .featurePreviewSummary {
+    font-size: 11px;
+    line-height: 1.35;
+    -webkit-line-clamp: 1;
+  }
+
+  .featurePreviewStats {
+    gap: 0.28rem;
+    margin-top: 0.48rem;
+  }
+
+  .featurePreviewStat {
+    padding: 0.38rem 0.28rem;
+  }
+
+  .featurePreviewStatValue {
+    font-size: 12.5px;
+  }
+
+  .featurePreviewStatLabel {
+    font-size: 8px;
+  }
+
+  .featurePreviewRows {
+    gap: 0.28rem;
+    padding: 0.42rem;
+  }
+
+  .featurePreviewRow {
+    padding: 0.38rem 0.48rem;
+    font-size: 10.8px;
+  }
+
+  .featureCard {
+    min-height: 64px;
+    padding: 0.62rem;
+  }
+
+  .featureCard h3 {
+    font-size: 12.5px;
+  }
+
+  .featureCard p {
+    font-size: 11px;
+    -webkit-line-clamp: 1;
+  }
+
+  .roleStoryContent p,
+  .storyPanelCopy p,
+  .compareLeadCard p,
+  .aiCard p,
+  .onboardingCard p {
+    font-size: 11.5px;
+    line-height: 1.38;
+  }
+
+  .priceAmount {
+    font-size: 20px;
+  }
+
+  .pricePlan {
+    font-size: 9.5px;
+  }
+
+  .pricePeriod,
+  .priceAnnualLine,
+  .priceStudents,
+  .priceAnnualSummary,
+  .planContextText,
+  .priceFeatures li {
+    font-size: 10.8px;
+    line-height: 1.3;
+  }
+
+  .priceFeatures {
+    gap: 0.24rem;
+  }
+
+  .priceCta {
+    min-height: 44px;
+    margin-top: 0.58rem;
+  }
+
+  .compareMobileSummaryCard h3 {
+    font-size: 0.96rem;
+  }
+
+  .compareMobileSummaryRow,
+  .compareMobileCardRow {
+    gap: 0.34rem;
+    padding: 0.45rem 0;
+  }
+
+  .compareMobileCardRows {
+    padding: 0.05rem 0.68rem;
+  }
+
+  .compareMobileCardHeader {
+    padding: 0.58rem 0.68rem;
+  }
+
+  .compareMobileLegend {
+    padding: 0.42rem 0.68rem 0;
+  }
+
+  .compareMobileSummaryRow > span,
+  .compareMobileCardFeature {
+    font-size: 10.8px;
+  }
+
+  .compareMobileCards .compareCell {
+    min-height: 28px;
+    padding: 0.3rem 0.42rem;
+    font-size: 10px;
+  }
+
+  .mobileStickyCta {
+    width: min(168px, calc(100vw - 2rem));
+    grid-template-columns: 1fr;
+    padding: 0.28rem;
+  }
+
+  .mobileStickyPrimary {
+    min-height: 44px;
+    padding: 0 0.75rem;
+    font-size: 11.5px;
+  }
+
+  .mobileStickySecondary {
+    display: none;
   }
 }

@@ -1216,6 +1216,46 @@ export default function LandingPage() {
           ))}
         </div>
 
+        {/* Mobile comparison cards */}
+        <div className={styles.compareMobileCards}>
+          <div className={styles.compareMobileSummaryCard}>
+            <div className={styles.compareMobileCardKicker}>Uthaan advantage</div>
+            <h3>Start with the workflows Pakistani private schools ask for first</h3>
+            <div className={styles.compareMobileSummaryList}>
+              {compareFeatures.slice(0, 4).map((feature) => (
+                <div key={feature.label} className={styles.compareMobileSummaryRow}>
+                  <span>{feature.label}</span>
+                  <CompareCell value={feature.uthaan} isUthaan />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {competitors.map((comp) => (
+            <div key={comp.name} className={styles.compareMobileCard}>
+              <div className={styles.compareMobileCardHeader}>
+                <span>Compared with</span>
+                <strong>{comp.name}</strong>
+              </div>
+              <div className={styles.compareMobileLegend}>
+                <span>Uthaan</span>
+                <span>{comp.name}</span>
+              </div>
+              <div className={styles.compareMobileCardRows}>
+                {compareFeatures.map((feature) => (
+                  <div key={feature.label} className={styles.compareMobileCardRow}>
+                    <span className={styles.compareMobileCardFeature}>{feature.label}</span>
+                    <div className={styles.compareMobileCardCells}>
+                      <CompareCell value={feature.uthaan} isUthaan />
+                      <CompareCell value={feature[comp.key]} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Mobile swipe layout */}
         <div
           ref={compareMobileRef}

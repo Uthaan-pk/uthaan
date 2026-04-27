@@ -13,12 +13,28 @@ export default function TeacherOnboardingForm() {
   const [state, formAction, isPending] = useActionState(createTeacherAccount, INITIAL_STATE)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!state.success) return
     setName('')
     setEmail('')
   }, [state.success])
+
+  async function copyLoginInstructions() {
+    if (!state.teacher) return
+
+    const origin = window.location.origin
+    await navigator.clipboard.writeText([
+      'Your Uthaan teacher account is ready.',
+      `Email: ${state.teacher.email}`,
+      `Login: ${origin}/login`,
+      `Reset password: ${origin}/forgot-password`,
+      'Use Forgot Password from the login page to set your password.',
+    ].join('\n'))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
 
   return (
     <section id="teacher-onboarding" className="rounded-2xl border border-gray-100 bg-white p-5">
@@ -78,12 +94,23 @@ export default function TeacherOnboardingForm() {
           {state.error}
         </div>
       ) : state.success && state.teacher ? (
-        <div className="mt-4 rounded-xl border border-[#6fcf6f]/30 bg-[#6fcf6f]/10 px-4 py-3">
-          <div className="text-sm font-semibold text-[#1a2e1a]">Teacher account created</div>
-          <div className="mt-1 text-sm text-gray-700">{state.teacher.email}</div>
-          <p className="mt-2 text-xs leading-5 text-gray-600">
-            Ask the teacher to sign in at <Link href="/login" className="font-medium text-[#1a2e1a] hover:underline">/login</Link> and use forgot password/reset password, or share credentials through the approved manual process.
-          </p>
+        <div className="mt-4 rounded-xl border border-[#6fcf6f]/30 bg-[#6fcf6f]/10 px-4 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="text-sm font-semibold text-[#1a2e1a]">Teacher account created</div>
+              <div className="mt-1 text-sm text-gray-700">{state.teacher.email}</div>
+              <p className="mt-2 text-xs leading-5 text-gray-600">
+                Ask the teacher to sign in at <Link href="/login" className="font-medium text-[#1a2e1a] hover:underline">/login</Link> and use Forgot Password / reset password, or share credentials through the approved manual process.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyLoginInstructions}
+              className="min-h-10 shrink-0 rounded-lg border border-[#1a2e1a]/15 bg-white px-3 py-2 text-xs font-medium text-[#1a2e1a] transition-colors hover:border-[#6fcf6f]/50 hover:bg-[#6fcf6f]/5"
+            >
+              {copied ? 'Copied' : 'Copy login instructions'}
+            </button>
+          </div>
         </div>
       ) : (
         <p className="mt-4 text-xs leading-5 text-gray-500">

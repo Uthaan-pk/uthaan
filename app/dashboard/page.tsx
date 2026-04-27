@@ -589,6 +589,29 @@ function LaunchDashboard({
                 />
               </div>
             </DashboardSection>
+
+            <DashboardSection
+              title="Need help?"
+              description="Setup videos are coming soon. For now, use the checklist above or ask Uthaan support for guided setup."
+            >
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Student import</div>
+                  <div className="mt-2 text-sm font-medium text-gray-900">Use the CSV import on /admin.</div>
+                  <div className="mt-1 text-xs leading-5 text-gray-500">Start with a small class list, then import the rest.</div>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Staff setup</div>
+                  <div className="mt-2 text-sm font-medium text-gray-900">Create teachers, then assign timetable coverage.</div>
+                  <div className="mt-1 text-xs leading-5 text-gray-500">Teacher subjects and classes are handled in Timetable.</div>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Pilot support</div>
+                  <div className="mt-2 text-sm font-medium text-gray-900">Ask Uthaan support for guided setup.</div>
+                  <div className="mt-1 text-xs leading-5 text-gray-500">We can walk through launch order with your school team.</div>
+                </div>
+              </div>
+            </DashboardSection>
           </div>
         </main>
       </div>
@@ -1640,42 +1663,43 @@ export default async function DashboardPage() {
       {
         label: 'Teachers added',
         done: teacherCount > 0,
-        detail: teacherCount > 0 ? `${teacherCount} teacher${teacherCount === 1 ? '' : 's'}` : 'Teacher onboarding still needs a safe creation flow',
+        detail: teacherCount > 0 ? `${teacherCount} teacher${teacherCount === 1 ? '' : 's'}` : 'Add your first teacher to begin assigning timetable coverage.',
+        href: '#teacher-onboarding',
       },
       {
         label: 'Students imported',
         done: totalStudents > 0,
-        detail: `${totalStudents} active student${totalStudents === 1 ? '' : 's'}`,
+        detail: totalStudents > 0 ? `${totalStudents} active student${totalStudents === 1 ? '' : 's'}` : 'No students imported yet.',
         href: role === 'admin' ? '/admin' : '/students',
       },
       {
         label: 'Timetable added',
         done: timetableCount > 0,
-        detail: `${timetableCount} timetable period${timetableCount === 1 ? '' : 's'}`,
+        detail: timetableCount > 0 ? `${timetableCount} timetable period${timetableCount === 1 ? '' : 's'}` : 'No timetable periods yet.',
         href: '/timetable',
       },
       {
         label: 'Fee setup started',
         done: feeRecordsCount > 0,
-        detail: `${feeRecordsCount} fee record${feeRecordsCount === 1 ? '' : 's'}`,
+        detail: feeRecordsCount > 0 ? `${feeRecordsCount} fee record${feeRecordsCount === 1 ? '' : 's'}` : 'No fee records yet.',
         href: '/fees',
       },
       {
         label: 'First announcement posted',
         done: announcementCount > 0,
-        detail: `${announcementCount} recent announcement${announcementCount === 1 ? '' : 's'}`,
+        detail: announcementCount > 0 ? `${announcementCount} recent announcement${announcementCount === 1 ? '' : 's'}` : 'Post your first school update.',
         href: '/announcements',
       },
       {
         label: 'Attendance marked',
         done: attendanceLogCount > 0,
-        detail: `${attendanceLogCount} attendance log${attendanceLogCount === 1 ? '' : 's'}`,
+        detail: attendanceLogCount > 0 ? `${attendanceLogCount} attendance log${attendanceLogCount === 1 ? '' : 's'}` : 'Mark first attendance after students are imported.',
         href: '/attendance',
       },
       {
         label: 'Marks/results ready',
         done: markCount > 0,
-        detail: `${markCount} mark${markCount === 1 ? '' : 's'}`,
+        detail: markCount > 0 ? `${markCount} mark${markCount === 1 ? '' : 's'}` : 'Enter marks when classes begin assessments.',
         href: '/results',
       },
     ] satisfies LaunchSetupItem[]

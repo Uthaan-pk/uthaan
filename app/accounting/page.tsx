@@ -119,21 +119,13 @@ export default async function AccountingPage() {
             </section>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {/* Today */}
+              {/* Expense approvals */}
               <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-                <div className="text-sm font-semibold text-gray-900">Today</div>
+                <div className="text-sm font-semibold text-gray-900">Expense approvals</div>
                 <div className="mt-1 text-sm text-gray-500">
-                  A snapshot of money movement for today.
+                  Petty expense requests awaiting admin sign-off.
                 </div>
                 <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
-                    <span className="text-sm text-gray-600">Fees collected today</span>
-                    <span className="text-sm font-semibold text-gray-900">{fmt(collectedToday)}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
-                    <span className="text-sm text-gray-600">Expenses approved today</span>
-                    <span className="text-sm font-semibold text-gray-900">{fmt(approvedToday)}</span>
-                  </div>
                   <div
                     className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
                       pendingExpenses > 0
@@ -151,47 +143,45 @@ export default async function AccountingPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
-                    <span className="text-sm text-gray-600">Total outstanding fees</span>
+                    <span className="text-sm text-gray-600">Approved this month</span>
+                    <span className="text-sm font-semibold text-gray-900">{fmt(approvedThisMonth)}</span>
+                  </div>
+                  <Link
+                    href="/accounting/expenses"
+                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-[#1a7a4a] transition-colors hover:border-gray-200"
+                  >
+                    <span>View all expenses</span>
+                    <span className="text-gray-400">→</span>
+                  </Link>
+                </div>
+              </section>
+
+              {/* Overdue snapshot */}
+              <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                <div className="text-sm font-semibold text-gray-900">Outstanding</div>
+                <div className="mt-1 text-sm text-gray-500">
+                  Unpaid fees that need attention.
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                    <span className="text-sm text-gray-600">Total outstanding</span>
                     <span className={`text-sm font-semibold ${outstanding > 0 ? 'text-amber-700' : 'text-gray-900'}`}>
                       {fmt(outstanding)}
                     </span>
                   </div>
-                </div>
-              </section>
-
-              {/* Quick links */}
-              <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-                <div className="text-sm font-semibold text-gray-900">Quick links</div>
-                <div className="mt-1 text-sm text-gray-500">
-                  Shortcuts for the finance tasks you use most.
-                </div>
-                <div className="mt-4 space-y-2">
-                  <Link
-                    href="/accounting/expenses"
-                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
-                  >
-                    <span>Expenses</span>
-                    <span className="text-gray-400">→</span>
-                  </Link>
-                  <Link
-                    href="/accounting/fees"
-                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
-                  >
-                    <span>Fee collection</span>
-                    <span className="text-gray-400">→</span>
-                  </Link>
+                  <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                    <span className="text-sm text-gray-600">Collected today</span>
+                    <span className="text-sm font-semibold text-gray-900">{fmt(collectedToday)}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3">
+                    <span className="text-sm text-gray-600">Expenses approved today</span>
+                    <span className="text-sm font-semibold text-gray-900">{fmt(approvedToday)}</span>
+                  </div>
                   <Link
                     href="/accounting/outstanding"
-                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
+                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-[#1a7a4a] transition-colors hover:border-gray-200"
                   >
-                    <span>Outstanding fees</span>
-                    <span className="text-gray-400">→</span>
-                  </Link>
-                  <Link
-                    href="/accounting/reports"
-                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#fafcf9] px-4 py-3 text-sm font-medium text-gray-800 transition-colors hover:border-gray-200"
-                  >
-                    <span>Reports</span>
+                    <span>View outstanding detail</span>
                     <span className="text-gray-400">→</span>
                   </Link>
                 </div>

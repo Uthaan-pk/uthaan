@@ -313,11 +313,21 @@ export default async function FeesPage() {
                 </div>
               ) : (
                 <section className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-                  <div className="px-5 py-4 border-b border-gray-100">
-                    <div className="text-sm font-semibold text-gray-900">Fee history</div>
-                    <div className="mt-1 text-sm text-gray-500">
-                      Review each recorded fee term, due date, amount, and payment status.
+                  <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">Fee history</div>
+                      <div className="mt-1 text-sm text-gray-500">
+                        Review each recorded fee term, due date, amount, and payment status.
+                      </div>
                     </div>
+                    <a
+                      href={`/fees/receipt/${child.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 text-xs font-medium text-[#1a7a4a] border border-[#6fcf6f]/30 bg-[#6fcf6f]/8 hover:bg-[#6fcf6f]/15 px-3 py-2 rounded-lg transition-colors whitespace-nowrap min-h-[36px] flex items-center"
+                    >
+                      View receipt
+                    </a>
                   </div>
                   {feeList.map((fee, i) => {
                     const status = statusOf(fee)

@@ -1,3 +1,89 @@
+# Accounting / Fees Workflow Fix
+
+## Diagnosis
+
+### Root causes
+1. **Duplicate stats on accounting dashboard**: `/accounting/page.tsx` renders "Pending approvals" in both the hero grid AND the "Today" section. Also, Quick links duplicate the sidebar nav with no additional value.
+2. **Accountant Fee Collection page is read-only**: `/accounting/fees/page.tsx` shows a read-only list with an amber banner "Contact the admin to mark a fee as paid." No action buttons exist.
+3. **No fee creation for accountant**: Fee creation lives only in `FeesClient.tsx` accessible to admin at `/fees`. Accountant has no route to create fees.
+4. **No payment recording columns on `fees` table**: The table only has `paid` and `paid_at`. Missing: `payment_method`, `payment_note`, `recorded_by`, `receipt_proof_url`.
+5. **No accountant INSERT/UPDATE RLS on `fees`**: Only SELECT is granted (`accountant_read_school_fees` policy). Cannot write.
+6. **No `fee_templates` table**: Doesn't exist. Needed for safe class/school-wide fee management.
+7. **No storage bucket for receipt proofs**: No Supabase Storage usage anywhere in the codebase.
+8. **Digital receipt exists** but parents have no link to it in their Fees tab. `/fees/receipt/[studentId]/page.tsx` is accessible to authenticated users but only admin can navigate there.
+9. **Accounting nav is clean** — sidebar has Dashboard + 4 Finance items, no duplicates.
+
+### Schema state
+- `fees`: id, student_id, amount, due_date, paid, paid_at, term, created_at — school-scoped via `students.school_id`
+- `petty_expenses`: has school_id, full RLS
+- `fee_templates`: does not exist
+- Storage: no buckets used anywhere
+
+---
+
+## Plan
+
+### SQL changes (needs approval before coding)
+1. `ALTER TABLE fees` — add payment_method, payment_note, recorded_by, receipt_proof_url
+2. RLS: accountant INSERT + UPDATE on fees (school-scoped via students.school_id)
+3. `CREATE TABLE fee_templates` with scope/class/student/frequency columns + full RLS
+4. Storage bucket `fee-receipts` (private, 5 MB, jpg/png/webp/pdf) + upload/read policies for admin/accountant
+
+### Code changes (after SQL approval)
+- **PART A**: Remove duplicate "Pending approvals" from accounting dashboard Today section; restructure dashboard
+- **PART B**: Convert `/accounting/fees` to client component; add Create Fee modal (individual/class/school) with preview count + duplicate skip; add server actions
+- **PART C**: Add fee templates UI with "Generate fees from template" action
+- **PART D**: Add Record Payment modal per fee row (payment_method, note, receipt proof upload OR digital receipt link)
+- **PART E**: Add "View receipt" link for parents in `/fees/page.tsx` parent branch
+
+## Checklist
+
+- [ ] SQL migration approved and applied
+- [ ] PART A: Accounting dashboard duplicate fixed
+- [ ] PART B: Accountant fee creation (individual/class/school)
+- [ ] PART C: Fee templates UI
+- [ ] PART D: Payment recording modal with receipt options
+- [ ] PART E: Parent digital receipt link
+- [ ] `npm run build` passes
+
+---
+
+# Desktop Balance + Role Mock Content Fix
+
+## Plan
+
+- [x] 1. Reduce base desktop CSS: featureCard padding, featureIcon margin-bottom, featurePreviewPanel padding, featurePreviewTitle size, featurePreviewStat padding/size, featurePreviewRow padding, featurePreviewRows gap/padding, featurePreviewScreenBar padding.
+- [x] 2. Add `.teacherTaskRows` / `.teacherTaskRow` / `.teacherTaskLabel` / `.teacherTaskMeta` / `.teacherTaskRowAi` CSS classes plus `≤767px` compact mobile overrides.
+- [x] 3. Extend `TeacherMock` in `LandingPage.tsx` with 3 compact task rows: Marks entry, Assignment review, AI report comments.
+- [x] 4. Verify `npm run build` passes. No TS errors, no horizontal overflow at 390px / 768px / 1280px / 1440px.
+
+---
+
+# Mobile Practicality Follow-Up Pass
+
+## Plan
+
+- [x] 1. Tighten `<768px` section rhythm, card padding, gaps, and inner card typography so dense sections scan faster.
+- [x] 2. Shorten mobile product preview and role mock cards, especially teacher/role workspace rows and empty visual height.
+- [x] 3. Make the sticky mobile CTA less intrusive while preserving safe-area support and 44px touch targets.
+- [x] 4. Replace the mobile comparison spreadsheet feel with compact phone-first comparison cards while leaving desktop unchanged.
+- [x] 5. Recheck mobile pricing density, horizontal overflow, TypeScript, and `npm run build`.
+
+---
+
+# Mobile-First Landing Refinement Pass
+
+## Plan
+
+- [x] 1. Tighten `<768px` hero scale: smaller spacing, slightly calmer dashboard visual, no empty-feeling first screen.
+- [x] 2. Recompose feature section on mobile: selected preview first, compact feature cards below, tighter preview stats/rows.
+- [x] 3. Recompose role-preview on mobile: mock preview first, compact copy/card rhythm, preserve role interactions.
+- [x] 4. Rework pricing mobile from horizontal carousel to one card per row with tighter padding, rhythm, and tap states.
+- [x] 5. Reduce comparison/story/product section density below 768px while preserving swipe compare behavior.
+- [x] 6. Verify no horizontal overflow and run `npm run build`.
+
+---
+
 # Saturday Morning Marketing Polish Pack
 
 ## Plan

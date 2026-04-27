@@ -269,14 +269,16 @@ export default function Sidebar({
             {overviewLabel}
           </p>
 
-          <NavItem
-            label={t.dashboard}
-            href="/dashboard"
-            active={pathname === '/dashboard'}
-            onClose={close}
-            isUrdu={isUrdu}
-            icon={<LayoutDashboard className={`w-4 h-4 shrink-0 ${pathname === '/dashboard' ? '' : 'opacity-60'}`} />}
-          />
+          {!isAccountant && (
+            <NavItem
+              label={t.dashboard}
+              href="/dashboard"
+              active={pathname === '/dashboard'}
+              onClose={close}
+              isUrdu={isUrdu}
+              icon={<LayoutDashboard className={`w-4 h-4 shrink-0 ${pathname === '/dashboard' ? '' : 'opacity-60'}`} />}
+            />
+          )}
 
           {isAdmin ? (
             <>

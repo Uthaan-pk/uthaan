@@ -11,6 +11,8 @@ import {
   FolderOpen,
   CreditCard,
   BarChart2,
+  DollarSign,
+  Receipt,
   Shield,
   UserPlus,
   CalendarOff,
@@ -19,7 +21,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-export type Role = 'teacher' | 'admin' | 'student' | 'parent'
+export type Role = 'teacher' | 'admin' | 'student' | 'parent' | 'accountant'
 
 export type PageEntry = {
   id: string
@@ -36,6 +38,7 @@ const all: Role[] = ['teacher', 'admin', 'student', 'parent']
 const staff: Role[] = ['teacher', 'admin']
 const teacherOnly: Role[] = ['teacher']
 const adminOnly: Role[] = ['admin']
+const accountantOnly: Role[] = ['accountant']
 const parentOnly: Role[] = ['parent']
 const notAdmin: Role[] = ['teacher', 'student', 'parent']
 const feeRoles: Role[] = ['admin', 'student', 'parent']
@@ -163,6 +166,56 @@ export const PAGE_INDEX: PageEntry[] = [
     category: 'page',
   },
   {
+    id: 'accounting',
+    label: 'Accounting Dashboard',
+    description: 'Finance overview for fee collection and expenses',
+    href: '/accounting',
+    icon: LayoutDashboard,
+    roles: accountantOnly,
+    keywords: ['accountant', 'finance', 'overview', 'dashboard'],
+    category: 'page',
+  },
+  {
+    id: 'accounting-fees',
+    label: 'Fee Collection',
+    description: 'Review collected school fees',
+    href: '/accounting/fees',
+    icon: CreditCard,
+    roles: accountantOnly,
+    keywords: ['fees', 'collection', 'paid', 'payments'],
+    category: 'page',
+  },
+  {
+    id: 'accounting-outstanding',
+    label: 'Outstanding Fees',
+    description: 'Review overdue and unpaid fees',
+    href: '/accounting/outstanding',
+    icon: DollarSign,
+    roles: accountantOnly,
+    keywords: ['outstanding', 'dues', 'unpaid', 'overdue', 'defaulters'],
+    category: 'page',
+  },
+  {
+    id: 'accounting-expenses',
+    label: 'Expenses',
+    description: 'Create and review petty expense requests',
+    href: '/accounting/expenses',
+    icon: Receipt,
+    roles: accountantOnly,
+    keywords: ['expense', 'petty cash', 'vendor', 'approval'],
+    category: 'page',
+  },
+  {
+    id: 'accounting-reports',
+    label: 'Accounting Reports',
+    description: 'Review finance reports',
+    href: '/accounting/reports',
+    icon: BarChart2,
+    roles: accountantOnly,
+    keywords: ['reports', 'finance reports', 'summary'],
+    category: 'page',
+  },
+  {
     id: 'analytics',
     label: 'Analytics',
     description: 'School performance insights',
@@ -284,6 +337,26 @@ export const PAGE_INDEX: PageEntry[] = [
     icon: CreditCard,
     roles: feeRoles,
     keywords: ['outstanding dues', 'fee balance', 'pending'],
+    category: 'action',
+  },
+  {
+    id: 'action-accounting-expense',
+    label: 'Add Expense',
+    description: 'Open the accountant expense request workflow',
+    href: '/accounting/expenses',
+    icon: Receipt,
+    roles: accountantOnly,
+    keywords: ['add expense', 'new expense', 'petty cash', 'request approval'],
+    category: 'action',
+  },
+  {
+    id: 'action-accounting-dues',
+    label: 'Check Outstanding Fees',
+    description: 'Open overdue and unpaid fee balances',
+    href: '/accounting/outstanding',
+    icon: DollarSign,
+    roles: accountantOnly,
+    keywords: ['fee dues', 'outstanding fees', 'defaulters', 'unpaid fees'],
     category: 'action',
   },
   {

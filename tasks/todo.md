@@ -1,3 +1,13 @@
+# Targeted AI Desktop Layout Fix
+
+## Plan
+
+- [x] 1. Keep the desktop density system, but undo the accidental `aiSection` max-width behavior that left-locks the dark band.
+- [x] 2. Center `.aiInner` and keep `.aiGrid` at two compact columns on desktop/tablet where space allows.
+- [x] 3. Preserve `<768px` mobile AI stacking and verify build/overflow.
+
+---
+
 # Aggressive Desktop Density Follow-Up
 
 ## Plan

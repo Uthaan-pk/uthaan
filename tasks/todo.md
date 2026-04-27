@@ -1,3 +1,14 @@
+# Homepage Founder Preview Trust Card
+
+## Plan
+
+- [x] 1. Add a compact founder/story preview on the homepage near the final CTA, linking to `/founders`.
+- [x] 2. Style the preview with the existing glass/gradient landing page language, keeping it smaller than a full section.
+- [x] 3. Add mobile and desktop responsive rules so the card stays compact at 390px and balanced on desktop.
+- [x] 4. Run `npm run build` and verify the homepage has no horizontal overflow.
+
+---
+
 # Premium Role Preview + Accountant Story
 
 ## Plan

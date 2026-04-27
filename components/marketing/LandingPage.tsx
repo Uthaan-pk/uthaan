@@ -1448,6 +1448,25 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className={`${styles.founderPreviewSection} ${styles.fadeIn}`} aria-labelledby="founder-preview-title">
+        <div className={styles.founderPreviewCard}>
+          <div className={styles.founderPreviewCopy}>
+            <div className={`${styles.sectionTag} ${styles.mono}`}>Founder story</div>
+            <h2 id="founder-preview-title">Built from inside Pakistani schools</h2>
+            <p>
+              Uthaan started from a simple problem: schools had attendance, fees, results, and
+              parent communication scattered across registers, WhatsApp, and Excel. We are building
+              a cleaner way for school owners, admins, teachers, accountants, parents, and students
+              to stay aligned.
+            </p>
+          </div>
+          <Link href="/founders" className={styles.founderPreviewLink}>
+            Read the founder story
+            <ChevronRight size={15} aria-hidden="true" />
+          </Link>
+        </div>
+      </section>
+
       <div className={`${styles.ctaSection} ${styles.fadeIn}`}>
         <div className={styles.ctaBox}>
           <div className={`${styles.sectionTag} ${styles.mono}`}>Ready to explore Uthaan?</div>

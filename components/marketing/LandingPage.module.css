@@ -1518,6 +1518,7 @@
 .btnPrimary:focus-visible,
 .btnSecondary:focus-visible,
 .priceCta:focus-visible,
+.founderPreviewLink:focus-visible,
 .mobileStickyPrimary:focus-visible,
 .mobileStickySecondary:focus-visible,
 .storyChip:focus-visible,
@@ -1722,6 +1723,79 @@
   font-weight: 600;
   color: var(--white);
   letter-spacing: -0.3px;
+}
+
+.founderPreviewSection {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 0 2rem 1.35rem;
+}
+
+.founderPreviewCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.4rem;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.018)),
+    radial-gradient(circle at 8% 0%, rgb(34 168 98 / 0.13), transparent 38%),
+    radial-gradient(circle at 96% 100%, rgb(196 115 42 / 0.1), transparent 34%);
+  box-shadow:
+    0 24px 48px rgb(0 0 0 / 18%),
+    inset 0 1px 0 rgb(255 255 255 / 0.04);
+  padding: 1.35rem 1.45rem;
+}
+
+.founderPreviewCopy {
+  min-width: 0;
+}
+
+.founderPreviewCopy h2 {
+  margin: 0.35rem 0 0.55rem;
+  color: var(--white);
+  font-size: clamp(21px, 2.4vw, 28px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.founderPreviewCopy p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--gray);
+  font-size: 13.5px;
+  line-height: 1.62;
+}
+
+.founderPreviewLink {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid rgb(34 168 98 / 0.34);
+  border-radius: 999px;
+  background: rgb(34 168 98 / 0.1);
+  color: var(--green-light);
+  padding: 0.68rem 0.92rem;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.founderPreviewLink:hover {
+  border-color: rgb(34 168 98 / 0.58);
+  background: var(--green);
+  color: var(--white);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgb(26 122 74 / 22%);
 }
 
 .mobileStickyCta {
@@ -5235,5 +5309,67 @@
 @media (min-width: 1440px) {
   .aiInner {
     width: min(100%, 980px);
+  }
+}
+
+/* ── Founder preview final responsive tuning ────────────────────────────── */
+
+@media (max-width: 767px) {
+  .founderPreviewSection {
+    padding: 0 1rem 1rem;
+  }
+
+  .founderPreviewCard {
+    grid-template-columns: 1fr;
+    gap: 0.95rem;
+    border-radius: 18px;
+    padding: 1rem;
+  }
+
+  .founderPreviewCopy h2 {
+    margin-top: 0.3rem;
+    margin-bottom: 0.45rem;
+    font-size: 1.35rem;
+    line-height: 1.12;
+  }
+
+  .founderPreviewCopy p {
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  .founderPreviewLink {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.62rem 0.85rem;
+    font-size: 12.5px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .founderPreviewSection {
+    width: min(100%, 900px);
+    padding: 0 1.5rem 1.15rem;
+  }
+
+  .founderPreviewCard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    border-radius: 18px;
+    padding: 1.2rem;
+  }
+
+  .founderPreviewLink {
+    justify-self: start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .founderPreviewSection {
+    padding-bottom: 1.1rem;
+  }
+
+  .founderPreviewCard {
+    padding: 1.25rem 1.35rem;
   }
 }

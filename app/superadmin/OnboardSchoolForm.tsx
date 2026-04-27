@@ -61,7 +61,7 @@ export default function OnboardSchoolForm() {
             { label: 'School ID', value: c.schoolId, mono: true },
             { label: 'Admin name', value: c.adminName },
             { label: 'Email', value: c.adminEmail },
-            { label: 'Password', value: c.password, mono: true, highlight: true },
+            { label: 'Password', value: c.password ?? 'Generated password unavailable', mono: true, highlight: true },
           ].map(({ label, value, mono, highlight }) => (
             <div key={label} className="flex items-center justify-between px-6 py-3">
               <span className="text-xs text-gray-400 font-medium w-24 shrink-0">{label}</span>

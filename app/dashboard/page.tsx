@@ -1396,11 +1396,15 @@ export default async function DashboardPage() {
                     <div className="mt-2 text-xl font-semibold tracking-tight text-green-700">{fmt(collectedThisMonth)}</div>
                     <div className="mt-1 text-xs text-gray-500">Today: {fmt(collectedToday)}</div>
                   </div>
-                  <div className={`rounded-2xl border px-4 py-4 ${totalOutstandingAmount > 0 ? 'border-amber-200 bg-amber-50/70' : 'border-gray-200 bg-[#fafcf9]'}`}>
+                  <Link
+                    href="/fees"
+                    className={`rounded-2xl border px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300 ${totalOutstandingAmount > 0 ? 'border-amber-200 bg-amber-50/70' : 'border-gray-200 bg-[#fafcf9]'}`}
+                  >
                     <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Outstanding fees</div>
                     <div className={`mt-2 text-xl font-semibold tracking-tight ${totalOutstandingAmount > 0 ? 'text-amber-700' : 'text-gray-900'}`}>{fmt(totalOutstandingAmount)}</div>
                     <div className="mt-1 text-xs text-gray-500">Overdue balances across all students</div>
-                  </div>
+                    <div className="mt-3 text-xs font-medium text-[#1a2e1a]">Review fees →</div>
+                  </Link>
                   <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
                     <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Approved expenses this month</div>
                     <div className="mt-2 text-xl font-semibold tracking-tight text-gray-900">{fmt(approvedExpensesThisMonth)}</div>
@@ -1433,7 +1437,7 @@ export default async function DashboardPage() {
                         tone={studentsWithHighAbsences > 0 ? 'warning' : 'default'}
                       />
                       <SignalCard
-                        href="/marks"
+                        href="/results"
                         label="Failing students"
                         value={studentsFailing}
                         helper="One or more subjects below pass"
@@ -1457,9 +1461,14 @@ export default async function DashboardPage() {
 
                     <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                       <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] p-4">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                          <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          Attendance watchlist
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                            Attendance watchlist
+                          </div>
+                          <Link href="/attendance" className="shrink-0 text-xs font-medium text-[#1a2e1a] hover:underline">
+                            Open →
+                          </Link>
                         </div>
                         <div className="mt-1 text-sm text-gray-500">
                           Students who may need school follow-up this term.
@@ -1493,9 +1502,14 @@ export default async function DashboardPage() {
                       </div>
 
                       <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] p-4">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                          <GraduationCap className="h-4 w-4 text-red-500" />
-                          Results risk
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                            <GraduationCap className="h-4 w-4 text-red-500" />
+                            Results risk
+                          </div>
+                          <Link href="/results" className="shrink-0 text-xs font-medium text-[#1a2e1a] hover:underline">
+                            Open →
+                          </Link>
                         </div>
                         <div className="mt-1 text-sm text-gray-500">
                           Students with one or more subjects below the pass line.
@@ -1641,7 +1655,10 @@ export default async function DashboardPage() {
                   >
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                        <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                        <Link
+                          href="/attendance"
+                          className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-white"
+                        >
                           <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
                             <ShieldCheck className="h-3.5 w-3.5" />
                             Attendance today
@@ -1650,8 +1667,11 @@ export default async function DashboardPage() {
                           <div className="mt-1 text-xs text-gray-500">
                             {todayPresentCount} of {totalStudents} students marked present, late, or excused.
                           </div>
-                        </div>
-                        <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                        </Link>
+                        <Link
+                          href="/timetable"
+                          className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-white"
+                        >
                           <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
                             <Clock3 className="h-3.5 w-3.5" />
                             Classes today
@@ -1662,8 +1682,11 @@ export default async function DashboardPage() {
                           <div className="mt-1 text-xs text-gray-500">
                             {classesWithAttendanceToday.size} with attendance started.
                           </div>
-                        </div>
-                        <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                        </Link>
+                        <Link
+                          href="/students"
+                          className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4 transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-white"
+                        >
                           <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-gray-500">
                             <Users className="h-3.5 w-3.5" />
                             Active classes
@@ -1674,12 +1697,17 @@ export default async function DashboardPage() {
                           <div className="mt-1 text-xs text-gray-500">
                             {totalStudents} active students across the school.
                           </div>
-                        </div>
+                        </Link>
                       </div>
 
                       <div className="rounded-2xl border border-gray-200 bg-white px-4 py-4">
-                        <div className="text-sm font-semibold text-gray-900">
-                          Attendance by class
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="text-sm font-semibold text-gray-900">
+                            Attendance by class
+                          </div>
+                          <Link href="/attendance" className="shrink-0 text-xs font-medium text-[#1a2e1a] hover:underline">
+                            Open →
+                          </Link>
                         </div>
                         <div className="mt-1 text-sm text-gray-500">
                           Lowest-performing classes today based on marked records.
@@ -1704,8 +1732,13 @@ export default async function DashboardPage() {
                       </div>
 
                       <div className="rounded-2xl border border-gray-200 bg-white px-4 py-4">
-                        <div className="text-sm font-semibold text-gray-900">
-                          Class coverage
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="text-sm font-semibold text-gray-900">
+                            Class coverage
+                          </div>
+                          <Link href="/timetable" className="shrink-0 text-xs font-medium text-[#1a2e1a] hover:underline">
+                            Open →
+                          </Link>
                         </div>
                         <div className="mt-1 text-sm text-gray-500">
                           Scheduled classes that still need attendance to be started.

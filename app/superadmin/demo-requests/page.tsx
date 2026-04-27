@@ -2,8 +2,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { updateDemoRequestStatus, type DemoRequestStatus } from '../actions'
+import { type DemoRequestStatus } from '../actions'
 import ConvertDemoRequestForm from './ConvertDemoRequestForm'
+import StatusUpdateForm from './StatusUpdateForm'
 
 type DemoRequestRow = {
   id: string
@@ -21,7 +22,6 @@ type DemoRequestRow = {
   created_at: string
 }
 
-const STATUSES: DemoRequestStatus[] = ['new', 'contacted', 'approved', 'rejected', 'converted']
 const REQUESTED_PLAN_LABELS: Record<DemoRequestRow['requested_plan'], string> = {
   not_sure: 'Not sure yet',
   starter: 'Starter',
@@ -170,38 +170,11 @@ export default async function DemoRequestsPage() {
                     )}
                   </div>
 
-                  <form action={updateDemoRequestStatus} className="min-w-[220px] space-y-2">
-                    <input type="hidden" name="id" value={request.id} />
-                    <label className="block text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                      Update status
-                    </label>
-                    <select
-                      name="status"
-                      defaultValue={request.status}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-[#6fcf6f] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/30"
-                    >
-                      {STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="submit"
-                      className="w-full rounded-lg bg-[#1a2e1a] px-4 py-2.5 text-sm font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
-                    >
-                      Save status
-                    </button>
-                    <div className="text-xs text-gray-400">
-                      {request.reviewed_at
-                        ? `Last reviewed ${new Date(request.reviewed_at).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}`
-                        : 'Not reviewed yet'}
-                    </div>
-                  </form>
+                  <StatusUpdateForm
+                    requestId={request.id}
+                    currentStatus={request.status}
+                    reviewedAt={request.reviewed_at}
+                  />
                 </div>
               </section>
             ))}

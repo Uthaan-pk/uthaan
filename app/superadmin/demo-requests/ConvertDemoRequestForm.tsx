@@ -51,7 +51,6 @@ export default function ConvertDemoRequestForm({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [slug, setSlug] = useState(toSlug(schoolName))
-  const [copied, setCopied] = useState(false)
 
   const defaultPlan: SchoolPlan = 'pilot'
 
@@ -62,24 +61,18 @@ export default function ConvertDemoRequestForm({
 
   const { firstName, lastName } = splitName(contactName)
 
-  async function handleCopy() {
-    if (!state?.success) return
-    const { credentials: c } = state
-    const text = [
-      `School: ${c.schoolName}`,
-      `School ID: ${c.schoolId}`,
-      `Admin: ${c.adminName}`,
-      `Email: ${c.adminEmail}`,
-      `Password: ${c.password}`,
-      `Login at: ${window.location.origin}/login`,
-    ].join('\n')
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
-  }
-
   if (state?.success) {
     const { credentials: c } = state
+    const nextSteps = [
+      'Share login/reset instructions securely',
+      'Add teachers',
+      'Import students',
+      'Add timetable',
+      'Post first announcement',
+      'Mark first attendance',
+      'Prepare marks/results',
+    ]
+
     return (
       <div className="mt-4 overflow-hidden rounded-xl border-2 border-[#6fcf6f] shadow-lg">
         <div className="flex items-start justify-between bg-[#1a2e1a] px-5 py-4">
@@ -88,7 +81,7 @@ export default function ConvertDemoRequestForm({
               School created — request converted
             </p>
             <p className="text-xs text-white/70">
-              Pilot plan and admin login are ready. Copy these credentials now; the password cannot be recovered.
+              Admin account created. Use password reset from /login, or share credentials through the approved manual process.
             </p>
           </div>
         </div>
@@ -97,9 +90,9 @@ export default function ConvertDemoRequestForm({
             [
               { label: 'School', value: c.schoolName },
               { label: 'School ID', value: c.schoolId, mono: true },
+              { label: 'Plan', value: c.plan === 'pilot' ? 'Pilot' : c.plan ?? 'Pilot' },
               { label: 'Admin', value: c.adminName },
               { label: 'Email', value: c.adminEmail },
-              { label: 'Password', value: c.password, mono: true, highlight: true },
             ] as Array<{ label: string; value: string; mono?: boolean; highlight?: boolean }>
           ).map(({ label, value, mono, highlight }) => (
             <div key={label} className="flex items-center justify-between px-5 py-3">
@@ -116,21 +109,18 @@ export default function ConvertDemoRequestForm({
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between gap-4 border-t border-gray-100 bg-gray-50 px-5 py-3">
-          <p className="text-xs text-gray-500">
-            Send credentials to the school admin. They should reset their password after first login.
-            Continue setup from the Pilot checklist in Superadmin.
-          </p>
-          <button
-            onClick={handleCopy}
-            className={`shrink-0 rounded-lg border px-4 py-2 text-xs font-medium transition-colors ${
-              copied
-                ? 'border-[#6fcf6f]/40 bg-[#6fcf6f]/20 text-[#1a2e1a]'
-                : 'border-[#1a2e1a] bg-[#1a2e1a] text-white hover:bg-[#1a2e1a]/80'
-            }`}
-          >
-            {copied ? 'Copied!' : 'Copy credentials'}
-          </button>
+        <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Next manual steps</p>
+          <ol className="mt-3 grid gap-2 sm:grid-cols-2">
+            {nextSteps.map((step, index) => (
+              <li key={step} className="flex items-start gap-2 text-xs text-gray-600">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#6fcf6f]/15 text-[10px] font-semibold text-[#1a2e1a]">
+                  {index + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     )
@@ -163,7 +153,7 @@ export default function ConvertDemoRequestForm({
 
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
             This is an operator-assisted conversion. It creates the school on Pilot, creates the first admin login,
-            and marks this request converted. Copy the generated credentials immediately after creation.
+            and marks this request converted. Use password reset from /login or your approved manual credential handoff.
           </div>
 
           {state?.success === false && (

@@ -6,14 +6,13 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   applySchoolPlan,
-  toggleSchoolStatus,
-  deleteSchool,
-  impersonateSchool,
   stopImpersonating,
   updateSchoolFeature,
   resetSchoolFeatureUsage,
 } from './actions'
 import OnboardSchoolForm from './OnboardSchoolForm'
+import PilotSetupChecklist, { type PilotSetupChecklistItem } from './PilotSetupChecklist'
+import SchoolRowActions from './SchoolRowActions'
 import UsageTable, { type UsageRow } from './UsageTable'
 import { TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
@@ -37,8 +36,8 @@ type SchoolRow = {
   mark_count: number
 }
 
-function PilotSetupChecklist({ school }: { school: SchoolRow }) {
-  const items = [
+function buildPilotSetupItems(school: SchoolRow): PilotSetupChecklistItem[] {
+  return [
     { label: 'School created', done: true, detail: school.plan === 'pilot' ? 'Pilot plan' : `${school.plan} plan` },
     { label: 'Admin login created', done: school.admin_count > 0, detail: `${school.admin_count} admin` },
     { label: 'Teachers added', done: school.teacher_count > 0, detail: `${school.teacher_count} teachers` },
@@ -48,45 +47,6 @@ function PilotSetupChecklist({ school }: { school: SchoolRow }) {
     { label: 'Attendance marked', done: school.attendance_log_count > 0, detail: `${school.attendance_log_count} logs` },
     { label: 'Marks/results ready', done: school.mark_count > 0, detail: `${school.mark_count} marks` },
   ]
-  const doneCount = items.filter((item) => item.done).length
-
-  return (
-    <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
-      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900">Pilot setup checklist</h3>
-          <p className="mt-0.5 text-xs text-gray-500">
-            Operator checklist based on existing school data. No extra setup table yet.
-          </p>
-        </div>
-        <span className="rounded-full bg-[#6fcf6f]/10 px-2.5 py-1 text-[10px] font-medium text-[#1a2e1a]">
-          {doneCount}/{items.length} ready
-        </span>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((item) => (
-          <div
-            key={item.label}
-            className={`rounded-xl border px-3 py-2 ${
-              item.done
-                ? 'border-[#6fcf6f]/25 bg-[#6fcf6f]/5'
-                : 'border-gray-100 bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  item.done ? 'bg-[#6fcf6f]' : 'bg-gray-300'
-                }`}
-              />
-              <span className="text-xs font-medium text-gray-900">{item.label}</span>
-            </div>
-            <div className="mt-1 pl-4 text-[11px] text-gray-400">{item.detail}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
 }
 
 export default async function SuperadminPage() {
@@ -344,39 +304,16 @@ export default async function SuperadminPage() {
                           : '—'}
                       </td>
                       <td className="px-5 py-3.5">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* Impersonate */}
-                          <form action={impersonateSchool.bind(null, school.id)}>
-                            <button
-                              type="submit"
-                              className="text-xs text-[#1a2e1a]/60 hover:text-[#1a2e1a] border border-gray-200 hover:border-[#6fcf6f]/50 px-2.5 py-1 rounded-lg transition-colors"
-                            >
-                              Browse
-                            </button>
-                          </form>
-
-                          {/* Suspend / Activate */}
-                          <form action={toggleSchoolStatus.bind(null, school.id, school.is_active !== false)}>
-                            <button
-                              type="submit"
-                              className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${
-                                school.is_active === false
-                                  ? 'text-green-700 border-green-200 hover:border-green-400 hover:text-green-800'
-                                  : 'text-amber-700 border-amber-200 hover:border-amber-400 hover:text-amber-800'
-                              }`}
-                            >
-                              {school.is_active === false ? 'Activate' : 'Suspend'}
-                            </button>
-                          </form>
-
-                          {/* Delete */}
-                          <DeleteButton schoolId={school.id} schoolName={school.name} />
-                        </div>
+                        <SchoolRowActions
+                          schoolId={school.id}
+                          schoolName={school.name}
+                          isActive={school.is_active !== false}
+                        />
                       </td>
                     </tr>
                     <tr className={i < schools.length - 1 ? 'border-b border-gray-50' : ''}>
                       <td colSpan={7} className="bg-[#fafcf9] px-5 py-4">
-                        <PilotSetupChecklist school={school} />
+                        <PilotSetupChecklist items={buildPilotSetupItems(school)} />
 
                         <div className="mb-4 rounded-2xl border border-[#6fcf6f]/20 bg-white p-4">
                           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -552,22 +489,3 @@ function FeatureCard({
     </div>
   )
 }
-
-// ── Delete button with confirmation (client component) ─────────────────────
-
-function DeleteButton({ schoolId, schoolName }: { schoolId: string; schoolName: string }) {
-  return (
-    <form
-      action={deleteSchool.bind(null, schoolId)}
-      onSubmit={
-        // inline onSubmit via script attribute won't work in RSC; use a client trick below
-        undefined
-      }
-    >
-      <DeleteConfirmButton schoolName={schoolName} />
-    </form>
-  )
-}
-
-// Needs 'use client' for onClick confirm — extracted as a tiny client component
-import DeleteConfirmButton from './DeleteConfirmButton'

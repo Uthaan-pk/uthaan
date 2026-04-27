@@ -20,12 +20,25 @@ export type OnboardCredentials = {
   schoolId: string
   adminName: string
   adminEmail: string
-  password: string
+  password?: string
+  plan?: SchoolPlan
 }
 
 export type OnboardResult =
   | { success: true; credentials: OnboardCredentials }
   | { success: false; error: string }
+
+export type DemoStatusUpdateResult = {
+  success: boolean
+  error: string | null
+  savedStatus?: DemoRequestStatus
+}
+
+export type SchoolActionResult = {
+  success: boolean
+  error: string | null
+  message?: string
+}
 
 const DEMO_REQUEST_STATUSES = ['new', 'contacted', 'approved', 'rejected', 'converted'] as const
 export type DemoRequestStatus = (typeof DEMO_REQUEST_STATUSES)[number]
@@ -76,21 +89,29 @@ async function assertSuperadmin() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
 
   if (roleData?.role !== 'superadmin') redirect('/dashboard')
+
+  return {
+    userId: user.id,
+    schoolId: roleData.school_id as string | null,
+  }
 }
 
-export async function updateDemoRequestStatus(formData: FormData) {
+export async function updateDemoRequestStatus(
+  _prevState: DemoStatusUpdateResult,
+  formData: FormData
+): Promise<DemoStatusUpdateResult> {
   await assertSuperadmin()
 
   const id = String(formData.get('id') ?? '').trim()
   const status = String(formData.get('status') ?? '').trim() as DemoRequestStatus
 
   if (!id || !DEMO_REQUEST_STATUSES.includes(status)) {
-    redirect('/superadmin/demo-requests')
+    return { success: false, error: 'Choose a valid request status.' }
   }
 
   const supabase = await createClient()
@@ -101,7 +122,7 @@ export async function updateDemoRequestStatus(formData: FormData) {
   if (!user) redirect('/login')
 
   const admin = createAdminClient()
-  await admin
+  const { error } = await admin
     .from('demo_requests')
     .update({
       status,
@@ -110,7 +131,12 @@ export async function updateDemoRequestStatus(formData: FormData) {
     })
     .eq('id', id)
 
-  redirect('/superadmin/demo-requests')
+  if (error) {
+    return { success: false, error: error.message || 'Could not update request status.' }
+  }
+
+  revalidatePath('/superadmin/demo-requests')
+  return { success: true, error: null, savedStatus: status }
 }
 
 export async function applySchoolPlan(formData: FormData) {
@@ -236,6 +262,7 @@ export async function onboardSchool(
       adminName: `${firstName} ${lastName}`,
       adminEmail: email,
       password,
+      plan: 'starter',
     },
   }
 }
@@ -398,30 +425,101 @@ export async function convertDemoRequest(
       schoolId,
       adminName: `${firstName} ${lastName}`,
       adminEmail: email,
-      password,
+      plan,
     },
   }
 }
 
-export async function toggleSchoolStatus(schoolId: string, currentlyActive: boolean) {
-  await assertSuperadmin()
+export async function toggleSchoolStatus(
+  schoolId: string,
+  currentlyActive: boolean,
+  _prevState: SchoolActionResult,
+  _formData: FormData
+): Promise<SchoolActionResult> {
+  const superadmin = await assertSuperadmin()
+
+  if (!schoolId) {
+    return { success: false, error: 'Missing school id.' }
+  }
+  if (superadmin.schoolId === schoolId) {
+    return { success: false, error: 'You cannot suspend your own assigned school.' }
+  }
 
   const admin = createAdminClient()
-  await admin
+  const { error } = await admin
     .from('schools')
     .update({ is_active: !currentlyActive })
     .eq('id', schoolId)
 
-  redirect('/superadmin')
+  if (error) {
+    return { success: false, error: error.message || 'Could not update school status.' }
+  }
+
+  revalidatePath('/superadmin')
+  return {
+    success: true,
+    error: null,
+    message: currentlyActive ? 'School suspended.' : 'School activated.',
+  }
 }
 
-export async function deleteSchool(schoolId: string) {
+export async function deleteSchool(
+  schoolId: string,
+  _prevState: SchoolActionResult,
+  _formData: FormData
+): Promise<SchoolActionResult> {
   await assertSuperadmin()
 
-  const admin = createAdminClient()
-  await admin.from('schools').delete().eq('id', schoolId)
+  if (!schoolId) {
+    return { success: false, error: 'Missing school id.' }
+  }
 
-  redirect('/superadmin')
+  const admin = createAdminClient()
+  const linkedTables = [
+    'students',
+    'user_roles',
+    'quizzes',
+    'assignments',
+    'attendance_logs',
+    'timetable',
+    'announcements',
+    'marks',
+    'petty_expenses',
+    'student_risk_alerts',
+    'announcement_acknowledgements',
+  ]
+
+  for (const table of linkedTables) {
+    const { count, error } = await admin
+      .from(table)
+      .select('school_id', { count: 'exact', head: true })
+      .eq('school_id', schoolId)
+
+    if (error) {
+      return { success: false, error: `Could not verify linked data in ${table}. Suspend the school instead.` }
+    }
+    if ((count ?? 0) > 0) {
+      return {
+        success: false,
+        error: 'This school has linked data and cannot be deleted safely. Suspend it instead.',
+      }
+    }
+  }
+
+  const { error } = await admin.from('schools').delete().eq('id', schoolId)
+
+  if (error) {
+    if (error.code === '23503') {
+      return {
+        success: false,
+        error: 'This school has linked data and cannot be deleted safely. Suspend it instead.',
+      }
+    }
+    return { success: false, error: error.message || 'Could not delete school.' }
+  }
+
+  revalidatePath('/superadmin')
+  return { success: true, error: null, message: 'School deleted.' }
 }
 
 export async function impersonateSchool(schoolId: string) {

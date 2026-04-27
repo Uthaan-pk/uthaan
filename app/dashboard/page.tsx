@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import Sidebar from '@/components/Sidebar'
 import Link from 'next/link'
+import TeacherOnboardingForm from '@/app/admin/TeacherOnboardingForm'
 import { translations, type Language } from '@/lib/translations'
 import AssignmentChecklist from './AssignmentChecklist'
 import { resolveEffectiveRole } from '@/lib/school'
@@ -344,34 +345,6 @@ function StudentSummaryRow({
   )
 }
 
-function DisabledActionTile({
-  eyebrow,
-  title,
-  body,
-  icon,
-}: {
-  eyebrow: string
-  title: string
-  body: string
-  icon: React.ReactNode
-}) {
-  return (
-    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-4 py-4 text-gray-400">
-      <div className="flex items-start justify-between gap-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-2 text-gray-400">
-          {icon}
-        </div>
-        <span className="mt-1 rounded-full border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium text-gray-400">
-          Coming next
-        </span>
-      </div>
-      <div className="mt-4 text-[11px] font-medium uppercase tracking-wide">{eyebrow}</div>
-      <div className="mt-1 text-sm font-medium text-gray-600">{title}</div>
-      <div className="mt-1 text-sm leading-6">{body}</div>
-    </div>
-  )
-}
-
 type LaunchSetupItem = {
   label: string
   done: boolean
@@ -556,15 +529,20 @@ function LaunchDashboard({
               </DashboardSection>
             </div>
 
+            <div id="teacher-onboarding">
+              <TeacherOnboardingForm />
+            </div>
+
             <DashboardSection
               title="Launch actions"
-              description="Open the existing setup areas. Teacher onboarding is intentionally not faked here."
+              description="Open the existing setup areas. Teacher creation now creates a real staff login."
             >
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <DisabledActionTile
+                <ActionTile
+                  href="#teacher-onboarding"
                   eyebrow="Teachers"
-                  title="Teacher onboarding coming next"
-                  body="No safe teacher creation flow is available yet."
+                  title="Create teacher account"
+                  body="Add a real teacher login for this school."
                   icon={<Users className="h-4 w-4" />}
                 />
                 <ActionTile

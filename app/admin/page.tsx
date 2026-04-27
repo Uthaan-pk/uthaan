@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import AdminClient from './AdminClient'
+import TeacherOnboardingForm from './TeacherOnboardingForm'
 import SetupChecklist from '@/components/onboarding/SetupChecklist'
 import { HelpButton } from '@/components/HelpButton'
 
@@ -107,6 +108,7 @@ export default async function AdminPage() {
 
         <main className="uthaan-page-content">
           <SetupChecklist />
+          <TeacherOnboardingForm />
 
           <AdminClient
             students={allStudents}

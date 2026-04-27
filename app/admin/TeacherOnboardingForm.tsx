@@ -26,11 +26,10 @@ export default function TeacherOnboardingForm() {
 
     const origin = window.location.origin
     await navigator.clipboard.writeText([
-      'Your Uthaan teacher account is ready.',
-      `Email: ${state.teacher.email}`,
+      'Your Uthaan account is ready.',
       `Login: ${origin}/login`,
-      `Reset password: ${origin}/forgot-password`,
-      'Use Forgot Password from the login page to set your password.',
+      `Email: ${state.teacher.email}`,
+      'Use Forgot Password to set your password before signing in.',
     ].join('\n'))
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
@@ -100,7 +99,7 @@ export default function TeacherOnboardingForm() {
               <div className="text-sm font-semibold text-[#1a2e1a]">Teacher account created</div>
               <div className="mt-1 text-sm text-gray-700">{state.teacher.email}</div>
               <p className="mt-2 text-xs leading-5 text-gray-600">
-                Ask the teacher to sign in at <Link href="/login" className="font-medium text-[#1a2e1a] hover:underline">/login</Link> and use Forgot Password / reset password, or share credentials through the approved manual process.
+                Your Uthaan account is ready. Ask the teacher to open <Link href="/login" className="font-medium text-[#1a2e1a] hover:underline">/login</Link> and use Forgot Password to set their password before signing in.
               </p>
             </div>
             <button

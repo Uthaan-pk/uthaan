@@ -51,6 +51,7 @@ export default function ConvertDemoRequestForm({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [slug, setSlug] = useState(toSlug(schoolName))
+  const [copied, setCopied] = useState(false)
 
   const defaultPlan: SchoolPlan = 'pilot'
 
@@ -60,6 +61,22 @@ export default function ConvertDemoRequestForm({
   )
 
   const { firstName, lastName } = splitName(contactName)
+
+  async function copyLoginInstructions() {
+    if (!state?.success) return
+
+    const origin = window.location.origin
+    const { adminEmail } = state.credentials
+
+    await navigator.clipboard.writeText([
+      'Your Uthaan account is ready.',
+      `Login: ${origin}/login`,
+      `Email: ${adminEmail}`,
+      'Use Forgot Password to set your password before signing in.',
+    ].join('\n'))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
 
   if (state?.success) {
     const { credentials: c } = state
@@ -81,7 +98,7 @@ export default function ConvertDemoRequestForm({
               School created — request converted
             </p>
             <p className="text-xs text-white/70">
-              Admin account created. Use password reset from /login, or share credentials through the approved manual process.
+              Your Uthaan account is ready. Ask the admin to use Forgot Password from /login before signing in.
             </p>
           </div>
         </div>
@@ -108,6 +125,32 @@ export default function ConvertDemoRequestForm({
               </span>
             </div>
           ))}
+        </div>
+        <div className="border-t border-[#6fcf6f]/20 bg-[#6fcf6f]/5 px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Login handoff</p>
+              <p className="mt-1 text-sm font-semibold text-[#1a2e1a]">Your Uthaan account is ready.</p>
+              <div className="mt-2 grid gap-1 text-xs text-gray-600">
+                <span>
+                  Login: <span className="font-medium text-gray-900">/login</span>
+                </span>
+                <span>
+                  Email: <span className="font-medium text-gray-900">{c.adminEmail}</span>
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-gray-500">
+                Use Forgot Password to set your password before signing in.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyLoginInstructions}
+              className="min-h-10 shrink-0 rounded-lg border border-[#1a2e1a]/15 bg-white px-3 py-2 text-xs font-medium text-[#1a2e1a] transition-colors hover:border-[#6fcf6f]/50 hover:bg-[#6fcf6f]/5"
+            >
+              {copied ? 'Copied' : 'Copy login instructions'}
+            </button>
+          </div>
         </div>
         <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
           <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Next manual steps</p>

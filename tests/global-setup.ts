@@ -39,7 +39,12 @@ export default async function globalSetup() {
       await page.getByPlaceholder('you@school.com').fill(account.email)
       await page.locator('input[type="password"]').fill(account.password)
       await page.getByRole('button', { name: 'Sign in to Uthaan' }).click()
-      await page.waitForURL(`${BASE_URL}/dashboard**`, { timeout: 20000 })
+      const expectedPaths =
+        account.name === 'superadmin' ? ['/superadmin', '/dashboard'] : ['/dashboard']
+      await page.waitForURL(
+        (url) => expectedPaths.includes(url.pathname),
+        { timeout: 20000 }
+      )
       await context.storageState({ path: authFile })
       console.log(`[auth] ✓ ${account.name}`)
     } catch (err) {

@@ -10,5 +10,7 @@ export async function login(page: Page, email: string, password: string) {
   await page.getByPlaceholder('you@school.com').fill(email);
   await page.locator('input[type="password"]').fill(password);
   await page.getByRole('button', { name: 'Sign in to Uthaan' }).click();
-  await page.waitForURL('**/dashboard', { timeout: 20000 });
+  await page.waitForURL((url) => ['/dashboard', '/superadmin'].includes(url.pathname), {
+    timeout: 20000,
+  });
 }

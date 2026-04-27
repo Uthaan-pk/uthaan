@@ -158,7 +158,7 @@ export default function AdminClient({
       .filter(l => l.trim())
 
     if (lines.length < 2) {
-      setCsvError('Upload a CSV with a header row and at least one student row.')
+      setCsvError('Need a header row and at least one student row.')
       return
     }
 
@@ -171,7 +171,7 @@ export default function AdminClient({
     )
 
     if (missing.length) {
-      setCsvError(`Missing required column${missing.length === 1 ? '' : 's'}: ${missing.join(', ')}. Required: name, roll_no, class_num.`)
+      setCsvError(`Missing columns: ${missing.join(', ')}. Required: name, roll_no, class_num.`)
       return
     }
 

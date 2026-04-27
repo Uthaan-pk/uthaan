@@ -48,10 +48,6 @@ export default async function AdminPage() {
   let enrichedLinks: any[] = []
 
   if (activeParentLinkStudents.length > 0) {
-    const activeStudentIds = activeParentLinkStudents.map(
-      (student) => student.id
-    )
-
     const { data: parentLinksData, error: parentLinksError } = await supabase
       .from('parent_student')
       .select(`
@@ -70,7 +66,6 @@ export default async function AdminPage() {
           is_active
         )
       `)
-      .in('student_id', activeStudentIds)
       .order('created_at', { ascending: false })
       .limit(500)
 

@@ -4371,3 +4371,732 @@
     display: none;
   }
 }
+
+/* ── Aggressive desktop density pass — 100% zoom should feel like old 80% ── */
+
+@media (min-width: 1024px) {
+  .nav {
+    padding: 0.72rem 1.45rem;
+  }
+
+  .navLinks {
+    gap: 1.35rem;
+  }
+
+  .navLinks a,
+  .navLogin,
+  .navCta {
+    font-size: 12.5px;
+  }
+
+  .navCta {
+    min-height: 40px;
+    padding: 7px 15px;
+  }
+
+  .navLogin {
+    min-height: 40px;
+  }
+
+  .hero {
+    min-height: auto;
+    justify-content: flex-start;
+    padding: 5.1rem 2rem 3.15rem;
+  }
+
+  .heroBadge {
+    margin-bottom: 1rem;
+    padding: 4px 12px;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
+
+  .heroBadge::before {
+    width: 5px;
+    height: 5px;
+  }
+
+  .hero h1 {
+    max-width: 860px;
+    font-size: clamp(2.35rem, 4.6vw, 3.25rem);
+    line-height: 1.02;
+    margin-bottom: 0.9rem;
+    letter-spacing: -0.028em;
+  }
+
+  .hero p {
+    max-width: 500px;
+    margin-bottom: 1.65rem;
+    font-size: clamp(13.5px, 1.15vw, 15.5px);
+    line-height: 1.52;
+  }
+
+  .heroButtons {
+    gap: 0.7rem;
+  }
+
+  .btnPrimary,
+  .btnSecondary {
+    min-height: 44px;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .heroDashWrap {
+    width: min(100%, 500px);
+    margin-top: 1.8rem;
+  }
+
+  .heroDashCard {
+    border-radius: 14px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 22px 42px rgba(0, 0, 0, 0.34),
+      0 0 0 1px rgba(34, 168, 98, 0.05);
+  }
+
+  .dashChrome {
+    padding: 0.48rem 0.72rem;
+  }
+
+  .dashDots span {
+    width: 7px;
+    height: 7px;
+  }
+
+  .dashUrl {
+    font-size: 10px;
+  }
+
+  .dashSection {
+    padding: 0.55rem 0.72rem;
+  }
+
+  .dashLabel {
+    margin-bottom: 0.38rem;
+    font-size: 9px;
+  }
+
+  .rosterList {
+    gap: 0.28rem;
+  }
+
+  .rosterRow {
+    gap: 0.45rem;
+    padding: 0.36rem 0.48rem;
+    border-radius: 8px;
+  }
+
+  .rosterAvatar {
+    width: 22px;
+    height: 22px;
+    font-size: 8px;
+  }
+
+  .rosterName {
+    font-size: 11px;
+  }
+
+  .rosterCls {
+    font-size: 9px;
+  }
+
+  .feeAmount {
+    font-size: 20px;
+  }
+
+  .feeTag,
+  .aiTypedText {
+    font-size: 11px;
+  }
+
+  .aiTypingRow {
+    gap: 0.4rem;
+  }
+
+  .activityTicker {
+    height: 42px;
+  }
+
+  .tickerItem {
+    gap: 0.45rem;
+    font-size: 12px;
+  }
+
+  .tickerTime {
+    font-size: 11px;
+  }
+
+  .section,
+  .aiSection {
+    max-width: 960px;
+    padding: 4rem 1.5rem;
+    scroll-margin-top: 62px;
+  }
+
+  .aiInner {
+    max-width: 960px;
+  }
+
+  .sectionTag {
+    margin-bottom: 0.52rem;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+  }
+
+  .sectionTitle,
+  .ctaBox h2 {
+    max-width: 720px;
+    font-size: clamp(1.55rem, 2.45vw, 2.1rem);
+    line-height: 1.08;
+    letter-spacing: -0.028em;
+    margin-bottom: 0.6rem;
+  }
+
+  .sectionSub,
+  .ctaBox p {
+    max-width: 480px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .featureGrid,
+  .aiGrid,
+  .onboardingGrid,
+  .pricingGrid {
+    margin-top: 1.75rem;
+  }
+
+  .featureExperience {
+    grid-template-columns: minmax(0, 1.04fr) minmax(280px, 0.78fr);
+    gap: 0.95rem;
+  }
+
+  .featureGrid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    border-radius: 12px;
+  }
+
+  .featureCard {
+    min-height: 0;
+    padding: 0.9rem 1rem;
+  }
+
+  .featureIcon {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 0.42rem;
+    border-radius: 8px;
+  }
+
+  .featureIcon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .featureCard h3,
+  .onboardingCard h3,
+  .aiCard h3 {
+    margin-bottom: 5px;
+    font-size: 13.5px;
+  }
+
+  .featureCard p,
+  .onboardingCard p,
+  .aiCard p {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .featurePreviewPanel {
+    margin-top: 1.75rem;
+    padding: 0.82rem;
+    border-radius: 15px;
+  }
+
+  .featurePreviewSticky {
+    top: 66px;
+    max-height: calc(100vh - 84px);
+  }
+
+  .featurePreviewTop {
+    gap: 0.65rem;
+  }
+
+  .featurePreviewStatus {
+    padding: 0.22rem 0.48rem;
+    font-size: 9.5px;
+  }
+
+  .featurePreviewTitle {
+    margin-top: 0.45rem;
+    font-size: clamp(15px, 1.5vw, 18px);
+    letter-spacing: -0.025em;
+  }
+
+  .featurePreviewSummary {
+    margin-top: 0.48rem;
+    font-size: 11.5px;
+    line-height: 1.42;
+  }
+
+  .featurePreviewStats {
+    gap: 0.45rem;
+    margin-top: 0.7rem;
+  }
+
+  .featurePreviewStat {
+    padding: 0.45rem 0.42rem;
+    border-radius: 9px;
+  }
+
+  .featurePreviewStatValue {
+    font-size: 13px;
+  }
+
+  .featurePreviewStatLabel {
+    margin-top: 0.18rem;
+    font-size: 8.5px;
+  }
+
+  .featurePreviewScreen {
+    margin-top: 0.68rem;
+    border-radius: 13px;
+  }
+
+  .featurePreviewScreenBar {
+    padding: 0.38rem 0.58rem;
+  }
+
+  .featurePreviewScreenBar span {
+    width: 6px;
+    height: 6px;
+  }
+
+  .featurePreviewRows {
+    gap: 0.32rem;
+    padding: 0.5rem;
+  }
+
+  .featurePreviewRow {
+    gap: 0.48rem;
+    padding: 0.42rem 0.52rem;
+    border-radius: 9px;
+    font-size: 11px;
+  }
+
+  .featurePreviewRowDot {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 0 4px rgb(34 168 98 / 0.1);
+  }
+
+  .roleStoryWrap,
+  .storyToggleWrap,
+  .compareLead {
+    margin-top: 1.75rem;
+  }
+
+  .roleTabs,
+  .storyToggle {
+    gap: 0.45rem;
+    padding: 0.32rem;
+  }
+
+  .roleTab,
+  .storyToggleButton {
+    min-height: 40px;
+    padding: 0.56rem 0.75rem;
+    font-size: 11.5px;
+  }
+
+  .roleStoryPanel {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    gap: 1rem;
+    margin-top: 0.9rem;
+  }
+
+  .roleStoryContent,
+  .rolePreview,
+  .storyPanelCopy,
+  .storyPanelVisual,
+  .compareLeadCard,
+  .aiCard,
+  .onboardingCard,
+  .priceCard {
+    border-radius: 14px;
+  }
+
+  .roleStoryContent,
+  .storyPanelCopy,
+  .storyPanelVisual,
+  .compareLeadCard {
+    padding: 1.05rem;
+  }
+
+  .rolePreview {
+    padding: 0.85rem;
+  }
+
+  .roleStoryContent h3,
+  .storyPanelCopy h3,
+  .compareLeadCard h3 {
+    font-size: clamp(1.15rem, 2vw, 1.55rem);
+    line-height: 1.08;
+    margin-bottom: 0.5rem;
+  }
+
+  .roleStoryContent p,
+  .storyPanelCopy p,
+  .compareLeadCard p {
+    font-size: 12.5px;
+    line-height: 1.48;
+  }
+
+  .roleHighlights,
+  .storyBullets {
+    margin-top: 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .roleHighlights li,
+  .storyBullets li {
+    gap: 0.52rem;
+    font-size: 12px;
+  }
+
+  .roleHighlights li::before,
+  .storyBullets li::before {
+    width: 8px;
+    height: 8px;
+    box-shadow: 0 0 0 4px rgb(34 168 98 / 0.1);
+  }
+
+  .rolePreviewHeader {
+    margin-bottom: 0.55rem;
+    font-size: 12px;
+  }
+
+  .rolePreviewPill,
+  .roleMockBadge,
+  .aiBadge {
+    padding: 2px 7px;
+    font-size: 9.5px;
+  }
+
+  .roleMock {
+    margin-top: 0.55rem;
+    gap: 0.34rem;
+  }
+
+  .roleMockHeader {
+    margin-bottom: 0.18rem;
+    font-size: 10.5px;
+  }
+
+  .roleMockRow,
+  .studentSubjectRow,
+  .teacherRow,
+  .teacherTaskRow {
+    padding: 0.44rem 0.55rem;
+    border-radius: 8px;
+    font-size: 10.8px;
+  }
+
+  .teacherGrid {
+    gap: 0.28rem;
+  }
+
+  .teacherGridHeader,
+  .teacherRow {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 24px);
+    gap: 0.28rem;
+  }
+
+  .teacherGridHeader {
+    padding: 0 0.55rem;
+  }
+
+  .teacherName,
+  .roleMockAmount,
+  .teacherTaskLabel {
+    font-size: 10.8px;
+  }
+
+  .roleMockMeta,
+  .teacherDayLabel,
+  .teacherTaskMeta {
+    font-size: 9.5px;
+  }
+
+  .teacherTaskRows {
+    gap: 0.34rem;
+    margin-top: 0.46rem;
+  }
+
+  .aiGrid {
+    gap: 1rem;
+  }
+
+  .aiCard,
+  .onboardingCard {
+    padding: 1rem;
+  }
+
+  .onboardingGrid {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .onboardingStep {
+    margin-bottom: 0.55rem;
+    padding: 3px 8px;
+    font-size: 9.5px;
+  }
+
+  .storyPanel {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 330px);
+    gap: 1rem;
+    margin-top: 0.9rem;
+  }
+
+  .storyPanelVisual {
+    gap: 0.55rem;
+  }
+
+  .storyChip {
+    min-height: 40px;
+    padding: 0.55rem 0.7rem;
+    font-size: 11.5px;
+  }
+
+  .compareLeadCard {
+    max-width: 620px;
+  }
+
+  .compareGrid {
+    grid-template-columns: minmax(150px, 1.35fr) repeat(4, minmax(0, 1fr));
+    margin-top: 1.55rem;
+    border-radius: 14px;
+  }
+
+  .compareColHeader,
+  .compareFeatureCol {
+    padding: 0.62rem 0.72rem;
+    font-size: 11px;
+  }
+
+  .compareFeatureLabel {
+    padding: 0.62rem 0.72rem;
+    font-size: 11.5px;
+  }
+
+  .compareCell {
+    gap: 0.32rem;
+    padding: 0.58rem 0.64rem;
+    font-size: 10.8px;
+  }
+
+  .compareCell svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .pricingGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.72rem;
+    padding-top: 0.6rem;
+  }
+
+  .pricingAnnualNote {
+    max-width: 680px;
+    margin-top: 0.95rem;
+    padding: 0.72rem 0.85rem;
+    border-radius: 12px;
+  }
+
+  .pricingAnnualLead {
+    font-size: 11.5px;
+  }
+
+  .pricingAnnualMeta,
+  .pricingPilotNote {
+    font-size: 11px;
+  }
+
+  .priceCard {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .priceCardChevron {
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .featuredBadge {
+    top: -9px;
+    padding: 3px 10px;
+    font-size: 9.5px;
+  }
+
+  .pricePlan {
+    margin-bottom: 0.45rem;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .priceAmount {
+    font-size: 24px;
+    letter-spacing: -0.04em;
+  }
+
+  .pricePeriod,
+  .priceAnnualLine,
+  .priceStudents,
+  .priceAnnualSummary,
+  .planContextText,
+  .priceFeatures li {
+    font-size: 11.2px;
+    line-height: 1.36;
+  }
+
+  .priceAnnualLine {
+    margin-bottom: 0.7rem;
+  }
+
+  .priceStudents {
+    margin-bottom: 0.8rem;
+  }
+
+  .priceFeatures {
+    gap: 0.34rem;
+  }
+
+  .priceFeatures li {
+    gap: 0.45rem;
+  }
+
+  .priceFeatures li::before {
+    width: 10px;
+    height: 10px;
+    margin-top: 3px;
+  }
+
+  .priceAnnualSummary {
+    margin-top: 0.7rem;
+  }
+
+  .planContextSep {
+    margin: 0.72rem 0;
+  }
+
+  .planContextBlock + .planContextBlock {
+    margin-top: 0.58rem;
+  }
+
+  .planContextLabel {
+    font-size: 9.5px;
+  }
+
+  .priceCta {
+    min-height: 40px;
+    margin-top: 0.78rem;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .midpageCta {
+    gap: 1.4rem;
+    padding: 1.45rem 1.5rem;
+  }
+
+  .midpageCtaText {
+    font-size: 14.5px;
+  }
+
+  .ctaSection {
+    padding: 4rem 1.5rem 4.5rem;
+  }
+
+  .ctaBox {
+    max-width: 560px;
+    padding: 1.35rem;
+    border-radius: 18px;
+  }
+
+  .ctaBox p {
+    margin-bottom: 1.25rem;
+  }
+
+  .footer {
+    padding: 1.4rem;
+    font-size: 11.5px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .section,
+  .aiSection,
+  .aiInner {
+    max-width: 980px;
+  }
+
+  .hero h1 {
+    font-size: 3.35rem;
+  }
+
+  .heroDashWrap {
+    width: min(100%, 520px);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero {
+    min-height: auto;
+    padding: 5.8rem 1.5rem 3.4rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 6.2vw, 3.25rem);
+  }
+
+  .hero p {
+    max-width: 520px;
+    margin-bottom: 1.8rem;
+    font-size: 15px;
+  }
+
+  .heroDashWrap {
+    width: min(100%, 540px);
+    margin-top: 2rem;
+  }
+
+  .section,
+  .aiSection {
+    max-width: 900px;
+    padding: 4.5rem 1.5rem;
+  }
+
+  .sectionTitle,
+  .ctaBox h2 {
+    font-size: clamp(1.75rem, 4.4vw, 2.35rem);
+  }
+
+  .featureExperience,
+  .roleStoryPanel,
+  .storyPanel {
+    gap: 1rem;
+  }
+
+  .featurePreviewPanel,
+  .roleStoryContent,
+  .rolePreview,
+  .storyPanelCopy,
+  .storyPanelVisual,
+  .compareLeadCard,
+  .priceCard {
+    border-radius: 16px;
+  }
+}

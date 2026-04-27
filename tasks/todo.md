@@ -1,3 +1,16 @@
+# Aggressive Desktop Density Follow-Up
+
+## Plan
+
+- [x] 1. Add final desktop-first density overrides at `>=1024px` so they win over earlier base and mobile pass styles.
+- [x] 2. Reduce desktop hero scale: shorter padding, lower H1 max, smaller copy/buttons, narrower dashboard mock, compact ticker/dashboard rows.
+- [x] 3. Tighten Core Platform and Role Preview: smaller max widths, card padding, preview/mock rows, tabs, icons, radii, and type.
+- [x] 4. Tighten AI, story, onboarding, comparison, pricing, mid-page CTA, and final CTA so desktop feels closer to current 80% zoom.
+- [x] 5. Add a light `768–1023px` bridge so tablet does not inherit oversized desktop proportions.
+- [x] 6. Verify TypeScript/build and overflow at 390px, 768px, 1280px, and 1440px.
+
+---
+
 # Desktop Scale Reduction Pass
 
 ## Plan

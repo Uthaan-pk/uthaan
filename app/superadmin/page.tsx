@@ -29,6 +29,64 @@ type SchoolRow = {
   created_at: string | null
   student_count: number
   user_count: number
+  admin_count: number
+  teacher_count: number
+  timetable_count: number
+  announcement_count: number
+  attendance_log_count: number
+  mark_count: number
+}
+
+function PilotSetupChecklist({ school }: { school: SchoolRow }) {
+  const items = [
+    { label: 'School created', done: true, detail: school.plan === 'pilot' ? 'Pilot plan' : `${school.plan} plan` },
+    { label: 'Admin login created', done: school.admin_count > 0, detail: `${school.admin_count} admin` },
+    { label: 'Teachers added', done: school.teacher_count > 0, detail: `${school.teacher_count} teachers` },
+    { label: 'Students imported', done: school.student_count > 0, detail: `${school.student_count} students` },
+    { label: 'Timetable added', done: school.timetable_count > 0, detail: `${school.timetable_count} periods` },
+    { label: 'First announcement posted', done: school.announcement_count > 0, detail: `${school.announcement_count} posts` },
+    { label: 'Attendance marked', done: school.attendance_log_count > 0, detail: `${school.attendance_log_count} logs` },
+    { label: 'Marks/results ready', done: school.mark_count > 0, detail: `${school.mark_count} marks` },
+  ]
+  const doneCount = items.filter((item) => item.done).length
+
+  return (
+    <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
+      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">Pilot setup checklist</h3>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Operator checklist based on existing school data. No extra setup table yet.
+          </p>
+        </div>
+        <span className="rounded-full bg-[#6fcf6f]/10 px-2.5 py-1 text-[10px] font-medium text-[#1a2e1a]">
+          {doneCount}/{items.length} ready
+        </span>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {items.map((item) => (
+          <div
+            key={item.label}
+            className={`rounded-xl border px-3 py-2 ${
+              item.done
+                ? 'border-[#6fcf6f]/25 bg-[#6fcf6f]/5'
+                : 'border-gray-100 bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  item.done ? 'bg-[#6fcf6f]' : 'bg-gray-300'
+                }`}
+              />
+              <span className="text-xs font-medium text-gray-900">{item.label}</span>
+            </div>
+            <div className="mt-1 pl-4 text-[11px] text-gray-400">{item.detail}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default async function SuperadminPage() {
@@ -51,7 +109,18 @@ export default async function SuperadminPage() {
   // ── Data ───────────────────────────────────────────────────────────────
   const admin = createAdminClient()
 
-  const [schoolsRes, studentsRes, usersRes, quizzesRes, assignmentsRes, attLogsRes, featuresRes] = await Promise.all([
+  const [
+    schoolsRes,
+    studentsRes,
+    usersRes,
+    quizzesRes,
+    assignmentsRes,
+    attLogsRes,
+    featuresRes,
+    timetableRes,
+    announcementsRes,
+    marksRes,
+  ] = await Promise.all([
     admin.from('schools').select('id, name, slug, plan, is_active, created_at').order('created_at'),
     admin.from('students').select('id, school_id, is_active'),
     admin.from('user_roles').select('user_id, school_id, role'),
@@ -59,6 +128,9 @@ export default async function SuperadminPage() {
     admin.from('assignments').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
     admin.from('attendance_logs').select('student_id, status, school_id').gte('day', TERM_START_DATE),
     admin.from('school_features').select('id, school_id, feature_key, enabled, monthly_limit, used_this_month, last_reset_at, created_at, updated_at'),
+    admin.from('timetable').select('id, school_id'),
+    admin.from('announcements').select('id, school_id'),
+    admin.from('marks').select('id, school_id'),
   ])
 
   const schools: SchoolRow[] = (schoolsRes.data ?? []).map((s: any) => ({
@@ -67,6 +139,12 @@ export default async function SuperadminPage() {
     user_count: (usersRes.data ?? []).filter(
       (u: any) => u.school_id === s.id && u.role !== 'superadmin'
     ).length,
+    admin_count: (usersRes.data ?? []).filter((u: any) => u.school_id === s.id && u.role === 'admin').length,
+    teacher_count: (usersRes.data ?? []).filter((u: any) => u.school_id === s.id && u.role === 'teacher').length,
+    timetable_count: (timetableRes.data ?? []).filter((t: any) => t.school_id === s.id).length,
+    announcement_count: (announcementsRes.data ?? []).filter((a: any) => a.school_id === s.id).length,
+    attendance_log_count: (attLogsRes.data ?? []).filter((log: any) => log.school_id === s.id).length,
+    mark_count: (marksRes.data ?? []).filter((mark: any) => mark.school_id === s.id).length,
   }))
 
   // Build per-school usage rows
@@ -298,6 +376,8 @@ export default async function SuperadminPage() {
                     </tr>
                     <tr className={i < schools.length - 1 ? 'border-b border-gray-50' : ''}>
                       <td colSpan={7} className="bg-[#fafcf9] px-5 py-4">
+                        <PilotSetupChecklist school={school} />
+
                         <div className="mb-4 rounded-2xl border border-[#6fcf6f]/20 bg-white p-4">
                           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                             <div>

@@ -22,6 +22,14 @@ const PLAN_LABELS: Record<SchoolPlan, string> = {
   enterprise: 'Enterprise',
 }
 
+const REQUESTED_PLAN_LABELS: Record<RequestedPlan, string> = {
+  not_sure: 'Not sure yet',
+  starter: 'Starter',
+  growth: 'Growth',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+}
+
 function toSlug(name: string) {
   return name
     .toLowerCase()
@@ -45,7 +53,7 @@ export default function ConvertDemoRequestForm({
   const [slug, setSlug] = useState(toSlug(schoolName))
   const [copied, setCopied] = useState(false)
 
-  const defaultPlan: SchoolPlan = requestedPlan === 'not_sure' ? 'pilot' : requestedPlan
+  const defaultPlan: SchoolPlan = 'pilot'
 
   const [state, formAction, isPending] = useActionState<OnboardResult | null, FormData>(
     convertDemoRequest,
@@ -80,7 +88,7 @@ export default function ConvertDemoRequestForm({
               School created — request converted
             </p>
             <p className="text-xs text-white/70">
-              Copy these credentials now. The password cannot be recovered.
+              Pilot plan and admin login are ready. Copy these credentials now; the password cannot be recovered.
             </p>
           </div>
         </div>
@@ -111,6 +119,7 @@ export default function ConvertDemoRequestForm({
         <div className="flex items-center justify-between gap-4 border-t border-gray-100 bg-gray-50 px-5 py-3">
           <p className="text-xs text-gray-500">
             Send credentials to the school admin. They should reset their password after first login.
+            Continue setup from the Pilot checklist in Superadmin.
           </p>
           <button
             onClick={handleCopy}
@@ -153,7 +162,8 @@ export default function ConvertDemoRequestForm({
           </div>
 
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-            Copy the generated credentials immediately after creation — the password will not be shown again.
+            This is an operator-assisted conversion. It creates the school on Pilot, creates the first admin login,
+            and marks this request converted. Copy the generated credentials immediately after creation.
           </div>
 
           {state?.success === false && (
@@ -226,12 +236,10 @@ export default function ConvertDemoRequestForm({
 
               <div className="flex flex-col gap-1 sm:col-span-2">
                 <label className="text-xs font-medium text-gray-500">
-                  Plan{' '}
-                  {requestedPlan === 'not_sure' && (
-                    <span className="font-normal text-gray-400">
-                      (requested: not sure → defaulting to Pilot)
-                    </span>
-                  )}
+                  Plan
+                  <span className="font-normal text-gray-400">
+                    {' '}requested: {REQUESTED_PLAN_LABELS[requestedPlan]} · defaulting to Pilot
+                  </span>
                 </label>
                 <select
                   name="plan"

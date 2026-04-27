@@ -29,6 +29,7 @@ export type OnboardResult =
 
 const DEMO_REQUEST_STATUSES = ['new', 'contacted', 'approved', 'rejected', 'converted'] as const
 export type DemoRequestStatus = (typeof DEMO_REQUEST_STATUSES)[number]
+const CONVERTIBLE_DEMO_REQUEST_STATUSES: DemoRequestStatus[] = ['new', 'contacted', 'approved']
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -282,6 +283,12 @@ export async function convertDemoRequest(
   if (demoReq.status === 'converted') {
     return { success: false, error: 'This demo request has already been converted to a school.' }
   }
+  if (!CONVERTIBLE_DEMO_REQUEST_STATUSES.includes(demoReq.status as DemoRequestStatus)) {
+    return {
+      success: false,
+      error: `Only new, contacted, or approved requests can be converted. Current status: ${demoReq.status}.`,
+    }
+  }
 
   const { data: slugExists } = await admin
     .from('schools')
@@ -293,7 +300,7 @@ export async function convertDemoRequest(
   // Step 1: Create school
   const { data: school, error: schoolErr } = await admin
     .from('schools')
-    .insert({ name, slug, is_active: true })
+    .insert({ name, slug, plan, is_active: true })
     .select('id')
     .single()
 
@@ -304,12 +311,10 @@ export async function convertDemoRequest(
   const schoolId: string = school.id
   const password = generatePassword()
 
-  // Apply plan to schools and school_features
-  await admin.from('schools').update({ plan }).eq('id', schoolId)
-
+  // Apply plan to school_features. The school row is inserted with the same plan.
   const preset = SCHOOL_PLAN_PRESETS[plan]
   const updatedAt = new Date().toISOString()
-  await admin.from('school_features').upsert(
+  const { error: featuresErr } = await admin.from('school_features').upsert(
     (Object.entries(preset) as Array<[AiFeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
       ([featureKey, config]) => ({
         school_id: schoolId,
@@ -321,6 +326,10 @@ export async function convertDemoRequest(
     ),
     { onConflict: 'school_id,feature_key' }
   )
+  if (featuresErr) {
+    await admin.from('schools').delete().eq('id', schoolId)
+    return { success: false, error: featuresErr.message ?? 'Failed to apply school plan features.' }
+  }
 
   // Step 2: Create auth user
   const { data: authData, error: authErr } = await admin.auth.admin.createUser({
@@ -349,7 +358,7 @@ export async function convertDemoRequest(
   }
 
   // Step 4: Mark demo request as converted
-  await admin
+  const { data: convertedRequest, error: convertErr } = await admin
     .from('demo_requests')
     .update({
       status: 'converted',
@@ -357,6 +366,18 @@ export async function convertDemoRequest(
       reviewed_by: user.id,
     })
     .eq('id', demoRequestId)
+    .in('status', CONVERTIBLE_DEMO_REQUEST_STATUSES)
+    .select('id')
+    .single()
+
+  if (convertErr || !convertedRequest) {
+    await admin.auth.admin.deleteUser(userId)
+    await admin.from('schools').delete().eq('id', schoolId)
+    return {
+      success: false,
+      error: 'The request could not be marked converted. Nothing was created; please refresh and try again.',
+    }
+  }
 
   // Best-effort audit — never blocks conversion
   await writeAuditLog(admin, {
@@ -366,6 +387,9 @@ export async function convertDemoRequest(
     entity_id: demoRequestId,
     new_value: { school_id: schoolId, school_name: name, admin_email: email, plan },
   })
+
+  revalidatePath('/superadmin')
+  revalidatePath('/superadmin/demo-requests')
 
   return {
     success: true,

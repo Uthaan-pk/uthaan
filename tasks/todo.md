@@ -1,3 +1,14 @@
+# Desktop Scale Reduction Pass
+
+## Plan
+
+- [x] 1. Add `@media (min-width: 1024px)` block: reduce hero padding, H1/body font sizes, dashboard wrap width, ticker height.
+- [x] 2. Reduce section container padding (`section`, `aiSection`), section title/sub sizes, `sectionTitle` clamp.
+- [x] 3. Reduce feature/role/story/compare/pricing card paddings and section-level top margins.
+- [x] 4. Verify `npm run build` passes. No horizontal overflow at 390px / 768px / 1280px / 1440px.
+
+---
+
 # Desktop Balance + Role Mock Content Fix
 
 ## Plan

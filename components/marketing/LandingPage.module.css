@@ -3302,6 +3302,66 @@
   }
 }
 
+/* ── Desktop scale (≥1024px) — 100% zoom feels like prior 80% zoom ──────── */
+
+@media (min-width: 1024px) {
+  /* Hero */
+  .hero { padding: 6rem 2rem 4rem; }
+  .heroBadge { margin-bottom: 1.25rem; }
+  .hero h1 { font-size: clamp(1.9rem, 4vw, 3.5rem); margin-bottom: 1rem; }
+  .hero p { font-size: clamp(15px, 1.5vw, 17px); margin-bottom: 2rem; }
+  .heroDashWrap { margin-top: 2.5rem; width: min(100%, 580px); }
+  .activityTicker { height: 52px; }
+
+  /* Section containers */
+  .section { padding: 4.5rem 2rem; }
+  .aiSection { padding: 4rem 2rem; }
+  .sectionTitle { font-size: clamp(24px, 3.2vw, 36px); }
+  .sectionSub { font-size: 15px; }
+
+  /* Feature section */
+  .featureGrid { margin-top: 2rem; }
+  .featurePreviewPanel { margin-top: 2rem; }
+
+  /* Role preview section */
+  .roleStoryWrap { margin-top: 2rem; }
+  .roleStoryContent { padding: 1.25rem; }
+  .roleStoryContent h3,
+  .storyPanelCopy h3,
+  .compareLeadCard h3 { font-size: clamp(20px, 2.4vw, 28px); }
+  .rolePreview { padding: 1rem; }
+  .rolePreviewGrid { gap: 0.55rem; }
+  .roleMetricCard { padding: 0.65rem 0.6rem; }
+  .roleMetricValue { font-size: 15px; }
+  .rolePreviewFeed { gap: 0.5rem; margin-top: 0.75rem; }
+  .rolePreviewItem { padding: 0.55rem 0.7rem; }
+
+  /* AI / Onboarding section */
+  .aiGrid { gap: 1.35rem; margin-top: 2rem; }
+  .onboardingGrid { gap: 0.8rem; margin-top: 2rem; }
+  .onboardingCard { padding: 1.1rem; }
+  .aiCard { padding: 1.1rem; }
+
+  /* Story / comparison section */
+  .storyToggleWrap { margin-top: 2rem; }
+  .storyPanel { gap: 1rem; margin-top: 1rem; }
+  .storyPanelCopy,
+  .storyPanelVisual,
+  .compareLeadCard { padding: 1.1rem; }
+  .compareLead { margin-top: 2rem; }
+  .vsTable { margin-top: 2rem; }
+
+  /* Pricing */
+  .pricingGrid { margin-top: 2rem; }
+  .priceCard { padding: 1.3rem; }
+  .priceCardChevron { top: 1.3rem; right: 1.3rem; }
+
+  /* CTA section */
+  .ctaSection { padding: 4rem 2rem 5rem; }
+  .ctaBox { padding: 1.5rem; }
+  .midpageCta { padding: 1.5rem 2rem; }
+}
+
 /* ── prefers-reduced-motion ──────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

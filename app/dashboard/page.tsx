@@ -203,6 +203,36 @@ function ActionTile({
   )
 }
 
+function DisabledActionTile({
+  eyebrow,
+  title,
+  body,
+  icon,
+  status = 'Manual step',
+}: {
+  eyebrow: string
+  title: string
+  body: string
+  icon: React.ReactNode
+  status?: string
+}) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 text-gray-500">
+      <div className="flex items-start justify-between gap-3">
+        <div className="rounded-xl border border-gray-200 bg-white p-2 text-gray-400">
+          {icon}
+        </div>
+        <span className="rounded-full border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+          {status}
+        </span>
+      </div>
+      <div className="mt-4 text-[11px] font-medium uppercase tracking-wide text-gray-500">{eyebrow}</div>
+      <div className="mt-1 text-sm font-medium text-gray-800">{title}</div>
+      <div className="mt-1 text-sm leading-6 text-gray-500">{body}</div>
+    </div>
+  )
+}
+
 function QuickActionRow({
   href,
   eyebrow,
@@ -496,6 +526,15 @@ function LaunchDashboard({
                           <div className="min-w-0">
                             <div className="text-sm font-medium text-gray-900">{item.label}</div>
                             <div className="mt-1 text-xs leading-5 text-gray-500">{item.detail}</div>
+                            <div
+                              className={`mt-3 inline-flex rounded-full border px-2 py-1 text-[10px] font-medium uppercase tracking-wide ${
+                                item.done
+                                  ? 'border-[#6fcf6f]/25 bg-[#6fcf6f]/10 text-[#1a7a4a]'
+                                  : 'border-amber-200 bg-amber-50 text-amber-700'
+                              }`}
+                            >
+                              {item.done ? 'Done' : 'Needed'}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -538,6 +577,12 @@ function LaunchDashboard({
               description="Open the existing setup areas. Teacher creation now creates a real staff login."
             >
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <DisabledActionTile
+                  eyebrow="Admin login"
+                  title="Confirm admin handoff"
+                  body="Use /login and Forgot Password instructions from the conversion success panel."
+                  icon={<ShieldCheck className="h-4 w-4" />}
+                />
                 <ActionTile
                   href="#teacher-onboarding"
                   eyebrow="Teachers"
@@ -1704,10 +1749,6 @@ export default async function DashboardPage() {
       },
     ] satisfies LaunchSetupItem[]
     const actionCompletedCount = actionSetupItems.filter((item) => item.done).length
-    const launchSetupItems: LaunchSetupItem[] = [
-      { label: 'School created', done: true, detail: `${school.name} is active in Uthaan` },
-      ...actionSetupItems,
-    ]
     const showLaunchDashboard = actionCompletedCount < 5
 
     if (showLaunchDashboard) {
@@ -1717,7 +1758,7 @@ export default async function DashboardPage() {
           isImpersonating={role === 'superadmin'}
           schoolName={school.name}
           plan={String(school.plan ?? 'pilot').replace(/^\w/, (char) => char.toUpperCase())}
-          setupItems={launchSetupItems}
+          setupItems={actionSetupItems}
           actionCompletedCount={actionCompletedCount}
           studentCount={totalStudents}
           teacherCount={teacherCount}

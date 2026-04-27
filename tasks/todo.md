@@ -1,3 +1,16 @@
+# Premium Role Preview + Accountant Story
+
+## Plan
+
+- [x] 1. Add Accountant as a fifth role story with accurate manual fee/payment/receipt copy.
+- [x] 2. Replace the Teacher mock with compact timetable, attendance, marks, assignment, and staff-only AI rows.
+- [x] 3. Add a polished Accountant mock covering outstanding fees, recorded payments, proof upload, bulk fee creation, and receipt state.
+- [x] 4. Audit Admin, Parent, and Student mocks so every role preview has meaningful visible content without empty panels.
+- [x] 5. Tune desktop and mobile CSS so five tabs, compact mocks, and the role panel stay balanced without horizontal overflow.
+- [x] 6. Run `npm run build` and verify responsive behavior at 390px, 1024px, 1280px, and 1440px.
+
+---
+
 # Targeted AI Desktop Layout Fix
 
 ## Plan

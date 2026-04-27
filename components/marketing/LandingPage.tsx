@@ -259,8 +259,8 @@ const roleStories = {
     label: 'Admin',
     eyebrow: 'School operations',
     title: 'Run the school from one cleaner control layer',
-    body: 'School admins get visibility across attendance, fees, announcements, results, and staff-facing AI without jumping between scattered tools.',
-    highlights: ['Fee tracking and defaulter visibility', 'Attendance oversight across classes', 'Announcements and results in the same system'],
+    body: 'School admins get visibility across attendance, fees, recorded payments, announcements, results, and staff-facing AI without jumping between scattered tools.',
+    highlights: ['Fee tracking, receipt history, and defaulter visibility', 'Attendance oversight across classes', 'Announcements and results in the same system'],
     metrics: [
       ['Fees', 'Ledger-ready'],
       ['Results', 'School-wide'],
@@ -279,12 +279,24 @@ const roleStories = {
       ['Work', 'Reduced'],
     ],
   },
+  accountant: {
+    label: 'Accountant',
+    eyebrow: 'Fee workflow',
+    title: 'Record fees, payments, and receipts without chasing admin',
+    body: 'Accountants can create fees, record manual payments, upload proof, and keep admins informed with clean receipt history.',
+    highlights: ['Create individual, class-wide, or school-wide fees', 'Record payment with proof or digital receipt', 'Admins see amount, receipt, and recorded-by details'],
+    metrics: [
+      ['Fees', 'Flexible'],
+      ['Receipts', 'Clean'],
+      ['Proof', 'Tracked'],
+    ],
+  },
   parent: {
     label: 'Parent',
     eyebrow: 'Family visibility',
     title: 'Parents get the updates they actually care about',
-    body: 'Parents can stay informed with attendance, results, and announcements through a cleaner role-based experience without extra confusion.',
-    highlights: ['Attendance visibility', 'Results access', 'School announcements in one view'],
+    body: 'Parents can stay informed with attendance, results, announcements, balances, and clean digital receipts through a simpler role-based experience.',
+    highlights: ['Attendance visibility', 'Results access', 'Digital receipts and school announcements in one view'],
     metrics: [
       ['Updates', 'Relevant'],
       ['Results', 'Visible'],
@@ -363,7 +375,7 @@ const compareFeatures: CompareRow[] = [
   { label: 'AI report card comments',   uthaan: 'yes', google: 'no',      canvas: 'no',      classDojo: 'no'      },
   { label: 'Attendance alert summaries',uthaan: 'yes', google: 'no',      canvas: 'no',      classDojo: 'no'      },
   { label: 'WhatsApp parent alerts',    uthaan: 'planned', google: 'no',  canvas: 'no',      classDojo: 'no'      },
-  { label: 'Role-based access (4 roles)',uthaan: 'yes', google: 'partial', canvas: 'yes',    classDojo: 'partial' },
+  { label: 'Role-based access (5 roles)',uthaan: 'yes', google: 'partial', canvas: 'yes',    classDojo: 'partial' },
   { label: 'Full audit log',            uthaan: 'yes', google: 'no',      canvas: 'yes',     classDojo: 'no'      },
   { label: 'Affordable for small schools',uthaan: 'yes', google: 'partial',canvas: 'no',     classDojo: 'partial' },
 ]
@@ -403,10 +415,11 @@ function CompareCell({ value, isUthaan = false }: { value: CellValue; isUthaan?:
 
 // ── Role mock UI components ───────────────────────────────────────────────────
 
-const adminDefaulters = [
-  { name: 'Hamza Malik',  cls: 'Class 5-A', amount: 'Rs. 2,400' },
-  { name: 'Sara Raza',    cls: 'Class 6-B', amount: 'Rs. 4,800' },
-  { name: 'Zaid Ahmad',   cls: 'Class 7-A', amount: 'Rs. 2,400' },
+const adminOperations = [
+  { name: 'Fee collection', cls: 'April ledger', amount: 'Rs. 642k', tag: 'Live' },
+  { name: 'Attendance today', cls: '24 classes', amount: '91%', tag: 'Ready' },
+  { name: 'Receipt review', cls: 'Recorded by staff', amount: '18', tag: 'Proof' },
+  { name: 'Defaulters', cls: '3 classes flagged', amount: '12', tag: 'Due' },
 ]
 
 function AdminMock({ active }: { active: boolean }) {
@@ -418,19 +431,19 @@ function AdminMock({ active }: { active: boolean }) {
     }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) {
-      const timer = setTimeout(() => setVisible(adminDefaulters.length), 0)
+      const timer = setTimeout(() => setVisible(adminOperations.length), 0)
       return () => clearTimeout(timer)
     }
-    const timers = adminDefaulters.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
+    const timers = adminOperations.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
     return () => timers.forEach(clearTimeout)
   }, [active])
   return (
     <div className={styles.roleMock}>
       <div className={styles.roleMockHeader}>
-        <span>Fee defaulters</span>
-        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeRed}`}>12 outstanding</span>
+        <span>School command center</span>
+        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeGreen}`}>Today</span>
       </div>
-      {adminDefaulters.map((d, i) => (
+      {adminOperations.map((d, i) => (
         <div
           key={d.name}
           className={`${styles.roleMockRow} ${i < visible ? styles.roleMockRowVisible : ''}`}
@@ -439,21 +452,21 @@ function AdminMock({ active }: { active: boolean }) {
           <span className={styles.roleMockName}>{d.name}</span>
           <span className={styles.roleMockMeta}>{d.cls}</span>
           <span className={styles.roleMockAmount}>{d.amount}</span>
-          <span className={styles.roleMockTag}>Overdue</span>
+          <span className={d.tag === 'Due' ? styles.roleMockTag : styles.roleMockTagNeutral}>{d.tag}</span>
         </div>
       ))}
     </div>
   )
 }
 
-const teacherStudents = ['Aisha', 'Hamza', 'Sara', 'Zaid', 'Noor']
-const teacherDays = ['Mon', 'Tue', 'Wed']
-const teacherGrid: Array<Array<'Green' | 'Amber' | 'Red'>> = [
-  ['Green', 'Green', 'Green'],
-  ['Green', 'Amber', 'Green'],
-  ['Green', 'Green', 'Red'],
-  ['Amber', 'Green', 'Green'],
-  ['Green', 'Green', 'Green'],
+const teacherWorkRows = [
+  { label: '08:00 Urdu', meta: 'Class 5-A', tag: 'Next' },
+  { label: '08:45 English', meta: 'Class 6-B', tag: 'Period 2' },
+  { label: '09:30 Science', meta: 'Class 7', tag: 'Period 3' },
+  { label: 'Attendance', meta: 'Class 5-A · 38 present · 4 absent', tag: 'Marked' },
+  { label: 'Marks entry', meta: 'English · 28 students', tag: 'Open' },
+  { label: 'Assignment review', meta: '12 pending', tag: 'Review' },
+  { label: 'AI report comments', meta: 'Staff only', tag: 'Draft' },
 ]
 
 function TeacherMock({ active }: { active: boolean }) {
@@ -465,60 +478,84 @@ function TeacherMock({ active }: { active: boolean }) {
     }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) {
-      const timer = setTimeout(() => setVisible(teacherStudents.length), 0)
+      const timer = setTimeout(() => setVisible(teacherWorkRows.length), 0)
       return () => clearTimeout(timer)
     }
-    const timers = teacherStudents.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
+    const timers = teacherWorkRows.map((_, i) => setTimeout(() => setVisible(i + 1), 45 * i))
     return () => timers.forEach(clearTimeout)
   }, [active])
   return (
     <div className={styles.roleMock}>
       <div className={styles.roleMockHeader}>
-        <span>Attendance · Class 5-A</span>
+        <span>Teacher workspace</span>
         <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeGreen}`}>Today</span>
       </div>
-      <div className={styles.teacherGrid}>
-        <div className={styles.teacherGridHeader}>
-          <span />
-          {teacherDays.map((d) => (
-            <span key={d} className={styles.teacherDayLabel}>{d}</span>
-          ))}
+      {teacherWorkRows.map((row, i) => (
+        <div
+          key={`${row.label}-${row.meta}`}
+          className={`${styles.roleMockRow} ${styles.teacherScheduleRow} ${row.label.includes('AI') ? styles.teacherTaskRowAi : ''} ${i < visible ? styles.roleMockRowVisible : ''}`}
+          style={{ '--mock-delay': `${i * 45}ms` } as CSSProperties}
+        >
+          <span className={styles.teacherTaskLabel}>{row.label}</span>
+          <span className={styles.teacherTaskMeta}>{row.meta}</span>
+          <span className={row.tag === 'Next' || row.tag === 'Draft' ? styles.roleMockTagGreen : styles.roleMockTagNeutral}>{row.tag}</span>
         </div>
-        {teacherStudents.map((name, i) => (
-          <div
-            key={name}
-            className={`${styles.teacherRow} ${i < visible ? styles.roleMockRowVisible : ''}`}
-            style={{ '--mock-delay': `${i * 60}ms` } as CSSProperties}
-          >
-            <span className={styles.teacherName}>{name}</span>
-            {teacherGrid[i].map((dot, j) => (
-              <span key={j} className={`${styles.attendDot} ${styles[`dot${dot}`]}`} aria-label={dot} />
-            ))}
-          </div>
-        ))}
+      ))}
+    </div>
+  )
+}
+
+const accountantRows = [
+  { name: 'Outstanding fees', cls: 'Across active classes', amount: 'Rs. 184,000', tag: 'Due' },
+  { name: 'Payment recorded', cls: 'Class 5 · Digital receipt', amount: 'Rs. 12,000', tag: 'Receipt ready' },
+  { name: 'Proof uploaded', cls: 'Bank slip · Admin can view', amount: 'Manual', tag: 'Proof' },
+  { name: 'Bulk fee creation', cls: '128 students · 12 skipped duplicates', amount: 'School-wide', tag: 'Manual record' },
+]
+
+function AccountantMock({ active }: { active: boolean }) {
+  const [visible, setVisible] = useState(0)
+  useEffect(() => {
+    if (!active) {
+      const timer = setTimeout(() => setVisible(0), 0)
+      return () => clearTimeout(timer)
+    }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) {
+      const timer = setTimeout(() => setVisible(accountantRows.length), 0)
+      return () => clearTimeout(timer)
+    }
+    const timers = accountantRows.map((_, i) => setTimeout(() => setVisible(i + 1), 60 * i))
+    return () => timers.forEach(clearTimeout)
+  }, [active])
+  return (
+    <div className={styles.roleMock}>
+      <div className={styles.roleMockHeader}>
+        <span>Fee desk</span>
+        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeGreen}`}>Manual record</span>
       </div>
-      <div className={styles.teacherTaskRows}>
-        <div className={styles.teacherTaskRow}>
-          <span className={styles.teacherTaskLabel}>Marks entry</span>
-          <span className={styles.teacherTaskMeta}>English · 28 students</span>
+      {accountantRows.map((row, i) => (
+        <div
+          key={row.name}
+          className={`${styles.roleMockRow} ${styles.accountantRow} ${i < visible ? styles.roleMockRowVisible : ''}`}
+          style={{ '--mock-delay': `${i * 60}ms` } as CSSProperties}
+        >
+          <span className={styles.roleMockName}>{row.name}</span>
+          <span className={styles.roleMockMeta}>{row.cls}</span>
+          <span className={styles.roleMockAmount}>{row.amount}</span>
+          <span className={row.tag === 'Due' ? styles.roleMockTag : row.tag === 'Receipt ready' ? styles.roleMockTagGreen : styles.roleMockTagNeutral}>
+            {row.tag}
+          </span>
         </div>
-        <div className={styles.teacherTaskRow}>
-          <span className={styles.teacherTaskLabel}>Assignment review</span>
-          <span className={styles.teacherTaskMeta}>12 pending</span>
-        </div>
-        <div className={`${styles.teacherTaskRow} ${styles.teacherTaskRowAi}`}>
-          <span className={styles.teacherTaskLabel}>AI report comments</span>
-          <span className={styles.teacherTaskMeta}>Staff only</span>
-        </div>
-      </div>
+      ))}
     </div>
   )
 }
 
 const parentNotifs = [
-  { color: 'Green' as const, text: 'Hamza marked present',     time: '8:15 am'    },
-  { color: 'Amber' as const, text: 'Fee due in 4 days',        time: 'Yesterday'  },
-  { color: 'Blue'  as const, text: 'Term 2 results published', time: '2 days ago' },
+  { color: 'Green' as const, text: 'Hamza marked present',       time: '8:15 am'    },
+  { color: 'Amber' as const, text: 'April balance: Rs. 2,400',   time: 'Yesterday'  },
+  { color: 'Blue'  as const, text: 'Digital receipt available',  time: '2 days ago' },
+  { color: 'Green' as const, text: 'Term 2 results published',   time: '2 days ago' },
 ]
 
 function ParentMock({ active }: { active: boolean }) {
@@ -539,8 +576,8 @@ function ParentMock({ active }: { active: boolean }) {
   return (
     <div className={styles.roleMock}>
       <div className={styles.roleMockHeader}>
-        <span>Notifications</span>
-        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeBlue}`}>3 new</span>
+        <span>Parent updates</span>
+        <span className={`${styles.roleMockBadge} ${styles.roleMockBadgeBlue}`}>Clean view</span>
       </div>
       {parentNotifs.map((n, i) => (
         <div
@@ -562,6 +599,10 @@ const studentSubjects = [
   { name: 'Science', score: 71 },
   { name: 'English', score: 90 },
   { name: 'Urdu',    score: 68 },
+]
+const studentTasks = [
+  { name: 'English assignment', meta: 'Due Friday' },
+  { name: 'Science material', meta: 'Chapter 4' },
 ]
 
 function StudentMock({ active }: { active: boolean }) {
@@ -603,6 +644,14 @@ function StudentMock({ active }: { active: boolean }) {
           </div>
         </div>
       ))}
+      <div className={styles.studentTaskGrid}>
+        {studentTasks.map((task) => (
+          <div key={task.name} className={styles.studentTaskCard}>
+            <span className={styles.roleMockName}>{task.name}</span>
+            <span className={styles.roleMockMeta}>{task.meta}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -853,7 +902,7 @@ export default function LandingPage() {
   const activeFeaturePreview = featureCards.find((card) => card.key === activeFeatureCard) ?? featureCards[0]
   const activeRoleStory = roleStories[activeRole]
   const activeSystemStory = systemStories[activeStory]
-  const showMobileCta = !heroInView && !footerInView
+  const showMobileCta = !heroInView && !roleInView && !footerInView
 
   return (
     <div
@@ -1069,6 +1118,7 @@ export default function LandingPage() {
               </div>
               {activeRole === 'admin'   && <AdminMock   active />}
               {activeRole === 'teacher' && <TeacherMock active />}
+              {activeRole === 'accountant' && <AccountantMock active />}
               {activeRole === 'parent'  && <ParentMock  active />}
               {activeRole === 'student' && <StudentMock active />}
             </div>

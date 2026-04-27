@@ -2537,12 +2537,14 @@
   }
 
   .roleMockRow,
-  .studentSubjectRow {
+  .studentSubjectRow,
+  .studentTaskCard {
     padding: 0.58rem 0.65rem;
     border-radius: 10px;
   }
 
-  .teacherRow {
+  .teacherRow,
+  .teacherScheduleRow {
     padding: 0.5rem 0.65rem;
   }
 
@@ -2992,11 +2994,34 @@
   }
 
   .roleMockRow,
-  .studentSubjectRow {
+  .studentSubjectRow,
+  .studentTaskCard {
     gap: 0.42rem;
     padding: 0.46rem 0.52rem;
     border-radius: 9px;
     font-size: 11px;
+  }
+
+  .teacherScheduleRow,
+  .accountantRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .teacherScheduleRow .teacherTaskMeta,
+  .accountantRow .roleMockMeta {
+    grid-column: 1 / 2;
+    min-width: 0;
+  }
+
+  .teacherScheduleRow .roleMockTagNeutral,
+  .teacherScheduleRow .roleMockTagGreen,
+  .accountantRow .roleMockTag,
+  .accountantRow .roleMockTagNeutral,
+  .accountantRow .roleMockTagGreen {
+    grid-column: 2 / 3;
+    justify-self: end;
   }
 
   .teacherGrid {
@@ -3019,17 +3044,26 @@
   }
 
   .teacherName,
-  .roleMockAmount {
+  .roleMockAmount,
+  .studentTaskCard .roleMockName {
     font-size: 11px;
   }
 
   .roleMockMeta,
-  .teacherDayLabel {
+  .teacherDayLabel,
+  .studentTaskCard .roleMockMeta {
     font-size: 9.5px;
   }
 
   .roleMockTag {
-    display: none;
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .roleMockTagNeutral,
+  .roleMockTagGreen {
+    font-size: 9px;
+    padding: 2px 6px;
   }
 
   .studentSubjectRow {
@@ -3611,6 +3645,28 @@
   flex-shrink: 0;
 }
 
+.roleMockTagNeutral,
+.roleMockTagGreen {
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.roleMockTagNeutral {
+  background: rgb(255 255 255 / 0.045);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  color: rgb(255 255 255 / 0.72);
+}
+
+.roleMockTagGreen {
+  background: rgb(34 168 98 / 0.12);
+  border: 1px solid rgb(34 168 98 / 0.22);
+  color: var(--green-light);
+}
+
 /* ── Teacher mock ────────────────────────────────────────────────────────── */
 
 .teacherGrid {
@@ -3705,6 +3761,30 @@
   color: var(--green-light);
 }
 
+.teacherScheduleRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr) auto;
+  align-items: center;
+}
+
+.teacherScheduleRow .teacherTaskMeta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Accountant mock ─────────────────────────────────────────────────────── */
+
+.accountantRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.22fr) auto auto;
+  align-items: center;
+}
+
+.accountantRow .roleMockMeta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Parent mock ─────────────────────────────────────────────────────────── */
 
 .parentNotifRow {
@@ -3752,6 +3832,21 @@
   background: linear-gradient(90deg, var(--green), var(--green-light));
   transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   transition-delay: var(--mock-delay, 0ms);
+}
+
+.studentTaskGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.studentTaskCard {
+  display: grid;
+  gap: 0.18rem;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  border-radius: 12px;
+  background: rgb(34 168 98 / 0.04);
+  padding: 0.62rem 0.75rem;
 }
 
 /* ── Compare grid (desktop ≥768px) ───────────────────────────────────────── */
@@ -4098,6 +4193,10 @@
 
   .teacherTaskMeta {
     font-size: 9.5px;
+  }
+
+  .studentTaskGrid {
+    gap: 0.32rem;
   }
 
   .compareMobileScroll {
@@ -4797,7 +4896,9 @@
 
   .roleMockRow,
   .studentSubjectRow,
+  .studentTaskCard,
   .teacherRow,
+  .teacherScheduleRow,
   .teacherTaskRow {
     padding: 0.44rem 0.55rem;
     border-radius: 8px;
@@ -4830,9 +4931,19 @@
     font-size: 9.5px;
   }
 
+  .roleMockTagNeutral,
+  .roleMockTagGreen {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+
   .teacherTaskRows {
     gap: 0.34rem;
     margin-top: 0.46rem;
+  }
+
+  .studentTaskGrid {
+    gap: 0.34rem;
   }
 
   .aiGrid {

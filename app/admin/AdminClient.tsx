@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import ParentLinker from './ParentLinker'
@@ -78,6 +79,12 @@ export default function AdminClient({
   } | null>(null)
   const [csvError, setCsvError] = useState('')
 
+  useEffect(() => {
+    if (window.location.hash === '#import-students') {
+      setTab('import')
+    }
+  }, [])
+
   async function addStudent() {
     if (!form.name || !form.roll_no || !form.class_num) {
       toast.error('Name, roll number and class required')
@@ -99,7 +106,7 @@ export default function AdminClient({
     setSaving(false)
 
     if (!res.ok) {
-      toast.error(data.error || 'Failed')
+      toast.error(data.message || data.error || 'Failed')
       return
     }
 
@@ -151,7 +158,7 @@ export default function AdminClient({
       .filter(l => l.trim())
 
     if (lines.length < 2) {
-      setCsvError('Need a header row and at least one student')
+      setCsvError('Upload a CSV with a header row and at least one student row.')
       return
     }
 
@@ -164,7 +171,7 @@ export default function AdminClient({
     )
 
     if (missing.length) {
-      setCsvError(`Missing columns: ${missing.join(', ')}`)
+      setCsvError(`Missing required column${missing.length === 1 ? '' : 's'}: ${missing.join(', ')}. Required: name, roll_no, class_num.`)
       return
     }
 
@@ -182,6 +189,11 @@ export default function AdminClient({
         return row
       })
       .filter(r => r.name)
+
+    if (rows.length === 0) {
+      setCsvError('No student rows found. Add at least one row with name, roll_no, and class_num.')
+      return
+    }
 
     setCsvError('')
     setCsvRows(rows)
@@ -212,6 +224,12 @@ export default function AdminClient({
 
     const data = await res.json()
     setImporting(false)
+
+    if (!res.ok) {
+      toast.error(data.message || 'Could not import students')
+      return
+    }
+
     setImportResult(data)
 
     if (data.added > 0) {
@@ -481,35 +499,51 @@ export default function AdminClient({
 
       {tab === 'import' && (
         <div className="space-y-5">
-          <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <div id="import-students" className="bg-white rounded-xl border border-gray-100 p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-1">
               Bulk import from CSV
             </h3>
             <p className="text-xs text-gray-400 mb-5">
-              Add all 50 students in one go. Download the template, fill it in
-              Excel or Google Sheets, then upload.
+              Import students into the current school only. Download the template,
+              fill it in Excel or Google Sheets, then upload the CSV here.
             </p>
 
-            <div className="bg-[#f8f7f4] rounded-lg px-4 py-3 mb-5 flex items-start justify-between gap-4">
-              <div>
+            <div className="mb-5 grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="rounded-xl border border-gray-100 bg-[#f8f7f4] px-4 py-3">
                 <div className="text-xs font-medium text-gray-700 mb-1">
-                  Required columns in your CSV:
+                  Required columns
                 </div>
                 <code className="text-xs text-gray-500">
-                  name, roll_no, class_num, stage, email
+                  name, roll_no, class_num
                 </code>
                 <div className="text-xs text-gray-400 mt-1">
-                  stage values: <code>pre_1</code> · <code>matric</code> ·{' '}
-                  <code>o_levels</code>
+                  Optional columns: <code>stage</code>, <code>email</code>
                 </div>
                 <div className="text-xs text-gray-400">
-                  email is optional but recommended for auto-linking
+                  stage values: <code>pre_1</code> · <code>matric</code> · <code>o_levels</code>
                 </div>
               </div>
 
+              <div className="rounded-xl border border-[#6fcf6f]/20 bg-[#6fcf6f]/5 px-4 py-3">
+                <div className="text-xs font-medium text-gray-700 mb-1">
+                  Sample row
+                </div>
+                <div className="overflow-x-auto">
+                  <code className="whitespace-nowrap text-xs text-gray-600">
+                    Ali Khan, STU-001, 9, matric, ali@example.com
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs leading-5 text-gray-500">
+                Use a unique roll number per student. Class numbers should match your school structure
+                (for example 1-12). Duplicate roll numbers are skipped safely.
+              </div>
               <button
                 onClick={downloadTemplate}
-                className="flex-shrink-0 text-xs font-medium text-[#1a2e1a] border border-gray-200 bg-white px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                className="min-h-10 flex-shrink-0 text-xs font-medium text-[#1a2e1a] border border-gray-200 bg-white px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Download template
               </button>
@@ -626,6 +660,21 @@ export default function AdminClient({
                       </div>
                     )}
                   </div>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={() => setTab('students')}
+                      className="min-h-10 rounded-lg border border-green-200 bg-white px-3 py-2 text-xs font-medium text-green-800 hover:bg-green-50"
+                    >
+                      View roster
+                    </button>
+                    <Link
+                      href="/dashboard"
+                      className="min-h-10 rounded-lg border border-green-200 bg-white px-3 py-2 text-center text-xs font-medium text-green-800 hover:bg-green-50"
+                    >
+                      Back to launch dashboard
+                    </Link>
+                  </div>
                 </div>
 
                 {importResult.errors.length > 0 && (
@@ -655,16 +704,20 @@ export default function AdminClient({
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              How it works
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">
+              Import tips
             </h3>
+            <p className="mb-3 text-xs text-gray-400">
+              These are the mistakes that most often slow down a first pilot import.
+            </p>
             <div className="space-y-2">
               {[
                 'Download the template and open it in Excel or Google Sheets',
                 'Fill in your students — one row per student',
                 'Save as CSV (File → Download → CSV)',
                 'Upload the file here and click Import',
-                'Students who have already signed up with matching emails get linked automatically',
+                'Leave email blank if students do not have school email addresses yet',
+                'Keep roll numbers unique so duplicate rows can be skipped safely',
                 'Safe to re-run — duplicate roll numbers are skipped',
               ].map((step, i) => (
                 <div key={i} className="flex gap-3 text-xs text-gray-500">

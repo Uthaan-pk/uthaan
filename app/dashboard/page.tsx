@@ -546,7 +546,7 @@ function LaunchDashboard({
                   icon={<Users className="h-4 w-4" />}
                 />
                 <ActionTile
-                  href={canUseAdminImport ? '/admin' : '/students'}
+                  href={canUseAdminImport ? '/admin#import-students' : '/students'}
                   eyebrow="Students"
                   title={canUseAdminImport ? 'Import or manage students' : 'Review student roster'}
                   body={canUseAdminImport ? 'Use the existing student form or CSV bulk import.' : 'Open the roster; bulk import is available to school admins.'}
@@ -1670,7 +1670,7 @@ export default async function DashboardPage() {
         label: 'Students imported',
         done: totalStudents > 0,
         detail: totalStudents > 0 ? `${totalStudents} active student${totalStudents === 1 ? '' : 's'}` : 'No students imported yet.',
-        href: role === 'admin' ? '/admin' : '/students',
+        href: role === 'admin' ? '/admin#import-students' : '/students',
       },
       {
         label: 'Timetable added',

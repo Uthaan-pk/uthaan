@@ -29,6 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
 
   const schoolId = roleData?.school_id as string | null
+  if (!schoolId)
+    return NextResponse.json({ message: 'No school linked to your account' }, { status: 400 })
 
   let raw: unknown
   try {
@@ -46,6 +48,7 @@ export async function POST(request: Request) {
   const { data: existing } = await adminSupabase
     .from('students')
     .select('id')
+    .eq('school_id', schoolId)
     .eq('roll_no', roll_no)
     .single()
   if (existing)

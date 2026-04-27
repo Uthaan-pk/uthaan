@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     const { data: existing } = await adminSupabase
       .from('students')
       .select('id')
+      .eq('school_id', schoolId)
       .eq('roll_no', rollStr)
       .single()
     if (existing) {

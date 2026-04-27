@@ -42,6 +42,7 @@ export default async function Page() {
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
   const schoolContext = await getSchoolContext(supabase, user.id)
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
 
   if (role === 'parent') {
     const { data: link } = await supabase
@@ -230,13 +231,21 @@ export default async function Page() {
     )
   }
 
-  const [studentsRes, releasesRes] = await Promise.all([
-    supabase
+  const dataClient = role === 'superadmin' ? createAdminClient() : supabase
+
+  let studentsQuery = dataClient
       .from('students')
       .select('id, name, roll_no, class_num, stage, is_active')
       .eq('is_active', true)
-      .order('name', { ascending: true }),
-    supabase
+      .order('name', { ascending: true })
+
+  if (schoolContext?.schoolId) {
+    studentsQuery = studentsQuery.eq('school_id', schoolContext.schoolId)
+  }
+
+  const [studentsRes, releasesRes] = await Promise.all([
+    studentsQuery,
+    dataClient
       .from('result_releases')
       .select(
         'id, academic_year, term, class_num, released, released_at, released_by'
@@ -277,7 +286,11 @@ export default async function Page() {
 
   return (
     <div className="uthaan-page-shell">
-      <Sidebar email={user.email!} role={effectiveRole} />
+      <Sidebar
+        email={user.email!}
+        role={effectiveRole}
+        isImpersonating={role === 'superadmin'}
+      />
       <div className="uthaan-page-main">
         <header className="uthaan-page-header">
           <h1 className="text-sm font-semibold text-gray-900">

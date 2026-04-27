@@ -5,6 +5,8 @@ import TimetableGrid from './TimetableGrid'
 import { CURRENT_TERM } from '@/lib/constants'
 import { type TimetableRow } from './TimetableForm'
 import { HelpButton } from '@/components/HelpButton'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 
 export default async function TimetablePage() {
   const supabase = await createClient()
@@ -17,18 +19,23 @@ export default async function TimetablePage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role, student_id')
+    .select('role, student_id, school_id')
     .eq('user_id', user.id)
     .single()
 
   const role = roleData?.role
-  const isTeacher = role === 'teacher'
-  const isStaff = role === 'teacher' || role === 'admin'
+  const effectiveRole = await resolveEffectiveRole(role ?? '')
+  const schoolContext = await getSchoolContext(supabase, user.id)
+  const isTeacher = effectiveRole === 'teacher'
+  const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
+
+  const dataClient = role === 'superadmin' ? createAdminClient() : supabase
 
   let filterClassNum: number | null = null
 
   if (!isStaff && roleData?.student_id) {
-    const { data: student } = await supabase
+    const { data: student } = await dataClient
       .from('students')
       .select('class_num')
       .eq('id', roleData.student_id)
@@ -38,7 +45,7 @@ export default async function TimetablePage() {
     filterClassNum = student?.class_num ?? null
   }
 
-  let query = supabase
+  let query = dataClient
     .from('timetable')
     .select('*')
     .order('class_num', { ascending: true })
@@ -47,6 +54,10 @@ export default async function TimetablePage() {
 
   if (isTeacher) {
     query = query.eq('teacher_id', user.id)
+  }
+
+  if (schoolContext?.schoolId) {
+    query = query.eq('school_id', schoolContext.schoolId)
   }
 
   if (!isStaff && filterClassNum !== null) {
@@ -66,10 +77,16 @@ export default async function TimetablePage() {
   const teacherMap: Record<string, string> = {}
 
   if (teacherIds.length > 0) {
-    const { data: teacherRoles } = await supabase
+    let teacherRolesQuery = dataClient
       .from('user_roles')
       .select('user_id, role')
       .in('user_id', teacherIds)
+
+    if (schoolContext?.schoolId) {
+      teacherRolesQuery = teacherRolesQuery.eq('school_id', schoolContext.schoolId)
+    }
+
+    const { data: teacherRoles } = await teacherRolesQuery
 
     teacherRoles?.forEach(r => {
       teacherMap[r.user_id] =
@@ -87,11 +104,17 @@ export default async function TimetablePage() {
   if (isStaff) {
     if (!isTeacher) {
       // Admins: show tabs for every class that has active students
-      const { data: classData } = await supabase
+      let classQuery = dataClient
         .from('students')
         .select('class_num')
         .eq('is_active', true)
         .not('class_num', 'is', null)
+
+      if (schoolContext?.schoolId) {
+        classQuery = classQuery.eq('school_id', schoolContext.schoolId)
+      }
+
+      const { data: classData } = await classQuery
 
       const uniqueClasses = [
         ...new Set((classData ?? []).map((s: any) => s.class_num as number)),
@@ -103,17 +126,27 @@ export default async function TimetablePage() {
     // their own rows (already filtered by teacher_id above), so only classes
     // they are actually assigned to appear as tabs.
 
-    const { data: sl } = await supabase
+    let staffQuery = dataClient
       .from('user_roles')
       .select('user_id, role')
       .in('role', ['teacher', 'admin'])
+
+    if (schoolContext?.schoolId) {
+      staffQuery = staffQuery.eq('school_id', schoolContext.schoolId)
+    }
+
+    const { data: sl } = await staffQuery
 
     staffList = sl ?? []
   }
 
   return (
     <div className="uthaan-page-shell">
-      <Sidebar email={user.email!} role={role ?? ''} />
+      <Sidebar
+        email={user.email!}
+        role={effectiveRole}
+        isImpersonating={role === 'superadmin'}
+      />
 
       <div className="uthaan-page-main">
         <header className="uthaan-page-header">
@@ -131,7 +164,7 @@ export default async function TimetablePage() {
             rows={(rows as unknown as TimetableRow[]) ?? []}
             teacherMap={teacherMap}
             currentUserId={user.id}
-            currentRole={role ?? ''}
+            currentRole={effectiveRole}
             staffList={staffList}
             availableClasses={availableClasses}
           />

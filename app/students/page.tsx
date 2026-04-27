@@ -6,6 +6,8 @@ import StudentsTable from './StudentsTable'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 import { TERM_START_DATE } from '@/lib/constants'
 import { HelpButton } from '@/components/HelpButton'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -22,31 +24,49 @@ export default async function StudentsPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
 
   const role = roleData?.role ?? ''
+  const effectiveRole = await resolveEffectiveRole(role)
+  const schoolContext = await getSchoolContext(supabase, user.id)
 
   if (role === 'student') redirect('/dashboard')
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
+
+  const dataClient = role === 'superadmin' ? createAdminClient() : supabase
+
+  let studentsQuery = dataClient
+    .from('students')
+    .select('id, name, roll_no, email, stage, class_num, created_at, is_active')
+    .eq('is_active', true)
+    .order('name')
+
+  let attendanceQuery = dataClient
+    .from('attendance_logs')
+    .select('student_id, status')
+    .gte('day', TERM_START_DATE)
+
+  if (schoolContext?.schoolId) {
+    studentsQuery = studentsQuery.eq('school_id', schoolContext.schoolId)
+    attendanceQuery = attendanceQuery.eq('school_id', schoolContext.schoolId)
+  }
 
   const [{ data: students }, { data: attLogs }] = await Promise.all([
-    supabase
-      .from('students')
-      .select('id, name, roll_no, email, stage, class_num, created_at, is_active')
-      .eq('is_active', true)
-      .order('name'),
-    supabase
-      .from('attendance_logs')
-      .select('student_id, status')
-      .gte('day', TERM_START_DATE),
+    studentsQuery,
+    attendanceQuery,
   ])
 
   const attendanceMap = buildAttendanceMap(attLogs ?? [])
 
   return (
     <div className="uthaan-page-shell">
-      <Sidebar email={user.email!} role={role} />
+      <Sidebar
+        email={user.email!}
+        role={effectiveRole}
+        isImpersonating={role === 'superadmin'}
+      />
 
       <div className="uthaan-page-main">
         <header className="uthaan-page-header">

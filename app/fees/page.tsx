@@ -4,6 +4,8 @@ import Sidebar from '@/components/Sidebar'
 import FeesClient, { type Fee } from './FeesClient'
 import { CURRENT_TERM } from '@/lib/constants'
 import { HelpButton } from '@/components/HelpButton'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 
 export default async function FeesPage() {
   const supabase = await createClient()
@@ -16,35 +18,52 @@ export default async function FeesPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role, student_id')
+    .select('role, student_id, school_id')
     .eq('user_id', user.id)
     .single()
 
   const role = roleData?.role ?? ''
+  const effectiveRole = await resolveEffectiveRole(role)
+  const schoolContext = await getSchoolContext(supabase, user.id)
 
   if (!role) redirect('/dashboard')
 
   if (role === 'teacher') redirect('/dashboard')
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
 
-  if (role === 'admin') {
+  if (effectiveRole === 'admin') {
+    const dataClient = role === 'superadmin' ? createAdminClient() : supabase
+    let feesQuery = dataClient
+      .from('fees')
+      .select(
+        'id, student_id, amount, due_date, paid, paid_at, term, created_at, student:students!inner(name, class_num, school_id)'
+      )
+      .order('created_at', { ascending: false })
+      .limit(2000)
+
+    let studentsQuery = dataClient
+      .from('students')
+      .select('id, name, class_num')
+      .order('name')
+      .limit(2000)
+
+    if (schoolContext?.schoolId) {
+      feesQuery = feesQuery.eq('student.school_id', schoolContext.schoolId)
+      studentsQuery = studentsQuery.eq('school_id', schoolContext.schoolId)
+    }
+
     const [feesRes, studentsRes] = await Promise.all([
-      supabase
-        .from('fees')
-        .select(
-          'id, student_id, amount, due_date, paid, paid_at, term, created_at, student:students!inner(name, class_num)'
-        )
-        .order('created_at', { ascending: false })
-        .limit(2000),
-      supabase
-        .from('students')
-        .select('id, name, class_num')
-        .order('name')
-        .limit(2000),
+      feesQuery,
+      studentsQuery,
     ])
 
     return (
       <div className="uthaan-page-shell">
-        <Sidebar email={user.email!} role="admin" />
+        <Sidebar
+          email={user.email!}
+          role="admin"
+          isImpersonating={role === 'superadmin'}
+        />
         <FeesClient
           initialFees={(feesRes.data as unknown as Fee[]) ?? []}
           students={studentsRes.data ?? []}

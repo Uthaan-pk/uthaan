@@ -4,7 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import ComposeAnnouncement from './ComposeAnnouncement'
 import { CURRENT_TERM } from '@/lib/constants'
 import AnnouncementList from './AnnouncementList'
-import { resolveEffectiveRole } from '@/lib/school'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { HelpButton } from '@/components/HelpButton'
 
@@ -25,13 +25,22 @@ export default async function AnnouncementsPage() {
 
   const role = roleData?.role
   const effectiveRole = await resolveEffectiveRole(role ?? '')
+  const schoolContext = await getSchoolContext(supabase, user.id)
   const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
 
   if (isStaff) {
-    const { data: announcements } = await supabase
+    const dataClient = role === 'superadmin' ? createAdminClient() : supabase
+    let announcementsQuery = dataClient
       .from('announcements')
       .select('id, title, body, priority, class_num, created_by, created_at')
       .order('created_at', { ascending: false })
+
+    if (schoolContext?.schoolId) {
+      announcementsQuery = announcementsQuery.eq('school_id', schoolContext.schoolId)
+    }
+
+    const { data: announcements } = await announcementsQuery
 
     const creatorIds = [
       ...new Set(

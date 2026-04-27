@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 import AttendanceMarker, { type Student as AttendanceStudent } from './AttendanceMarker'
 import { CURRENT_TERM } from '@/lib/constants'
-import { resolveEffectiveRole } from '@/lib/school'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   earlyLeaveOnDay,
   leaveCoversDay,
@@ -102,20 +103,30 @@ export default async function AttendancePage() {
 
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
+  const schoolContext = await getSchoolContext(supabase, user.id)
   const isTeacher = effectiveRole === 'teacher'
   const isAdmin = effectiveRole === 'admin'
   const canViewAttendance = isTeacher || isAdmin
   const today = new Date().toISOString().split('T')[0]
 
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
+  const dataClient = role === 'superadmin' ? createAdminClient() : supabase
+
   if (canViewAttendance) {
     let visibleClassNums: number[] = []
 
     if (isTeacher) {
-      const { data: timetableRows } = await supabase
+      let timetableQuery = dataClient
         .from('timetable')
         .select('class_num')
         .eq('teacher_id', user.id)
         .limit(500)
+
+      if (schoolContext?.schoolId) {
+        timetableQuery = timetableQuery.eq('school_id', schoolContext.schoolId)
+      }
+
+      const { data: timetableRows } = await timetableQuery
 
       visibleClassNums = Array.from(
         new Set(
@@ -126,11 +137,15 @@ export default async function AttendancePage() {
       ).sort((a, b) => a - b)
     }
 
-    let studentsQuery = supabase
+    let studentsQuery = dataClient
       .from('students')
       .select('id, name, roll_no, stage, class_num')
       .eq('is_active', true)
       .order('name')
+
+    if (schoolContext?.schoolId) {
+      studentsQuery = studentsQuery.eq('school_id', schoolContext.schoolId)
+    }
 
     if (isTeacher) {
       if (visibleClassNums.length === 0) {
@@ -144,10 +159,14 @@ export default async function AttendancePage() {
 
     const studentIds = (students ?? []).map((s: { id: string }) => s.id)
 
-    let logsQuery = supabase
+    let logsQuery = dataClient
       .from('attendance_logs')
       .select('student_id, status')
       .eq('day', today)
+
+    if (schoolContext?.schoolId) {
+      logsQuery = logsQuery.eq('school_id', schoolContext.schoolId)
+    }
 
     if (studentIds.length > 0) {
       logsQuery = logsQuery.in('student_id', studentIds)
@@ -158,30 +177,33 @@ export default async function AttendancePage() {
     const [logsRes, leavesRes, earlyLeavesRes, termLogsRes] = await Promise.all([
       logsQuery,
       studentIds.length > 0
-        ? supabase
+        ? dataClient
             .from('student_leaves')
             .select('*')
             .in('student_id', studentIds)
+            .eq('school_id', schoolContext?.schoolId ?? roleData?.school_id ?? '')
             .limit(3000)
-        : supabase
+        : dataClient
             .from('student_leaves')
             .select('*')
             .in('student_id', ['00000000-0000-0000-0000-000000000000']),
       studentIds.length > 0
-        ? supabase
+        ? dataClient
             .from('student_early_leaves')
             .select('*')
             .in('student_id', studentIds)
+            .eq('school_id', schoolContext?.schoolId ?? roleData?.school_id ?? '')
             .limit(3000)
-        : supabase
+        : dataClient
             .from('student_early_leaves')
             .select('*')
             .in('student_id', ['00000000-0000-0000-0000-000000000000']),
       studentIds.length > 0
-        ? supabase
+        ? dataClient
             .from('attendance_logs')
             .select('student_id, status, day')
             .in('student_id', studentIds)
+            .eq('school_id', schoolContext?.schoolId ?? roleData?.school_id ?? '')
             .gte('day', TERM_START_DATE)
             .limit(50000)
         : Promise.resolve({ data: [] }),
@@ -500,7 +522,7 @@ export default async function AttendancePage() {
                   students={(students as unknown as AttendanceStudent[]) ?? []}
                   initialStatus={initialStatus}
                   today={today}
-                  schoolId={roleData?.school_id ?? null}
+                  schoolId={schoolContext?.schoolId ?? roleData?.school_id ?? null}
                   readOnly={isAdmin}
                   lockedStatusByStudent={lockedStatusByStudent}
                   leaveMeta={leaveMeta}

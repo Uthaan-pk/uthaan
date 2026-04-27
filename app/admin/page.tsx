@@ -5,6 +5,8 @@ import AdminClient from './AdminClient'
 import TeacherOnboardingForm from './TeacherOnboardingForm'
 import SetupChecklist from '@/components/onboarding/SetupChecklist'
 import { HelpButton } from '@/components/HelpButton'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -17,26 +19,41 @@ export default async function AdminPage() {
 
   const { data: roleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select('role, school_id')
     .eq('user_id', user.id)
     .single()
 
-  if (roleData?.role !== 'admin') redirect('/dashboard')
+  const role = roleData?.role ?? ''
+  const effectiveRole = await resolveEffectiveRole(role)
+  const schoolContext = await getSchoolContext(supabase, user.id)
+
+  if (effectiveRole !== 'admin') redirect('/dashboard')
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
+
+  const dataClient = role === 'superadmin' ? createAdminClient() : supabase
+
+  let studentsQuery = dataClient
+    .from('students')
+    .select('id, name, roll_no, email, class_num, stage, is_active')
+    .eq('is_active', true)
+    .order('name', { ascending: true })
+    .limit(500)
+
+  let parentLinkStudentsQuery = dataClient
+    .from('students')
+    .select('id, name, roll_no, email, class_num, stage, is_active')
+    .eq('is_active', true)
+    .order('name', { ascending: true })
+    .limit(500)
+
+  if (schoolContext?.schoolId) {
+    studentsQuery = studentsQuery.eq('school_id', schoolContext.schoolId)
+    parentLinkStudentsQuery = parentLinkStudentsQuery.eq('school_id', schoolContext.schoolId)
+  }
 
   const [studentsRes, parentLinkStudentsRes] = await Promise.all([
-    supabase
-      .from('students')
-      .select('id, name, roll_no, email, class_num, stage, is_active')
-      .eq('is_active', true)
-      .order('name', { ascending: true })
-      .limit(500),
-
-    supabase
-      .from('students')
-      .select('id, name, roll_no, email, class_num, stage, is_active')
-      .eq('is_active', true)
-      .order('name', { ascending: true })
-      .limit(500),
+    studentsQuery,
+    parentLinkStudentsQuery,
   ])
 
   if (studentsRes.error) throw studentsRes.error
@@ -48,7 +65,7 @@ export default async function AdminPage() {
   let enrichedLinks: any[] = []
 
   if (activeParentLinkStudents.length > 0) {
-    const { data: parentLinksData, error: parentLinksError } = await supabase
+    let parentLinksQuery = dataClient
       .from('parent_student')
       .select(`
         id,
@@ -63,11 +80,18 @@ export default async function AdminPage() {
           roll_no,
           class_num,
           stage,
-          is_active
+          is_active,
+          school_id
         )
       `)
       .order('created_at', { ascending: false })
       .limit(500)
+
+    if (schoolContext?.schoolId) {
+      parentLinksQuery = parentLinksQuery.eq('students.school_id', schoolContext.schoolId)
+    }
+
+    const { data: parentLinksData, error: parentLinksError } = await parentLinksQuery
 
     if (parentLinksError) throw parentLinksError
 
@@ -86,7 +110,11 @@ export default async function AdminPage() {
 
   return (
     <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-      <Sidebar email={user.email!} role="admin" />
+      <Sidebar
+        email={user.email!}
+        role="admin"
+        isImpersonating={role === 'superadmin'}
+      />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">

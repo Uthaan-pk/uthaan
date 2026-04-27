@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
-import { resolveEffectiveRole } from '@/lib/school'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 import GradebookGrid from './GradebookGrid'
 import ClassGradebookShell from './ClassGradebookShell'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
@@ -66,22 +67,62 @@ export default async function MarksPage() {
 
   const role = roleData?.role ?? ''
   const effectiveRole = await resolveEffectiveRole(role)
+  const schoolContext = await getSchoolContext(supabase, user.id)
   const isTeacher = effectiveRole === 'teacher'
   const isAdmin = effectiveRole === 'admin'
   const canViewMarks = isTeacher || isAdmin
 
+  if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
+  const dataClient = role === 'superadmin' ? createAdminClient() : supabase
+
   if (canViewMarks) {
-    const timetableQuery =
+    let timetableQuery =
       role === 'teacher'
-        ? supabase
+        ? dataClient
             .from('timetable')
             .select('class_num, subject, teacher_id, instructor_name')
             .eq('teacher_id', user.id)
             .limit(500)
-        : supabase
+        : dataClient
             .from('timetable')
             .select('class_num, subject, teacher_id, instructor_name')
             .limit(2000)
+
+    if (schoolContext?.schoolId) {
+      timetableQuery = timetableQuery.eq('school_id', schoolContext.schoolId)
+    }
+
+    let studentsQuery = dataClient
+      .from('students')
+      .select('id, name, roll_no, class_num, is_active')
+      .order('name')
+      .limit(2000)
+
+    let marksQuery = dataClient
+      .from('marks')
+      .select('id, student_id, subject, exam, percent, source')
+      .limit(10000)
+
+    let assignmentsQuery = dataClient
+      .from('assignments')
+      .select('id, title, subject, class_num, due_date, created_at')
+      .order('created_at', { ascending: false })
+      .limit(2000)
+
+    let weightsQuery = dataClient
+      .from('grade_weights')
+      .select(
+        'id, class_num, subject, assignment_weight, exam_weight, final_weight, quiz_weight'
+      )
+      .eq('academic_year', CURRENT_YEAR)
+      .limit(2000)
+
+    if (schoolContext?.schoolId) {
+      studentsQuery = studentsQuery.eq('school_id', schoolContext.schoolId)
+      marksQuery = marksQuery.eq('school_id', schoolContext.schoolId)
+      assignmentsQuery = assignmentsQuery.eq('school_id', schoolContext.schoolId)
+      weightsQuery = weightsQuery.eq('school_id', schoolContext.schoolId)
+    }
 
     const [
       studentsRes,
@@ -92,39 +133,20 @@ export default async function MarksPage() {
       timetableRes,
       examTypesRes,
     ] = await Promise.all([
-      supabase
-        .from('students')
-        .select('id, name, roll_no, class_num, is_active')
-        .order('name')
-        .limit(2000),
+      studentsQuery,
+      marksQuery,
+      assignmentsQuery,
 
-      supabase
-        .from('marks')
-        .select('id, student_id, subject, exam, percent, source')
-        .limit(10000),
-
-      supabase
-        .from('assignments')
-        .select('id, title, subject, class_num, due_date, created_at')
-        .order('created_at', { ascending: false })
-        .limit(2000),
-
-      supabase
+      dataClient
         .from('assignment_submissions')
         .select('id, assignment_id, student_id, grade, submitted_at, reviewed')
         .limit(10000),
 
-      supabase
-        .from('grade_weights')
-        .select(
-          'id, class_num, subject, assignment_weight, exam_weight, final_weight, quiz_weight'
-        )
-        .eq('academic_year', CURRENT_YEAR)
-        .limit(2000),
+      weightsQuery,
 
       timetableQuery,
 
-      supabase
+      dataClient
         .from('exam_types')
         .select('id, name, category')
         .order('created_at', { ascending: true })
@@ -161,7 +183,7 @@ export default async function MarksPage() {
     let visibleClassNums: number[] = []
     let visibleSubjects: string[] = []
 
-    if (role === 'admin') {
+    if (isAdmin) {
       visibleClassNums = Array.from(
         new Set(
           allStudentsRaw
@@ -250,9 +272,9 @@ export default async function MarksPage() {
           <header className="bg-white border-b border-gray-100 px-6 pl-16 md:pl-6 h-14 flex items-center justify-between flex-shrink-0">
             <h1 className="text-sm font-semibold text-gray-900">Gradebook</h1>
             <div className="flex items-center gap-3">
-              {isTeacher && roleData?.school_id && (
+              {isTeacher && (schoolContext?.schoolId ?? roleData?.school_id) && (
                 <CsvImport
-                  schoolId={roleData.school_id}
+                  schoolId={schoolContext?.schoolId ?? roleData!.school_id}
                   visibleSubjects={visibleSubjects}
                 />
               )}
@@ -274,7 +296,7 @@ export default async function MarksPage() {
               assignmentAvgByStudentId={assignmentAvgByStudentId}
               examTypes={examTypes}
               visibleSubjects={visibleSubjects}
-              schoolId={roleData?.school_id ?? null}
+              schoolId={schoolContext?.schoolId ?? roleData?.school_id ?? null}
               readOnlyGradesOnly={isAdmin}
             />
           </main>

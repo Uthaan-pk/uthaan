@@ -1,3 +1,14 @@
+# Desktop Balance + Role Mock Content Fix
+
+## Plan
+
+- [x] 1. Reduce base desktop CSS: featureCard padding, featureIcon margin-bottom, featurePreviewPanel padding, featurePreviewTitle size, featurePreviewStat padding/size, featurePreviewRow padding, featurePreviewRows gap/padding, featurePreviewScreenBar padding.
+- [x] 2. Add `.teacherTaskRows` / `.teacherTaskRow` / `.teacherTaskLabel` / `.teacherTaskMeta` / `.teacherTaskRowAi` CSS classes plus `≤767px` compact mobile overrides.
+- [x] 3. Extend `TeacherMock` in `LandingPage.tsx` with 3 compact task rows: Marks entry, Assignment review, AI report comments.
+- [x] 4. Verify `npm run build` passes. No TS errors, no horizontal overflow at 390px / 768px / 1280px / 1440px.
+
+---
+
 # Mobile Practicality Follow-Up Pass
 
 ## Plan

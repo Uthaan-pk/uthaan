@@ -497,6 +497,20 @@ function TeacherMock({ active }: { active: boolean }) {
           </div>
         ))}
       </div>
+      <div className={styles.teacherTaskRows}>
+        <div className={styles.teacherTaskRow}>
+          <span className={styles.teacherTaskLabel}>Marks entry</span>
+          <span className={styles.teacherTaskMeta}>English · 28 students</span>
+        </div>
+        <div className={styles.teacherTaskRow}>
+          <span className={styles.teacherTaskLabel}>Assignment review</span>
+          <span className={styles.teacherTaskMeta}>12 pending</span>
+        </div>
+        <div className={`${styles.teacherTaskRow} ${styles.teacherTaskRowAi}`}>
+          <span className={styles.teacherTaskLabel}>AI report comments</span>
+          <span className={styles.teacherTaskMeta}>Staff only</span>
+        </div>
+      </div>
     </div>
   )
 }

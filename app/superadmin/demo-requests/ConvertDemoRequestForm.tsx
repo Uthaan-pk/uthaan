@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { convertDemoRequest, type OnboardResult } from '../actions'
+import { convertDemoRequest, type OnboardResult, type OnboardCredentials } from '../actions'
 import { SCHOOL_PLANS, type SchoolPlan } from '@/lib/schoolPlans'
 
 type RequestedPlan = 'not_sure' | 'starter' | 'growth' | 'pro' | 'enterprise'
@@ -30,6 +30,162 @@ const REQUESTED_PLAN_LABELS: Record<RequestedPlan, string> = {
   enterprise: 'Enterprise',
 }
 
+const PRINT_STYLES = `@media print {
+  body > * { visibility: hidden !important; }
+  #uthaan-setup-packet { visibility: visible !important; position: fixed; top: 0; left: 0; width: 100%; padding: 40px; background: #fff; box-sizing: border-box; }
+  #uthaan-setup-packet * { visibility: visible !important; }
+  #uthaan-setup-packet .setup-packet-no-print { display: none !important; }
+}`
+
+const LIVE_FEATURES = [
+  'Student management', 'Teacher accounts', 'Attendance', 'Marks/results',
+  'Report cards', 'Announcements', 'Fees', 'Timetable',
+  'Staff-only AI report comments', 'Attendance alert summaries',
+]
+
+const NOT_LIVE_FEATURES = [
+  'WhatsApp Business API', 'Payment automation',
+  'Self-serve signup', 'Fully automated parent linking/import',
+]
+
+const FIRST_WEEK = [
+  { day: 'Day 1', tasks: ['Admin logs in', 'Add teachers', 'Import students'] },
+  { day: 'Day 2', tasks: ['Add timetable', 'Set up fees', 'Post first announcement'] },
+  { day: 'Day 3', tasks: ['Mark attendance', 'Add marks/results', 'Review dashboard'] },
+]
+
+function SetupPacket({ credentials, loginUrl }: { credentials: OnboardCredentials; loginUrl: string }) {
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
+      <div id="uthaan-setup-packet" className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-[#1a2e1a]">Uthaan Setup Packet</h2>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="setup-packet-no-print rounded-lg border border-[#1a2e1a]/15 bg-[#1a2e1a] px-3 py-2 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#1a2e1a]/80"
+          >
+            Print setup packet
+          </button>
+        </div>
+
+        {/* 1. School launch summary */}
+        <section className="mb-5">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">School launch summary</p>
+          <dl className="grid gap-1.5">
+            {[
+              { label: 'School', value: credentials.schoolName },
+              { label: 'Plan', value: credentials.plan ?? 'Pilot' },
+              { label: 'Login URL', value: loginUrl, mono: true },
+              { label: 'Admin name', value: credentials.adminName },
+              { label: 'Admin email', value: credentials.adminEmail, mono: true },
+            ].map(({ label, value, mono }) => (
+              <div key={label} className="flex gap-4">
+                <dt className="w-24 shrink-0 text-xs text-gray-400">{label}</dt>
+                <dd className={`text-xs text-gray-800 ${mono ? 'font-mono' : 'font-medium'}`}>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <div className="my-4 border-t border-gray-100" />
+
+        {/* 2. Admin login instructions */}
+        <section className="mb-5">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Admin login instructions</p>
+          <ul className="space-y-1.5 text-xs text-gray-700">
+            <li>Uthaan does not share passwords. The admin must set their own password.</li>
+            <li>
+              Go to <span className="font-mono text-gray-900">{loginUrl}</span>
+            </li>
+            <li>Click <strong>Forgot Password</strong> and enter the admin email.</li>
+            <li>Set a new password before signing in for the first time.</li>
+          </ul>
+        </section>
+
+        <div className="my-4 border-t border-gray-100" />
+
+        {/* 3. First-week checklist */}
+        <section className="mb-5">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">First-week checklist</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {FIRST_WEEK.map(({ day, tasks }) => (
+              <div key={day}>
+                <p className="mb-1.5 text-xs font-medium text-gray-500">{day}</p>
+                <ul className="space-y-1">
+                  {tasks.map((task) => (
+                    <li key={task} className="flex items-center gap-2 text-xs text-gray-600">
+                      <span className="h-3 w-3 shrink-0 rounded-sm border border-gray-300" aria-hidden="true" />
+                      {task}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="my-4 border-t border-gray-100" />
+
+        {/* 4. Teacher handoff template */}
+        <section className="mb-5">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Teacher handoff template</p>
+          <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 font-mono text-xs text-gray-700">
+            <p>Your Uthaan teacher account is ready.</p>
+            <p className="mt-1">Login URL: {loginUrl}</p>
+            <p className="mt-1">Email: [teacher email]</p>
+            <p className="mt-1">Use Forgot Password to set your password before signing in.</p>
+          </div>
+        </section>
+
+        <div className="my-4 border-t border-gray-100" />
+
+        {/* 5. Student CSV format */}
+        <section className="mb-5">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Student CSV format</p>
+          <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 font-mono text-xs text-gray-700">
+            <p>name,roll_no,class_num</p>
+            <p>Ali Khan,101,5</p>
+            <p>Ayesha Ahmed,102,5</p>
+          </div>
+        </section>
+
+        <div className="my-4 border-t border-gray-100" />
+
+        {/* 6. Honest status */}
+        <section>
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">What is live</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="mb-2 text-xs font-medium text-green-700">Live now</p>
+              <ul className="space-y-1">
+                {LIVE_FEATURES.map((item) => (
+                  <li key={item} className="flex items-start gap-1.5 text-xs text-gray-600">
+                    <span className="mt-0.5 shrink-0 text-green-600">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-medium text-gray-400">Not live yet</p>
+              <ul className="space-y-1">
+                {NOT_LIVE_FEATURES.map((item) => (
+                  <li key={item} className="flex items-start gap-1.5 text-xs text-gray-400">
+                    <span className="mt-0.5 shrink-0">—</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
+  )
+}
+
 function toSlug(name: string) {
   return name
     .toLowerCase()
@@ -52,6 +208,7 @@ export default function ConvertDemoRequestForm({
   const [open, setOpen] = useState(false)
   const [slug, setSlug] = useState(toSlug(schoolName))
   const [copied, setCopied] = useState(false)
+  const [showPacket, setShowPacket] = useState(false)
 
   const defaultPlan: SchoolPlan = 'pilot'
 
@@ -91,6 +248,7 @@ export default function ConvertDemoRequestForm({
     ]
 
     return (
+      <>
       <div className="mt-4 overflow-hidden rounded-xl border-2 border-[#6fcf6f] shadow-lg">
         <div className="flex items-start justify-between bg-[#1a2e1a] px-5 py-4">
           <div>
@@ -165,7 +323,23 @@ export default function ConvertDemoRequestForm({
             ))}
           </ol>
         </div>
+        <div className="border-t border-[#6fcf6f]/20 bg-white px-5 py-3">
+          <button
+            type="button"
+            onClick={() => setShowPacket((s) => !s)}
+            className="text-xs font-medium text-[#1a2e1a] underline-offset-2 hover:underline"
+          >
+            {showPacket ? 'Hide setup packet' : 'Open setup packet →'}
+          </button>
+        </div>
       </div>
+      {showPacket && (
+        <SetupPacket
+          credentials={c}
+          loginUrl={`${window.location.origin}/login`}
+        />
+      )}
+      </>
     )
   }
 

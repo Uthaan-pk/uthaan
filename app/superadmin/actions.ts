@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   buildDefaultSchoolFeature,
-  buildDefaultSchoolFeatures,
   type AiFeatureKey,
 } from '@/lib/aiFeatures'
 import { SCHOOL_PLAN_PRESETS, isSchoolPlan, type SchoolPlan } from '@/lib/schoolPlans'
@@ -224,7 +223,17 @@ export async function onboardSchool(
     .update({ plan: 'starter' satisfies SchoolPlan })
     .eq('id', schoolId)
 
-  await admin.from('school_features').upsert(buildDefaultSchoolFeatures(schoolId), {
+  const starterPreset = SCHOOL_PLAN_PRESETS['starter']
+  const starterFeatureRows = (
+    Object.entries(starterPreset) as Array<[AiFeatureKey, { enabled: boolean; monthly_limit: number }]>
+  ).map(([featureKey, config]) => ({
+    school_id: schoolId,
+    feature_key: featureKey,
+    enabled: config.enabled,
+    monthly_limit: config.monthly_limit,
+    updated_at: new Date().toISOString(),
+  }))
+  await admin.from('school_features').upsert(starterFeatureRows, {
     onConflict: 'school_id,feature_key',
   })
 

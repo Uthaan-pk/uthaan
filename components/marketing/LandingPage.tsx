@@ -189,37 +189,37 @@ const pricingCards = [
     amount: 'Rs. 12,000',
     period: '/ month',
     annualAmount: 'Rs. 120,000 / year',
-    students: 'Up to 200 students',
-    features: ['Core school management', 'Attendance, marks, fees, announcements', 'Up to 4 user roles', 'No AI included'],
-    annualSummary: 'Priority onboarding and 12-month price lock',
-    bestFor: 'Best for smaller schools moving from notebooks or spreadsheets into one structured system.',
-    setupNote: 'Guided onboarding helps your school get live cleanly without a heavy rollout.',
-    aiNote: 'No AI included on Starter.',
+    students: 'Up to 250 students',
+    features: ['Student records', 'Teacher accounts', 'Attendance', 'Fees', 'Announcements', 'Marks/results', 'Report cards', 'Basic support'],
+    annualSummary: 'Guided onboarding and 12-month price lock',
+    bestFor: 'For small schools starting digital operations.',
+    setupNote: 'One-time setup: Rs. 20,000. Guided onboarding included.',
+    aiNote: 'No AI on Starter.',
   },
   {
     plan: 'Growth',
-    amount: 'Rs. 30,000',
+    amount: 'Rs. 25,000',
     period: '/ month',
-    annualAmount: 'Rs. 300,000 / year',
-    students: 'Up to 600 students',
-    features: ['Everything in Starter', 'AI report card comments', 'Attendance alert summaries', 'Priority support'],
+    annualAmount: 'Rs. 250,000 / year',
+    students: 'Up to 700 students',
+    features: ['Everything in Starter', 'Timetable', 'Assignments/homework', 'Parent/student access', 'Attendance summaries', 'Staff-only AI report comments', 'Attendance alert summaries', 'Guided onboarding support'],
     annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
     featured: true,
-    bestFor: 'Best for growing schools that want core operations plus practical staff-facing AI.',
-    setupNote: 'Priority onboarding keeps rollout faster for schools moving onto Growth.',
-    aiNote: 'Annual Growth schools receive higher AI usage limits than monthly schools.',
+    bestFor: 'For growing private schools.',
+    setupNote: 'One-time setup: Rs. 35,000. Priority onboarding included.',
+    aiNote: 'AI report comments and attendance alert summaries included. Annual plans receive higher limits.',
   },
   {
     plan: 'Pro',
-    amount: 'Rs. 65,000',
+    amount: 'Rs. 50,000',
     period: '/ month',
-    annualAmount: 'Rs. 650,000 / year',
+    annualAmount: 'Rs. 500,000 / year',
     students: 'Up to 1,500 students',
-    features: ['Everything in Growth', 'Assignment feedback generator', 'Quiz generator when available', 'Higher AI limits'],
+    features: ['Everything in Growth', 'Priority support', 'Higher AI limits', 'Advanced admin reporting', 'Custom report card support', 'Additional training sessions'],
     annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
-    bestFor: 'Best for larger schools that want deeper AI-assisted staff workflows and higher operating capacity.',
-    setupNote: 'Pro onboarding is handled as a guided school rollout, not self-serve setup.',
-    aiNote: 'Annual Pro schools receive higher AI usage limits than monthly schools.',
+    bestFor: 'For larger schools needing more control and support.',
+    setupNote: 'One-time setup: Rs. 60,000. Handled as a guided school rollout.',
+    aiNote: 'Higher AI limits across all features. Annual Pro schools receive the highest monthly AI limits.',
   },
   {
     plan: 'Enterprise',
@@ -227,11 +227,11 @@ const pricingCards = [
     period: ' ',
     annualAmount: 'Custom annual contract',
     students: '1,500+ students',
-    features: ['Multi-campus/custom setup', 'High AI limits', 'Dedicated onboarding', 'Custom rollout support'],
-    annualSummary: 'Annual and custom contract options with priority onboarding',
-    bestFor: 'Best for larger groups, multi-campus schools, or schools needing a tailored rollout.',
-    setupNote: 'Enterprise onboarding and rollout terms are scoped with your school directly.',
-    aiNote: 'AI limits and rollout model are agreed as part of the contract.',
+    features: ['Multi-campus support', 'Custom workflows', 'Dedicated onboarding', 'Custom reporting', 'Future integration options'],
+    annualSummary: 'Annual and custom contract options with dedicated onboarding',
+    bestFor: 'For school groups and multi-campus institutions.',
+    setupNote: 'Onboarding and rollout terms are scoped with your school directly.',
+    aiNote: 'AI limits and rollout model agreed as part of the contract.',
   },
 ]
 
@@ -1393,10 +1393,11 @@ export default function LandingPage() {
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
-          Start with a guided school pilot, then choose the plan that fits your rollout.
-          Payments are handled manually, and AI access plus monthly limits are managed per school by Uthaan.
+          Start with a 2-month guided pilot. Pilot setup starts from Rs. 20,000.
+          Monthly subscription begins after the pilot if your school continues.
+          Early pilot schools may qualify for a founder rate.
         </p>
-        <div className={styles.pricingPilotNote}>Pilot terms are discussed during onboarding.</div>
+        <div className={styles.pricingPilotNote}>Request a demo to start your pilot. There is no self-serve signup — your school is set up with guided onboarding.</div>
         <div className={styles.pricingAnnualNote}>
           <div className={styles.pricingAnnualLead}>Annual billing: save 2 months.</div>
           <div className={styles.pricingAnnualMeta}>
@@ -1427,7 +1428,7 @@ export default function LandingPage() {
                   <div
                     className={`${styles.featuredBadge} ${pricingHasBeenSeen && !reducedMotion ? styles.featuredBadgePulse : ''}`}
                   >
-                    Most popular
+                    Recommended
                   </div>
                 ) : null}
                 <ChevronDown

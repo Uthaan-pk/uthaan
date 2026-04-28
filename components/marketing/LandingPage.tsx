@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock } from 'lucide-react'
 import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
@@ -938,9 +939,17 @@ export default function LandingPage() {
       className={`${styles.page} ${styles.sora} ${sora.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable}`}
     >
       <nav className={styles.nav}>
-        <div className={styles.navLogo}>
-          Uth<span>aan</span>
-        </div>
+        <Link href="/" className={styles.navLogo} aria-label="Uthaan home">
+          <Image
+            src="/brand/uthaan-icon.svg"
+            alt=""
+            width={30}
+            height={30}
+            className={styles.navLogoIcon}
+            priority
+          />
+          <span className={styles.navLogoWord}>Uthaan</span>
+        </Link>
         <ul className={styles.navLinks}>
           <li>
             <a href="#features" className={activeSection === 'features' ? styles.navLinkActive : ''}>

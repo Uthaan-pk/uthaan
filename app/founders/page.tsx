@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { JetBrains_Mono, Sora } from 'next/font/google'
+import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
 
 import styles from '@/components/marketing/LandingPage.module.css'
 
@@ -12,6 +12,13 @@ const sora = Sora({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-landing-mono',
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  weight: '400',
+  variable: '--font-instrument-serif',
 })
 
 const valueCards = [
@@ -52,10 +59,18 @@ const trustPoints = [
 
 export default function FoundersPage() {
   return (
-    <div className={`${styles.page} ${styles.sora} ${sora.variable} ${jetbrainsMono.variable}`}>
+    <div className={`${styles.page} ${styles.sora} ${sora.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable}`}>
       <nav className={styles.nav}>
-        <Link href="/" className={styles.navLogo}>
-          Uth<span>aan</span>
+        <Link href="/" className={styles.navLogo} aria-label="Uthaan home">
+          <Image
+            src="/brand/uthaan-icon.svg"
+            alt=""
+            width={30}
+            height={30}
+            className={styles.navLogoIcon}
+            priority
+          />
+          <span className={styles.navLogoWord}>Uthaan</span>
         </Link>
         <ul className={styles.navLinks}>
           <li>
@@ -173,14 +188,17 @@ export default function FoundersPage() {
       <section className={`${styles.section} ${styles.brandMeaningSection}`}>
         <div className={styles.brandMeaningGrid}>
           <div className={styles.brandMeaningVisual}>
+            <div className={`${styles.brandMeaningLabel} ${styles.mono}`}>Primary brand mark</div>
             <Image
-              src="/brand/uthaan-logo-primary.svg"
-              alt="Uthaan primary logo"
-              width={640}
-              height={210}
-              sizes="(max-width: 1024px) 100vw, 420px"
-              className={styles.brandMeaningLogo}
+              src="/brand/uthaan-icon.svg"
+              alt=""
+              width={112}
+              height={112}
+              sizes="112px"
+              className={styles.brandMeaningIcon}
             />
+            <div className={styles.brandMeaningWordmark}>Uthaan</div>
+            <div className={styles.brandMeaningLine}>Rising schools, building futures</div>
           </div>
 
           <div className={styles.brandMeaningCopy}>

@@ -170,6 +170,54 @@ export default function FoundersPage() {
         </p>
       </section>
 
+      <section className={`${styles.section} ${styles.brandMeaningSection}`}>
+        <div className={styles.brandMeaningGrid}>
+          <div className={styles.brandMeaningVisual}>
+            <Image
+              src="/brand/uthaan-logo-primary.svg"
+              alt="Uthaan primary logo"
+              width={640}
+              height={210}
+              sizes="(max-width: 1024px) 100vw, 420px"
+              className={styles.brandMeaningLogo}
+            />
+          </div>
+
+          <div className={styles.brandMeaningCopy}>
+            <div className={`${styles.sectionTag} ${styles.mono}`}>Brand meaning</div>
+            <h2 className={styles.sectionTitle}>The Meaning Behind Uthaan</h2>
+            <p>
+              Uthaan means rising, uplift, and progress, and that is exactly what we want to help
+              schools achieve.
+            </p>
+            <p>
+              The Uthaan symbol combines a rising school roof, an open book, upward movement, and a
+              small flag.
+            </p>
+            <ul>
+              <li>The roof represents the school as a trusted institution.</li>
+              <li>The open book represents learning, records, and academic growth.</li>
+              <li>
+                The upward form represents Uthaan itself: lifting schools toward a more organized,
+                modern future.
+              </li>
+              <li>
+                The small flag at the top represents achievement, direction, and a school reaching a
+                higher standard.
+              </li>
+            </ul>
+            <p>
+              Uthaan exists to help Pakistani schools move upward from registers, spreadsheets, and
+              scattered systems into one organized future.
+            </p>
+            <p className={styles.brandMeaningClose}>
+              This is why we chose the name Uthaan, because we are not just building software, we are
+              helping schools move upward.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className={styles.section}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>Values</div>
         <h2 className={styles.sectionTitle}>What the product is trying to stand for.</h2>

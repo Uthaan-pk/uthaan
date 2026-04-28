@@ -634,6 +634,99 @@
   margin: 0;
 }
 
+.brandMeaningSection {
+  max-width: 1180px;
+}
+
+.brandMeaningGrid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.86fr) minmax(0, 1.14fr);
+  gap: 3rem;
+  align-items: center;
+  border-block: 1px solid rgba(255, 255, 255, 0.08);
+  padding-block: 3.5rem;
+}
+
+.brandMeaningVisual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(231, 244, 236, 0.96), rgba(244, 246, 245, 0.9)),
+    radial-gradient(circle at 22% 18%, rgba(46, 158, 91, 0.18), transparent 46%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    0 26px 56px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.brandMeaningVisual::after {
+  content: '';
+  position: absolute;
+  inset: auto 10% 16% 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(15, 91, 58, 0.24), transparent);
+}
+
+.brandMeaningLogo {
+  position: relative;
+  z-index: 1;
+  width: min(82%, 440px);
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 18px 42px rgba(15, 91, 58, 0.12);
+}
+
+.brandMeaningCopy {
+  max-width: 640px;
+}
+
+.brandMeaningCopy p {
+  margin: 0 0 1.05rem;
+  color: #c8d1d9;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.brandMeaningCopy ul {
+  display: grid;
+  gap: 0.78rem;
+  margin: 1.35rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brandMeaningCopy li {
+  position: relative;
+  padding-left: 1.35rem;
+  color: #aeb8c1;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.brandMeaningCopy li::before {
+  content: '';
+  position: absolute;
+  top: 0.72em;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #2e9e5b;
+  box-shadow: 0 0 0 5px rgba(46, 158, 91, 0.11);
+}
+
+.brandMeaningCopy .brandMeaningClose {
+  margin-top: 1.5rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid rgba(46, 158, 91, 0.25);
+  color: #ffffff;
+  font-weight: 600;
+}
+
 .featureGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -5371,5 +5464,58 @@
 
   .founderPreviewCard {
     padding: 1.25rem 1.35rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .brandMeaningGrid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-block: 2.5rem;
+  }
+
+  .brandMeaningVisual {
+    min-height: 260px;
+  }
+
+  .brandMeaningCopy {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .brandMeaningGrid {
+    gap: 1.6rem;
+    padding-block: 2rem;
+  }
+
+  .brandMeaningVisual {
+    min-height: 210px;
+    border-radius: 20px;
+  }
+
+  .brandMeaningLogo {
+    width: min(86%, 360px);
+    border-radius: 14px;
+  }
+
+  .brandMeaningCopy p {
+    font-size: 13.5px;
+    line-height: 1.62;
+  }
+
+  .brandMeaningCopy ul {
+    gap: 0.65rem;
+    margin: 1rem 0;
+  }
+
+  .brandMeaningCopy li {
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  .brandMeaningCopy .brandMeaningClose {
+    margin-top: 1.15rem;
+    padding-top: 1rem;
   }
 }

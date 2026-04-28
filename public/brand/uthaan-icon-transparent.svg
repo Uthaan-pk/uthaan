@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Uthaan icon">
+  <path d="M256 82 L342 196 H308 L256 126 L204 196 H170 L256 82Z" fill="#2E9E5B"/>
+  <path d="M256 82 L256 48" stroke="#0F5B3A" stroke-width="14" stroke-linecap="round"/>
+  <path d="M263 52 L334 72 L263 94 V52Z" fill="#2E9E5B"/>
+  <path d="M164 220 C206 215 235 230 256 268 C277 230 306 215 348 220 L348 257 C310 253 279 267 256 313 C233 267 202 253 164 257 V220Z" fill="#0F5B3A"/>
+  <path d="M146 279 C194 270 230 286 256 336 C282 286 318 270 366 279 L366 314 C315 307 281 326 256 381 C231 326 197 307 146 314 V279Z" fill="#2E9E5B"/>
+  <rect x="226" y="196" width="24" height="24" rx="2" fill="#0F5B3A"/>
+  <rect x="262" y="196" width="24" height="24" rx="2" fill="#0F5B3A"/>
+  <rect x="226" y="232" width="24" height="24" rx="2" fill="#0F5B3A"/>
+  <rect x="262" y="232" width="24" height="24" rx="2" fill="#0F5B3A"/>
+</svg>

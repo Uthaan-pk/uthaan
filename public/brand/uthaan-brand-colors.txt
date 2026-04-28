@@ -1,0 +1,14 @@
+Uthaan Brand Palette
+
+Deep Green: #0F5B3A
+Growth Green: #2E9E5B
+Soft Green: #E7F4EC
+Charcoal: #33423D
+Light Gray: #F4F6F5
+
+Suggested meaning:
+- Deep Green: trust, stability, institution
+- Growth Green: progress, uplift, student growth
+- Soft Green: warmth, calm onboarding, approachable SaaS
+- Charcoal: serious admin/business text
+- Light Gray: clean app background

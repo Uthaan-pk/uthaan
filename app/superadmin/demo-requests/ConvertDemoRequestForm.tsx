@@ -60,7 +60,22 @@ function SetupPacket({ credentials, loginUrl }: { credentials: OnboardCredential
       <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
       <div id="uthaan-setup-packet" className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-[#1a2e1a]">Uthaan Setup Packet</h2>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/brand/uthaan-icon.svg"
+                alt=""
+                className="h-8 w-8 rounded-lg"
+              />
+              <span
+                className="text-2xl leading-none text-[#0F5B3A]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Uthaan
+              </span>
+            </div>
+            <h2 className="mt-2 text-sm font-bold text-[#1a2e1a]">Setup Packet</h2>
+          </div>
           <button
             type="button"
             onClick={() => window.print()}

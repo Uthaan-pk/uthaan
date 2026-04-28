@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -56,9 +57,24 @@ export default async function DemoRequestsPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f7f4]">
-      <header className="flex h-14 items-center justify-between bg-[#1a2e1a] px-6">
-        <div className="flex items-center gap-3">
-          <span className="text-xl font-bold tracking-tight text-[#6fcf6f]">Uthaan</span>
+      <header className="flex min-h-14 flex-col gap-3 bg-[#1a2e1a] px-4 py-3 sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <Image
+              src="/brand/uthaan-icon.svg"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 shrink-0 rounded-lg"
+              priority
+            />
+            <span
+              className="truncate text-2xl leading-none text-white"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Uthaan
+            </span>
+          </span>
           <span className="text-xs font-medium uppercase tracking-widest text-white/60">
             Superadmin
           </span>

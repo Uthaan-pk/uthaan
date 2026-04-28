@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import AuthPanel from '@/components/auth/AuthPanel'
 
@@ -57,10 +58,24 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center bg-[#f8f7f4] p-6 sm:p-8">
         <div className="w-full max-w-sm">
 
-          {/* Mobile logo — only visible when left panel is hidden */}
-          <div className="lg:hidden mb-8">
-            <div className="text-2xl font-bold text-[#1a2e1a]">Uthaan</div>
-            <div className="text-xs text-gray-400 uppercase tracking-widest mt-0.5">
+          <div className="mb-8">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/brand/uthaan-icon.svg"
+                alt=""
+                width={34}
+                height={34}
+                className="h-8 w-8 shrink-0 rounded-[10px] shadow-sm"
+                priority
+              />
+              <div
+                className="text-3xl leading-none text-[#0F5B3A]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Uthaan
+              </div>
+            </div>
+            <div className="text-xs text-gray-400 uppercase tracking-widest mt-2">
               School Management
             </div>
           </div>

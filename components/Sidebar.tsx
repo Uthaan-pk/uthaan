@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -163,19 +164,14 @@ export default function Sidebar({
           }}
           className="flex items-center justify-center bg-white border-b border-r border-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          >
-            <line x1="2" y1="4.5" x2="16" y2="4.5" />
-            <line x1="2" y1="9" x2="16" y2="9" />
-            <line x1="2" y1="13.5" x2="16" y2="13.5" />
-          </svg>
+          <Image
+            src="/brand/uthaan-icon.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-lg"
+            priority
+          />
         </button>
       )}
 
@@ -196,9 +192,22 @@ export default function Sidebar({
         className="flex-col flex-shrink-0 bg-[#1a2e1a] shadow-xl shadow-black/10"
       >
         <div className="px-5 py-6 border-b border-white/10 flex items-center justify-between">
-          <div>
-            <div className="text-2xl font-bold text-[#6fcf6f] tracking-tight">
-              Uthaan
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Image
+                src="/brand/uthaan-icon.svg"
+                alt=""
+                width={30}
+                height={30}
+                className="h-7 w-7 shrink-0 rounded-[9px] shadow-[0_10px_24px_rgba(111,207,111,0.12)]"
+                priority
+              />
+              <div
+                className="truncate text-[26px] leading-none text-white"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Uthaan
+              </div>
             </div>
             <div
               className={`text-white/30 mt-0.5 ${

@@ -6,13 +6,30 @@
  * - Hidden on mobile (form takes priority)
  */
 
+import Image from 'next/image'
+
 export default function AuthPanel() {
   return (
     <div className="hidden lg:flex w-1/2 bg-[#1a2e1a] flex-col justify-between p-12">
 
       {/* Logo */}
       <div>
-        <div className="text-3xl font-bold text-[#6fcf6f] tracking-tight">Uthaan</div>
+        <div className="flex items-center gap-3">
+          <Image
+            src="/brand/uthaan-icon.svg"
+            alt=""
+            width={34}
+            height={34}
+            className="h-8 w-8 rounded-[10px] shadow-[0_10px_24px_rgba(111,207,111,0.14)]"
+            priority
+          />
+          <div
+            className="text-3xl leading-none text-white"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+          >
+            Uthaan
+          </div>
+        </div>
         <div className="text-xs text-white/30 uppercase tracking-widest mt-1">
           School Management System
         </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { Fragment } from 'react'
@@ -164,13 +165,28 @@ export default async function SuperadminPage() {
   return (
     <div className="min-h-screen bg-[#f8f7f4]">
       {/* Top bar */}
-      <header className="bg-[#1a2e1a] px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-[#6fcf6f] tracking-tight">Uthaan</span>
+      <header className="flex min-h-14 flex-col gap-3 bg-[#1a2e1a] px-4 py-3 sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <Image
+              src="/brand/uthaan-icon.svg"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 shrink-0 rounded-lg"
+              priority
+            />
+            <span
+              className="truncate text-2xl leading-none text-white"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+            >
+              Uthaan
+            </span>
+          </span>
           <span className="text-white/30 text-xs">·</span>
           <span className="text-white/60 text-xs font-medium uppercase tracking-widest">Superadmin</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Link
             href="/"
             className="text-xs text-white/50 hover:text-white/80 transition-colors"

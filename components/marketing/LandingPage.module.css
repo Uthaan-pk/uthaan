@@ -5634,3 +5634,99 @@
     padding-top: 1rem;
   }
 }
+
+/* ── Desktop width correction for public marketing pages ────────────────── */
+
+@media (min-width: 1024px) {
+  .section {
+    width: min(100% - 4rem, 1220px);
+    max-width: 1220px;
+  }
+
+  .sectionTitle,
+  .ctaBox h2 {
+    max-width: 820px;
+  }
+
+  .sectionSub,
+  .ctaBox p {
+    max-width: 700px;
+  }
+
+  .hero h1 {
+    max-width: 1040px;
+  }
+
+  .hero p {
+    max-width: 660px;
+  }
+
+  .heroDashWrap {
+    width: min(100%, 760px);
+  }
+
+  .featureExperience {
+    grid-template-columns: minmax(0, 1.18fr) minmax(340px, 0.82fr);
+    gap: 1.4rem;
+  }
+
+  .roleStoryPanel {
+    grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+    gap: 1.4rem;
+  }
+
+  .storyPanel {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 430px);
+    gap: 1.4rem;
+  }
+
+  .aiInner {
+    width: min(100% - 4rem, 1220px);
+    max-width: 1220px;
+  }
+
+  .compareLeadCard {
+    max-width: 860px;
+  }
+
+  .compareGrid {
+    grid-template-columns: minmax(220px, 1.45fr) repeat(4, minmax(0, 1fr));
+  }
+
+  .pricingGrid {
+    grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+    gap: 1rem;
+  }
+
+  .founderPilotBox {
+    max-width: none;
+  }
+
+  .founderPreviewSection {
+    width: min(100% - 4rem, 1120px);
+  }
+
+  .brandMeaningSection {
+    max-width: 1240px;
+  }
+
+  .brandMeaningGrid {
+    grid-template-columns: minmax(360px, 0.95fr) minmax(0, 1.05fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .section {
+    width: min(100% - 5rem, 1240px);
+    max-width: 1240px;
+  }
+
+  .aiInner {
+    width: min(100% - 5rem, 1240px);
+    max-width: 1240px;
+  }
+
+  .heroDashWrap {
+    width: min(100%, 820px);
+  }
+}

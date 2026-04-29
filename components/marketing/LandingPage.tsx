@@ -1395,7 +1395,7 @@ export default function LandingPage() {
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
           Start with 2 months free. For selected early schools, Uthaan begins with a guided pilot:
-          Rs. 20,000 setup, 2 months free, then Rs. 25,000/month if your school continues.
+          Rs. 20,000 setup, 2 months free, then a monthly plan that fits your school.
         </p>
         <div className={styles.pricingPilotNote}>There is no self-serve signup yet — your school is set up with guided onboarding.</div>
         <div className={styles.founderPilotBox}>
@@ -1403,13 +1403,13 @@ export default function LandingPage() {
             <div className={styles.founderPilotEyebrow}>Founder Pilot Offer</div>
             <div className={styles.founderPilotOffer}>Rs. 20,000 setup + 2 months free</div>
             <p>
-              After the free pilot, continue on the Growth plan at Rs. 25,000/month only if Uthaan
-              is working for your school.
+              After the free pilot, continue on the plan that fits your school. Most schools
+              continue on Growth at Rs. 25,000/month.
             </p>
           </div>
           <div className={styles.founderPilotSupport}>
-            Includes guided setup, admin handoff, teacher onboarding, student import support, and
-            first-week activation help.
+            We help set up your school, create admin and teacher access, support student import, and
+            guide first-week activation.
           </div>
         </div>
 

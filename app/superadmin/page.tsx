@@ -6,7 +6,6 @@ import { Fragment } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
-  applySchoolPlan,
   stopImpersonating,
   updateSchoolFeature,
   resetSchoolFeatureUsage,
@@ -15,11 +14,12 @@ import {
 import OnboardSchoolForm from './OnboardSchoolForm'
 import PilotSetupChecklist, { type PilotSetupChecklistItem } from './PilotSetupChecklist'
 import SchoolRowActions from './SchoolRowActions'
+import ApplyPlanForm from './ApplyPlanForm'
 import UsageTable, { type UsageRow } from './UsageTable'
 import { TERM_START_DATE } from '@/lib/constants'
 import { buildAttendanceMap } from '@/lib/attendanceLeaves'
 import { AI_FEATURES, type AiFeatureKey, type SchoolFeatureRow } from '@/lib/aiFeatures'
-import { SCHOOL_PLANS, type SchoolPlan } from '@/lib/schoolPlans'
+import { type SchoolPlan } from '@/lib/schoolPlans'
 
 type SchoolRow = {
   id: string
@@ -346,31 +346,7 @@ export default async function SuperadminPage() {
                               </p>
                             </div>
 
-                            <form action={applySchoolPlan} className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                              <input type="hidden" name="school_id" value={school.id} />
-                              <div>
-                                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                                  School plan
-                                </label>
-                                <select
-                                  name="plan"
-                                  defaultValue={school.plan}
-                                  className="min-w-[150px] rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-[#6fcf6f] focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
-                                >
-                                  {SCHOOL_PLANS.map((plan) => (
-                                    <option key={plan} value={plan}>
-                                      {plan}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <button
-                                type="submit"
-                                className="rounded-lg bg-[#1a2e1a] px-4 py-2.5 text-xs font-medium text-[#6fcf6f] transition-colors hover:bg-[#243d24]"
-                              >
-                                Apply plan
-                              </button>
-                            </form>
+                            <ApplyPlanForm schoolId={school.id} currentPlan={school.plan} />
                           </div>
                         </div>
 

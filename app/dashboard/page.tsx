@@ -1054,25 +1054,6 @@ export default async function DashboardPage() {
 
   if (role === 'student') {
     const studentId = roleData?.student_id
-    const studentSchoolId = roleData?.school_id
-    if (studentSchoolId) {
-      const portalEnabled = await isFeatureEnabled(studentSchoolId, 'parent_portal')
-      if (!portalEnabled) {
-        return (
-          <div className="flex h-screen bg-[#f8f7f4] overflow-hidden">
-            <Sidebar email={user.email!} role="student" />
-            <div className="flex-1 flex items-center justify-center">
-              <div className="max-w-xs text-center">
-                <div className="mb-1 text-sm font-medium text-gray-900">Student portal not available</div>
-                <div className="text-xs text-gray-400">
-                  Student access is not enabled on your school&apos;s current plan. Contact your school administrator.
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
-    }
 
     const today = new Date().toISOString().split('T')[0]
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]

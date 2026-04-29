@@ -139,26 +139,33 @@ export async function updateDemoRequestStatus(
   return { success: true, error: null, savedStatus: status }
 }
 
-export async function applySchoolPlan(formData: FormData) {
+export async function applySchoolPlan(
+  _prevState: SchoolActionResult,
+  formData: FormData
+): Promise<SchoolActionResult> {
   await assertSuperadmin()
 
   const schoolId = String(formData.get('school_id') ?? '').trim()
   const plan = String(formData.get('plan') ?? '').trim()
 
   if (!schoolId || !isSchoolPlan(plan)) {
-    redirect('/superadmin')
+    return { success: false, error: 'Invalid school or plan.' }
   }
 
   const admin = createAdminClient()
   const preset = SCHOOL_PLAN_PRESETS[plan]
   const updatedAt = new Date().toISOString()
 
-  await admin
+  const { error: planErr } = await admin
     .from('schools')
     .update({ plan })
     .eq('id', schoolId)
 
-  await admin
+  if (planErr) {
+    return { success: false, error: 'Could not update plan. Please try again.' }
+  }
+
+  const { error: featuresErr } = await admin
     .from('school_features')
     .upsert(
       (Object.entries(preset) as Array<[FeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
@@ -173,8 +180,12 @@ export async function applySchoolPlan(formData: FormData) {
       { onConflict: 'school_id,feature_key' }
     )
 
+  if (featuresErr) {
+    return { success: false, error: 'Plan applied but features could not be updated. Please try again.' }
+  }
+
   revalidatePath('/superadmin')
-  redirect('/superadmin')
+  return { success: true, error: null, message: 'Plan updated.' }
 }
 
 // ── Actions ────────────────────────────────────────────────────────────────

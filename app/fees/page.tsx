@@ -6,6 +6,9 @@ import { CURRENT_TERM } from '@/lib/constants'
 import { HelpButton } from '@/components/HelpButton'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
+import { getFeatureStatus } from '@/lib/featureGate'
+import FeatureLockedCard from '@/components/FeatureLockedCard'
+import TrialBanner from '@/components/TrialBanner'
 
 export default async function FeesPage() {
   const supabase = await createClient()
@@ -32,6 +35,35 @@ export default async function FeesPage() {
   if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
 
   if (effectiveRole === 'admin') {
+    let feeAnalyticsTrialStatus = null
+    if (schoolContext?.schoolId) {
+      const status = await getFeatureStatus(schoolContext.schoolId, 'fee_analytics')
+      if (!status.enabled) {
+        return (
+          <div className="uthaan-page-shell">
+            <Sidebar email={user.email!} role="admin" isImpersonating={role === 'superadmin'} />
+            {status.trialExpired ? (
+              <div className="flex flex-1 flex-col items-center justify-center p-8">
+                <TrialBanner featureName="Fee Analytics" status={status} />
+                <FeatureLockedCard
+                  featureName="Fee Analytics"
+                  description="Track fees, defaulters, and payment history across your school."
+                  availableOn="Growth"
+                />
+              </div>
+            ) : (
+              <FeatureLockedCard
+                featureName="Fee Analytics"
+                description="Track fees, defaulters, and payment history across your school."
+                availableOn="Growth"
+              />
+            )}
+          </div>
+        )
+      }
+      if (status.trialActive) feeAnalyticsTrialStatus = status
+    }
+
     const dataClient = role === 'superadmin' ? createAdminClient() : supabase
     let feesQuery = dataClient
       .from('fees')
@@ -64,6 +96,11 @@ export default async function FeesPage() {
           role="admin"
           isImpersonating={role === 'superadmin'}
         />
+        {feeAnalyticsTrialStatus && (
+          <div className="px-5 pt-4">
+            <TrialBanner featureName="Fee Analytics" status={feeAnalyticsTrialStatus} />
+          </div>
+        )}
         <FeesClient
           initialFees={(feesRes.data as unknown as Fee[]) ?? []}
           students={studentsRes.data ?? []}

@@ -27,16 +27,32 @@ export const AI_FEATURES = [
 
 export type AiFeatureKey = (typeof AI_FEATURES)[number]['key']
 
+export const OPERATIONAL_FEATURES = [
+  { key: 'report_cards',             label: 'Report Cards',             description: 'Generate and download report cards.' },
+  { key: 'parent_portal',            label: 'Parent & Student Portal',  description: 'Parent and student login access to the app.' },
+  { key: 'fee_analytics',            label: 'Fee Analytics',            description: 'Defaulter lists, fee collection analytics, and receipt generation.' },
+  { key: 'timetable',                label: 'Timetable',                description: 'Timetable builder access.' },
+  { key: 'unlimited_announcements',  label: 'Unlimited Announcements',  description: 'More than 5 announcements per month.' },
+  { key: 'advanced_reporting',       label: 'Advanced Reporting',       description: 'Cross-class analytics and performance trends.' },
+  { key: 'custom_report_cards',      label: 'Custom Report Cards',      description: 'Custom report card templates.' },
+  { key: 'priority_support',         label: 'Priority Support',         description: 'Priority support flag.' },
+] as const
+
+export type OperationalFeatureKey = (typeof OPERATIONAL_FEATURES)[number]['key']
+export type FeatureKey = AiFeatureKey | OperationalFeatureKey
+
 export type SchoolFeatureRow = {
   id: string
   school_id: string
-  feature_key: AiFeatureKey
+  feature_key: FeatureKey
   enabled: boolean
   monthly_limit: number | null
   used_this_month: number
   last_reset_at: string
   created_at?: string | null
   updated_at?: string | null
+  trial_until?: string | null
+  trial_granted_by?: string | null
 }
 
 export function getAiFeatureDefinition(featureKey: AiFeatureKey) {

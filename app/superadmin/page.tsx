@@ -10,6 +10,7 @@ import {
   stopImpersonating,
   updateSchoolFeature,
   resetSchoolFeatureUsage,
+  grantFeatureTrial,
 } from './actions'
 import OnboardSchoolForm from './OnboardSchoolForm'
 import PilotSetupChecklist, { type PilotSetupChecklistItem } from './PilotSetupChecklist'
@@ -88,7 +89,7 @@ export default async function SuperadminPage() {
     admin.from('quizzes').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
     admin.from('assignments').select('id, school_id, created_at').gte('created_at', TERM_START_DATE),
     admin.from('attendance_logs').select('student_id, status, school_id').gte('day', TERM_START_DATE),
-    admin.from('school_features').select('id, school_id, feature_key, enabled, monthly_limit, used_this_month, last_reset_at, created_at, updated_at'),
+    admin.from('school_features').select('id, school_id, feature_key, enabled, monthly_limit, used_this_month, last_reset_at, created_at, updated_at, trial_until, trial_granted_by'),
     admin.from('timetable').select('id, school_id'),
     admin.from('announcements').select('id, school_id'),
     admin.from('marks').select('id, school_id'),
@@ -502,6 +503,44 @@ function FeatureCard({
           </button>
         </div>
       </form>
+
+      {/* Trial grant */}
+      <div className="mt-3 border-t border-gray-100 pt-3">
+        {feature?.trial_until && new Date(feature.trial_until) > new Date() ? (
+          <div className="text-[11px] text-blue-600">
+            Trial active until{' '}
+            {new Date(feature.trial_until).toLocaleDateString('en-US', {
+              month: 'short', day: 'numeric', year: 'numeric',
+            })}
+          </div>
+        ) : (
+          <form action={grantFeatureTrial} className="flex items-end gap-2">
+            <input type="hidden" name="school_id" value={schoolId} />
+            <input type="hidden" name="feature_key" value={featureKey} />
+            <div className="flex-1">
+              <label className="block text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-1">
+                Grant trial
+              </label>
+              <select
+                name="days"
+                defaultValue="7"
+                className="w-full border border-gray-200 rounded-lg px-2.5 py-2 text-xs text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#6fcf6f]/40"
+              >
+                <option value="3">3 days</option>
+                <option value="7">7 days</option>
+                <option value="14">14 days</option>
+                <option value="30">30 days</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-100 transition-colors"
+            >
+              Grant
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   )
 }

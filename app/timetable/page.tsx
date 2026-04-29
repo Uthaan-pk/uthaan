@@ -7,6 +7,9 @@ import { type TimetableRow } from './TimetableForm'
 import { HelpButton } from '@/components/HelpButton'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
+import { getFeatureStatus } from '@/lib/featureGate'
+import FeatureLockedCard from '@/components/FeatureLockedCard'
+import TrialBanner from '@/components/TrialBanner'
 
 export default async function TimetablePage() {
   const supabase = await createClient()
@@ -29,6 +32,35 @@ export default async function TimetablePage() {
   const isTeacher = effectiveRole === 'teacher'
   const isStaff = effectiveRole === 'teacher' || effectiveRole === 'admin'
   if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
+
+  let timetableTrialStatus = null
+  if (isStaff && schoolContext?.schoolId) {
+    const status = await getFeatureStatus(schoolContext.schoolId, 'timetable')
+    if (!status.enabled) {
+      return (
+        <div className="uthaan-page-shell">
+          <Sidebar email={user.email!} role={effectiveRole} isImpersonating={role === 'superadmin'} />
+          {status.trialExpired ? (
+            <div className="flex flex-1 flex-col items-center justify-center p-8">
+              <TrialBanner featureName="Timetable" status={status} />
+              <FeatureLockedCard
+                featureName="Timetable"
+                description="Build and manage your school timetable."
+                availableOn="Growth"
+              />
+            </div>
+          ) : (
+            <FeatureLockedCard
+              featureName="Timetable"
+              description="Build and manage your school timetable."
+              availableOn="Growth"
+            />
+          )}
+        </div>
+      )
+    }
+    if (status.trialActive) timetableTrialStatus = status
+  }
 
   const dataClient = role === 'superadmin' ? createAdminClient() : supabase
 
@@ -160,6 +192,9 @@ export default async function TimetablePage() {
         </header>
 
         <main className="uthaan-page-content">
+          {timetableTrialStatus && (
+            <TrialBanner featureName="Timetable" status={timetableTrialStatus} />
+          )}
           <TimetableGrid
             rows={(rows as unknown as TimetableRow[]) ?? []}
             teacherMap={teacherMap}

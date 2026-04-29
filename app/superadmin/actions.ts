@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import {
   buildDefaultSchoolFeature,
   type AiFeatureKey,
+  type FeatureKey,
 } from '@/lib/aiFeatures'
 import { SCHOOL_PLAN_PRESETS, isSchoolPlan, type SchoolPlan } from '@/lib/schoolPlans'
 import { writeAuditLog } from '@/lib/audit'
@@ -160,7 +161,7 @@ export async function applySchoolPlan(formData: FormData) {
   await admin
     .from('school_features')
     .upsert(
-      (Object.entries(preset) as Array<[AiFeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
+      (Object.entries(preset) as Array<[FeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
         ([featureKey, config]) => ({
           school_id: schoolId,
           feature_key: featureKey,
@@ -225,7 +226,7 @@ export async function onboardSchool(
 
   const starterPreset = SCHOOL_PLAN_PRESETS['starter']
   const starterFeatureRows = (
-    Object.entries(starterPreset) as Array<[AiFeatureKey, { enabled: boolean; monthly_limit: number }]>
+    Object.entries(starterPreset) as Array<[FeatureKey, { enabled: boolean; monthly_limit: number }]>
   ).map(([featureKey, config]) => ({
     school_id: schoolId,
     feature_key: featureKey,
@@ -351,7 +352,7 @@ export async function convertDemoRequest(
   const preset = SCHOOL_PLAN_PRESETS[plan]
   const updatedAt = new Date().toISOString()
   const { error: featuresErr } = await admin.from('school_features').upsert(
-    (Object.entries(preset) as Array<[AiFeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
+    (Object.entries(preset) as Array<[FeatureKey, { enabled: boolean; monthly_limit: number }]>).map(
       ([featureKey, config]) => ({
         school_id: schoolId,
         feature_key: featureKey,
@@ -612,6 +613,40 @@ export async function resetSchoolFeatureUsage(schoolId: string, featureKey: AiFe
     })
     .eq('school_id', schoolId)
     .eq('feature_key', featureKey)
+
+  revalidatePath('/superadmin')
+  redirect('/superadmin')
+}
+
+export async function grantFeatureTrial(formData: FormData) {
+  await assertSuperadmin()
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/superadmin')
+
+  const schoolId = String(formData.get('school_id') ?? '').trim()
+  const featureKey = String(formData.get('feature_key') ?? '').trim()
+  const daysRaw = parseInt(String(formData.get('days') ?? '7'), 10)
+  const days = [3, 7, 14, 30].includes(daysRaw) ? daysRaw : 7
+
+  if (!schoolId || !featureKey) redirect('/superadmin')
+
+  const trialUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+  const admin = createAdminClient()
+
+  await admin
+    .from('school_features')
+    .upsert(
+      {
+        school_id: schoolId,
+        feature_key: featureKey,
+        trial_until: trialUntil,
+        trial_granted_by: user.id,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'school_id,feature_key' }
+    )
 
   revalidatePath('/superadmin')
   redirect('/superadmin')

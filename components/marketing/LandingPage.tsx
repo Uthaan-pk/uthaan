@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock, Lock } from 'lucide-react'
 import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useInView, useReducedMotion } from '@/lib/motion'
@@ -187,33 +187,34 @@ const aiCards = [
 const pricingCards = [
   {
     plan: 'Starter',
-    amount: 'Rs. 12,000',
+    amount: 'Rs. 8,000',
     period: '/ month',
-    setupFee: 'One-time setup: Rs. 20,000',
+    setupFee: 'One-time setup: Rs. 15,000',
     students: 'Up to 250 students',
-    features: ['Student records', 'Teacher accounts', 'Attendance', 'Fees', 'Announcements', 'Marks/results', 'Report cards', 'Basic support'],
-    bestFor: 'Small schools starting digital operations',
+    features: ['Student records & profiles', 'Basic attendance marking', 'Basic fee tracking', 'Marks entry', '5 announcements/month', 'Admin dashboard'],
+    lockedFeatures: ['Report cards', 'Timetable', 'Parent & student portal', 'Fee analytics & defaulter alerts', 'AI features', 'Advanced reporting'],
+    bestFor: 'Digital register for schools going paperless',
     supportNote: 'Guided onboarding available for setup and first use.',
   },
   {
     plan: 'Growth',
-    amount: 'Rs. 25,000',
+    amount: 'Rs. 20,000',
     period: '/ month',
-    setupFee: 'One-time setup: Rs. 35,000',
+    setupFee: 'One-time setup: Rs. 30,000',
     students: 'Up to 700 students',
-    features: ['Everything in Starter', 'Timetable', 'Assignments/homework', 'Parent/student access', 'Attendance summaries', 'Staff-only AI report comments', 'Attendance alert summaries', 'Guided onboarding support'],
+    features: ['Everything in Starter', 'Report cards', 'Timetable builder', 'Parent & student portal', 'Fee analytics & defaulter lists', 'Unlimited announcements', 'AI report card comments (50/mo)', 'AI attendance alerts (10/mo)', 'Guided onboarding support'],
     featured: true,
-    bestFor: 'Growing private schools that want daily operations in one place',
+    bestFor: 'Complete school operations in one platform',
     supportNote: 'A common choice after the founder pilot free period.',
   },
   {
     plan: 'Pro',
-    amount: 'Rs. 50,000',
+    amount: 'Rs. 45,000',
     period: '/ month',
-    setupFee: 'One-time setup: Rs. 60,000',
+    setupFee: 'One-time setup: Rs. 55,000',
     students: 'Up to 1,500 students',
-    features: ['Everything in Growth', 'Priority support', 'Higher AI limits', 'Advanced admin reporting', 'Custom report card support', 'Additional training sessions'],
-    bestFor: 'Larger schools needing more control and support',
+    features: ['Everything in Growth', 'All AI features with higher limits', 'Advanced cross-class reporting', 'Custom report card templates', 'Priority support', 'Additional training sessions'],
+    bestFor: 'Full platform with AI and advanced control',
     supportNote: 'Handled as a guided school rollout with additional training.',
   },
   {
@@ -222,7 +223,7 @@ const pricingCards = [
     period: '',
     setupFee: 'Setup scoped with your school',
     students: '1,500+ students',
-    features: ['Multi-campus support', 'Custom workflows', 'Dedicated onboarding', 'Custom reporting', 'Future integration options'],
+    features: ['Everything in Pro', 'Multi-campus support', 'Custom workflows', 'Dedicated onboarding', 'Custom reporting'],
     bestFor: 'School groups and multi-campus institutions',
     supportNote: 'Rollout, reporting, and integration options are scoped directly.',
   },
@@ -1411,7 +1412,7 @@ export default function LandingPage() {
             <p>
               Available for the first five selected schools. After the free pilot, continue on
               the plan that fits your school. Most schools continue on Growth at Rs.
-              25,000/month.
+              20,000/month.
             </p>
           </div>
           <div className={styles.founderPilotSupport}>
@@ -1420,6 +1421,7 @@ export default function LandingPage() {
           </div>
         </div>
 
+        <p className="mb-3 text-center text-[11px] text-gray-400">All prices in PKR. ~Rs. 279 = $1 USD.</p>
         <div className={styles.pricingGrid}>
           {pricingCards.map((card, index) => {
             const isExpanded = expandedPlan === card.plan
@@ -1461,6 +1463,16 @@ export default function LandingPage() {
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
+                {'lockedFeatures' in card && card.lockedFeatures && card.lockedFeatures.length > 0 && (
+                  <ul className={styles.priceFeatures} style={{ opacity: 0.38, marginTop: '0.25rem' }}>
+                    {card.lockedFeatures.map((feature) => (
+                      <li key={feature} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Lock size={10} style={{ flexShrink: 0 }} aria-hidden="true" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className={`${styles.planContext} ${isExpanded ? styles.planContextExpanded : ''}`}>
                   <div className={styles.planContextSep} />
                   <div className={styles.planContextBlock}>

@@ -6,6 +6,9 @@ import ResultsPage from './ResultsPage'
 import { CURRENT_TERM, CURRENT_YEAR } from '@/lib/constants'
 import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 import { getAiFeatureDefinition, isNewUsageMonth } from '@/lib/aiFeatures'
+import { getFeatureStatus } from '@/lib/featureGate'
+import FeatureLockedCard from '@/components/FeatureLockedCard'
+import TrialBanner from '@/components/TrialBanner'
 import { HelpButton } from '@/components/HelpButton'
 
 async function isReleasedForClass(
@@ -43,6 +46,35 @@ export default async function Page() {
   const effectiveRole = await resolveEffectiveRole(role)
   const schoolContext = await getSchoolContext(supabase, user.id)
   if (role === 'superadmin' && !schoolContext?.schoolId) redirect('/superadmin')
+
+  let reportCardsTrialStatus = null
+  if ((effectiveRole === 'admin' || effectiveRole === 'teacher') && schoolContext?.schoolId) {
+    const status = await getFeatureStatus(schoolContext.schoolId, 'report_cards')
+    if (!status.enabled) {
+      return (
+        <div className="uthaan-page-shell">
+          <Sidebar email={user.email!} role={effectiveRole} isImpersonating={role === 'superadmin'} />
+          {status.trialExpired ? (
+            <div className="flex flex-1 flex-col items-center justify-center p-8">
+              <TrialBanner featureName="Report Cards" status={status} />
+              <FeatureLockedCard
+                featureName="Report Cards"
+                description="Generate and download report cards for your students."
+                availableOn="Growth"
+              />
+            </div>
+          ) : (
+            <FeatureLockedCard
+              featureName="Report Cards"
+              description="Generate and download report cards for your students."
+              availableOn="Growth"
+            />
+          )}
+        </div>
+      )
+    }
+    if (status.trialActive) reportCardsTrialStatus = status
+  }
 
   if (role === 'parent') {
     const { data: link } = await supabase
@@ -304,6 +336,9 @@ export default async function Page() {
           </div>
         </header>
         <main className="uthaan-page-content">
+          {reportCardsTrialStatus && (
+            <TrialBanner featureName="Report Cards" status={reportCardsTrialStatus} />
+          )}
           <ResultsPage
             students={studentsRes.data ?? []}
             releases={releasesRes.data ?? []}

@@ -7,6 +7,7 @@ import AnnouncementList from './AnnouncementList'
 import { getSchoolContext, resolveEffectiveRole } from '@/lib/school'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { HelpButton } from '@/components/HelpButton'
+import { getFeatureLimit } from '@/lib/featureGate'
 
 
 export default async function AnnouncementsPage() {
@@ -41,6 +42,20 @@ export default async function AnnouncementsPage() {
     }
 
     const { data: announcements } = await announcementsQuery
+
+    let announceLimitReached = false
+    let announceMonthLimit = 0
+    if (schoolContext?.schoolId) {
+      const feat = await getFeatureLimit(schoolContext.schoolId, 'unlimited_announcements')
+      if (!feat.enabled && feat.limit > 0) {
+        const nowMonth = new Date().toISOString().slice(0, 7)
+        const thisMonthCount = (announcements ?? []).filter(
+          a => a.created_at?.slice(0, 7) === nowMonth
+        ).length
+        announceMonthLimit = feat.limit
+        announceLimitReached = thisMonthCount >= feat.limit
+      }
+    }
 
     const creatorIds = [
       ...new Set(
@@ -80,7 +95,13 @@ export default async function AnnouncementsPage() {
 
           <main className="uthaan-page-content">
             <div className="max-w-7xl space-y-5">
-              <ComposeAnnouncement />
+              {announceLimitReached ? (
+                <div className="rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-xs text-amber-700">
+                  Monthly announcement limit reached ({announceMonthLimit}/month on this plan). Upgrade to Growth for unlimited announcements.
+                </div>
+              ) : (
+                <ComposeAnnouncement />
+              )}
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-50">
                   <h2 className="text-sm font-semibold text-gray-900">

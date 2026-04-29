@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock, Lock, Users, GraduationCap, FileSpreadsheet, Headphones } from 'lucide-react'
+import { Building2, ChevronDown, ChevronRight, CheckCircle2, Minus, Clock, Lock, Users, GraduationCap, LifeBuoy } from 'lucide-react'
 import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useInView, useReducedMotion } from '@/lib/motion'
@@ -187,23 +187,23 @@ const aiCards = [
 const setupFeeItems = [
   {
     Icon: Users,
-    title: 'In-person school visit',
-    description: 'Our team visits your school, meets your admin and teachers, and sets everything up on-site.',
+    title: 'Starter: School visit included',
+    description: 'We visit your school, help prepare student and teacher records, show your office staff the basics, and check in during the first week.',
   },
   {
     Icon: GraduationCap,
-    title: 'Staff training',
-    description: "We walk your admin through every workflow — attendance, fees, marks, announcements — until they're confident.",
+    title: 'Growth: More training time',
+    description: 'Everything in Starter, plus more time with your staff for timetable, report cards, fee lists, and parent/student access.',
   },
   {
-    Icon: FileSpreadsheet,
-    title: 'Data import',
-    description: 'We prepare and import your student records, set up teacher accounts, and configure your school.',
+    Icon: LifeBuoy,
+    title: 'Pro: Faster help',
+    description: 'Everything in Growth, plus extra training sessions, faster support, and more help for larger schools with more staff.',
   },
   {
-    Icon: Headphones,
-    title: 'First-week support',
-    description: 'A dedicated check-in during your first week to fix issues, answer questions, and make sure your team is comfortable.',
+    Icon: Building2,
+    title: 'Enterprise: Support for school groups',
+    description: 'For schools with multiple branches. We help plan the launch, train senior staff, and support custom school needs.',
   },
 ] as const
 
@@ -214,7 +214,7 @@ const pricingCards = [
     period: '/ month',
     setupFee: 'One-time setup: Rs. 20,000',
     students: 'Up to 250 students',
-    features: ['Student records', 'Teacher accounts', 'Attendance', 'Fees (basic)', '5 announcements/month', 'Marks/results', 'Basic support'],
+    features: ['Student records', 'Teacher accounts', 'Attendance', 'Fees (basic)', '5 announcements/month', 'Marks/results', 'School visit included', 'First-week check-in', 'Basic support'],
     lockedFeatures: [
       { name: 'Report cards',             plan: 'Growth+' },
       { name: 'Timetable',                plan: 'Growth+' },
@@ -225,7 +225,7 @@ const pricingCards = [
       { name: 'Advanced reporting',       plan: 'Pro+' },
     ],
     bestFor: 'Small schools starting digital operations',
-    supportNote: 'Guided onboarding available for setup and first use.',
+    supportNote: 'A school visit and first-week check-in are included.',
   },
   {
     plan: 'Growth',
@@ -233,7 +233,7 @@ const pricingCards = [
     period: '/ month',
     setupFee: 'One-time setup: Rs. 35,000',
     students: 'Up to 700 students',
-    features: ['Everything in Starter', 'Timetable', 'Assignments/homework', 'Parent/student access', 'Fee analytics & defaulter lists', 'Unlimited announcements', 'Report cards', 'Staff-only AI report comments (50/mo)', 'Attendance alert summaries (10/mo)', 'Guided onboarding support'],
+    features: ['Everything in Starter', 'More staff training time', 'Parent/student access help', 'Fee lists & defaulter tracking', 'Report cards', 'Timetable', 'Staff-only AI report comments (50/mo)', 'Attendance alert summaries (10/mo)'],
     lockedFeatures: [
       { name: 'Advanced cross-class reporting', plan: 'Pro+' },
       { name: 'Custom report card templates',   plan: 'Pro+' },
@@ -244,7 +244,7 @@ const pricingCards = [
     ],
     featured: true,
     bestFor: 'Growing private schools that want daily operations in one place',
-    supportNote: 'A common choice after the founder pilot free period.',
+    supportNote: 'Best for most private schools that want more staff training time.',
   },
   {
     plan: 'Pro',
@@ -252,9 +252,9 @@ const pricingCards = [
     period: '/ month',
     setupFee: 'One-time setup: Rs. 60,000',
     students: 'Up to 1,500 students',
-    features: ['Everything in Growth', 'All AI features with higher limits', 'Advanced cross-class reporting', 'Custom report card templates', 'Priority support', 'Additional training sessions'],
+    features: ['Everything in Growth', 'Faster support', 'Extra training sessions', 'More help for large schools', 'All AI tools with higher limits', 'Better school reports', 'Custom report card formats'],
     bestFor: 'Larger schools needing more control and support',
-    supportNote: 'Handled as a guided school rollout with additional training.',
+    supportNote: 'Better for larger schools that need faster help and more training.',
   },
   {
     plan: 'Enterprise',
@@ -262,9 +262,9 @@ const pricingCards = [
     period: '',
     setupFee: 'Setup scoped with your school',
     students: '1,500+ students',
-    features: ['Multi-campus support', 'Custom workflows', 'Dedicated onboarding', 'Custom reporting', 'Future integration options'],
+    features: ['Support for multiple branches', 'Launch planning with your team', 'Senior staff training', 'Custom school needs', 'Custom reports', 'Future integration options'],
     bestFor: 'School groups and multi-campus institutions',
-    supportNote: 'Rollout, reporting, and integration options are scoped directly.',
+    supportNote: 'For school groups that need branch-level planning and senior staff training.',
   },
 ]
 
@@ -1462,8 +1462,8 @@ export default function LandingPage() {
 
         {/* Setup fee justification */}
         <div className={styles.setupFeesSection}>
-          <h3 className={styles.setupFeesTitle}>What your setup fee includes</h3>
-          <p className={styles.setupFeesSub}>Every school gets hands-on onboarding — not a login link and good luck.</p>
+          <h3 className={styles.setupFeesTitle}>Hands-on help for every school</h3>
+          <p className={styles.setupFeesSub}>We visit your school, help prepare your records, train your staff, and stay with you after launch. Bigger plans include more training time and faster support.</p>
           <div className={styles.setupFeesGrid}>
             {setupFeeItems.map(({ Icon, title, description }) => (
               <div key={title} className={styles.setupFeeCard}>
@@ -1475,7 +1475,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <p className={styles.pricingPkrNote}>All prices in PKR. ~Rs. 279 = $1 USD. Setup fee includes in-person onboarding.</p>
+        <p className={styles.pricingPkrNote}>All prices in PKR. Setup fee includes hands-on help from our team.</p>
         <div className={styles.pricingGrid}>
           {pricingCards.map((card, index) => {
             const isExpanded = expandedPlan === card.plan

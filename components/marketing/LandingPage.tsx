@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock, Lock } from 'lucide-react'
+import { ChevronDown, ChevronRight, CheckCircle2, Minus, Clock, Lock, Users, GraduationCap, FileSpreadsheet, Headphones } from 'lucide-react'
 import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useInView, useReducedMotion } from '@/lib/motion'
@@ -184,37 +184,76 @@ const aiCards = [
   },
 ]
 
+const setupFeeItems = [
+  {
+    Icon: Users,
+    title: 'In-person school visit',
+    description: 'Our team visits your school, meets your admin and teachers, and sets everything up on-site.',
+  },
+  {
+    Icon: GraduationCap,
+    title: 'Staff training',
+    description: "We walk your admin through every workflow — attendance, fees, marks, announcements — until they're confident.",
+  },
+  {
+    Icon: FileSpreadsheet,
+    title: 'Data import',
+    description: 'We prepare and import your student records, set up teacher accounts, and configure your school.',
+  },
+  {
+    Icon: Headphones,
+    title: 'First-week support',
+    description: 'A dedicated check-in during your first week to fix issues, answer questions, and make sure your team is comfortable.',
+  },
+] as const
+
 const pricingCards = [
   {
     plan: 'Starter',
-    amount: 'Rs. 8,000',
+    amount: 'Rs. 12,000',
     period: '/ month',
-    setupFee: 'One-time setup: Rs. 15,000',
+    setupFee: 'One-time setup: Rs. 20,000',
     students: 'Up to 250 students',
-    features: ['Student records & profiles', 'Basic attendance marking', 'Basic fee tracking', 'Marks entry', '5 announcements/month', 'Admin dashboard'],
-    lockedFeatures: ['Report cards', 'Timetable', 'Parent & student portal', 'Fee analytics & defaulter alerts', 'AI features', 'Advanced reporting'],
-    bestFor: 'Digital register for schools going paperless',
+    features: ['Student records', 'Teacher accounts', 'Attendance', 'Fees (basic)', '5 announcements/month', 'Marks/results', 'Basic support'],
+    lockedFeatures: [
+      { name: 'Report cards',             plan: 'Growth+' },
+      { name: 'Timetable',                plan: 'Growth+' },
+      { name: 'Parent/student portal',    plan: 'Growth+' },
+      { name: 'Fee analytics & defaulters', plan: 'Growth+' },
+      { name: 'AI report comments',       plan: 'Growth+' },
+      { name: 'AI attendance alerts',     plan: 'Growth+' },
+      { name: 'Advanced reporting',       plan: 'Pro+' },
+    ],
+    bestFor: 'Small schools starting digital operations',
     supportNote: 'Guided onboarding available for setup and first use.',
   },
   {
     plan: 'Growth',
-    amount: 'Rs. 20,000',
+    amount: 'Rs. 25,000',
     period: '/ month',
-    setupFee: 'One-time setup: Rs. 30,000',
+    setupFee: 'One-time setup: Rs. 35,000',
     students: 'Up to 700 students',
-    features: ['Everything in Starter', 'Report cards', 'Timetable builder', 'Parent & student portal', 'Fee analytics & defaulter lists', 'Unlimited announcements', 'AI report card comments (50/mo)', 'AI attendance alerts (10/mo)', 'Guided onboarding support'],
+    features: ['Everything in Starter', 'Timetable', 'Assignments/homework', 'Parent/student access', 'Fee analytics & defaulter lists', 'Unlimited announcements', 'Report cards', 'Staff-only AI report comments (50/mo)', 'Attendance alert summaries (10/mo)', 'Guided onboarding support'],
+    lockedFeatures: [
+      { name: 'Advanced cross-class reporting', plan: 'Pro+' },
+      { name: 'Custom report card templates',   plan: 'Pro+' },
+      { name: 'Assignment feedback AI',         plan: 'Pro+' },
+      { name: 'Quiz generator AI',              plan: 'Pro+' },
+      { name: 'Priority support',               plan: 'Pro+' },
+      { name: 'Additional training sessions',   plan: 'Pro+' },
+    ],
     featured: true,
-    bestFor: 'Complete school operations in one platform',
+    bestFor: 'Growing private schools that want daily operations in one place',
     supportNote: 'A common choice after the founder pilot free period.',
   },
   {
     plan: 'Pro',
-    amount: 'Rs. 45,000',
+    amount: 'Rs. 50,000',
     period: '/ month',
-    setupFee: 'One-time setup: Rs. 55,000',
+    setupFee: 'One-time setup: Rs. 60,000',
     students: 'Up to 1,500 students',
     features: ['Everything in Growth', 'All AI features with higher limits', 'Advanced cross-class reporting', 'Custom report card templates', 'Priority support', 'Additional training sessions'],
-    bestFor: 'Full platform with AI and advanced control',
+    bestFor: 'Larger schools needing more control and support',
     supportNote: 'Handled as a guided school rollout with additional training.',
   },
   {
@@ -223,7 +262,7 @@ const pricingCards = [
     period: '',
     setupFee: 'Setup scoped with your school',
     students: '1,500+ students',
-    features: ['Everything in Pro', 'Multi-campus support', 'Custom workflows', 'Dedicated onboarding', 'Custom reporting'],
+    features: ['Multi-campus support', 'Custom workflows', 'Dedicated onboarding', 'Custom reporting', 'Future integration options'],
     bestFor: 'School groups and multi-campus institutions',
     supportNote: 'Rollout, reporting, and integration options are scoped directly.',
   },
@@ -1412,7 +1451,7 @@ export default function LandingPage() {
             <p>
               Available for the first five selected schools. After the free pilot, continue on
               the plan that fits your school. Most schools continue on Growth at Rs.
-              20,000/month.
+              25,000/month.
             </p>
           </div>
           <div className={styles.founderPilotSupport}>
@@ -1421,7 +1460,22 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <p className="mb-3 text-center text-[11px] text-gray-400">All prices in PKR. ~Rs. 279 = $1 USD.</p>
+        {/* Setup fee justification */}
+        <div className={styles.setupFeesSection}>
+          <h3 className={styles.setupFeesTitle}>What your setup fee includes</h3>
+          <p className={styles.setupFeesSub}>Every school gets hands-on onboarding — not a login link and good luck.</p>
+          <div className={styles.setupFeesGrid}>
+            {setupFeeItems.map(({ Icon, title, description }) => (
+              <div key={title} className={styles.setupFeeCard}>
+                <Icon size={20} className={styles.setupFeeIcon} aria-hidden="true" />
+                <div className={styles.setupFeeItemTitle}>{title}</div>
+                <div className={styles.setupFeeItemDesc}>{description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className={styles.pricingPkrNote}>All prices in PKR. ~Rs. 279 = $1 USD. Setup fee includes in-person onboarding.</p>
         <div className={styles.pricingGrid}>
           {pricingCards.map((card, index) => {
             const isExpanded = expandedPlan === card.plan
@@ -1464,14 +1518,18 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 {'lockedFeatures' in card && card.lockedFeatures && card.lockedFeatures.length > 0 && (
-                  <ul className={styles.priceFeatures} style={{ opacity: 0.38, marginTop: '0.25rem' }}>
-                    {card.lockedFeatures.map((feature) => (
-                      <li key={feature} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Lock size={10} style={{ flexShrink: 0 }} aria-hidden="true" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    <div className={styles.lockedFeaturesSep} aria-hidden="true" />
+                    <ul className={styles.priceFeaturesLocked}>
+                      {card.lockedFeatures.map((feat) => (
+                        <li key={feat.name} className={styles.lockedFeatureItem}>
+                          <Lock size={11} className={styles.lockIcon} aria-hidden="true" />
+                          <span className={styles.lockedFeatureName}>{feat.name}</span>
+                          <span className={styles.lockedBadge}>{feat.plan}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 )}
                 <div className={`${styles.planContext} ${isExpanded ? styles.planContextExpanded : ''}`}>
                   <div className={styles.planContextSep} />

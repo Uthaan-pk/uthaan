@@ -1534,6 +1534,130 @@
   font-size: 12px;
 }
 
+/* ── Setup fee includes section ───────────────────────────────── */
+.setupFeesSection {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.setupFeesTitle {
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35rem;
+}
+
+.setupFeesSub {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 1.25rem;
+}
+
+.setupFeesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .setupFeesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .setupFeesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.setupFeeCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--dark2);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.setupFeeIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--green-light);
+  flex-shrink: 0;
+}
+
+.setupFeeItemTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.35;
+}
+
+.setupFeeItemDesc {
+  font-size: 12px;
+  color: var(--gray);
+  line-height: 1.55;
+}
+
+/* ── Locked features list inside price cards ──────────────────── */
+.lockedFeaturesSep {
+  height: 1px;
+  background: var(--border);
+  margin: 0.85rem 0 0.75rem;
+}
+
+.priceFeaturesLocked {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+}
+
+.lockedFeatureItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+}
+
+.lockIcon {
+  width: 12px;
+  height: 12px;
+  color: rgb(255 255 255 / 0.25);
+  flex-shrink: 0;
+}
+
+.lockedFeatureName {
+  color: rgb(255 255 255 / 0.3);
+  flex: 1;
+}
+
+.lockedBadge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--green-light);
+  background: rgb(34 168 98 / 0.1);
+  border: 1px solid rgb(34 168 98 / 0.2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── PKR pricing note ─────────────────────────────────────────── */
+.pricingPkrNote {
+  margin-top: 1.1rem;
+  color: var(--gray);
+  font-size: 11.5px;
+  text-align: center;
+}
+
 .priceCard {
   border: 1px solid var(--border);
   border-radius: 14px;

@@ -189,50 +189,42 @@ const pricingCards = [
     plan: 'Starter',
     amount: 'Rs. 12,000',
     period: '/ month',
-    annualAmount: 'Rs. 120,000 / year',
+    setupFee: 'One-time setup: Rs. 20,000',
     students: 'Up to 250 students',
     features: ['Student records', 'Teacher accounts', 'Attendance', 'Fees', 'Announcements', 'Marks/results', 'Report cards', 'Basic support'],
-    annualSummary: 'Guided onboarding and 12-month price lock',
-    bestFor: 'For small schools starting digital operations.',
-    setupNote: 'One-time setup: Rs. 20,000. Guided onboarding included.',
-    aiNote: 'No AI on Starter.',
+    bestFor: 'Small schools starting digital operations',
+    supportNote: 'Guided onboarding available for setup and first use.',
   },
   {
     plan: 'Growth',
     amount: 'Rs. 25,000',
     period: '/ month',
-    annualAmount: 'Rs. 250,000 / year',
+    setupFee: 'One-time setup: Rs. 35,000',
     students: 'Up to 700 students',
     features: ['Everything in Starter', 'Timetable', 'Assignments/homework', 'Parent/student access', 'Attendance summaries', 'Staff-only AI report comments', 'Attendance alert summaries', 'Guided onboarding support'],
-    annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
     featured: true,
-    bestFor: 'For growing private schools.',
-    setupNote: 'One-time setup: Rs. 35,000. Priority onboarding included.',
-    aiNote: 'AI report comments and attendance alert summaries included. Annual plans receive higher limits.',
+    bestFor: 'Growing private schools that want daily operations in one place',
+    supportNote: 'Recommended for the founder pilot after the free period.',
   },
   {
     plan: 'Pro',
     amount: 'Rs. 50,000',
     period: '/ month',
-    annualAmount: 'Rs. 500,000 / year',
+    setupFee: 'One-time setup: Rs. 60,000',
     students: 'Up to 1,500 students',
     features: ['Everything in Growth', 'Priority support', 'Higher AI limits', 'Advanced admin reporting', 'Custom report card support', 'Additional training sessions'],
-    annualSummary: 'Priority onboarding, higher AI limits, and 12-month price lock',
-    bestFor: 'For larger schools needing more control and support.',
-    setupNote: 'One-time setup: Rs. 60,000. Handled as a guided school rollout.',
-    aiNote: 'Higher AI limits across all features. Annual Pro schools receive the highest monthly AI limits.',
+    bestFor: 'Larger schools needing more control and support',
+    supportNote: 'Handled as a guided school rollout with additional training.',
   },
   {
     plan: 'Enterprise',
-    amount: 'Custom',
-    period: ' ',
-    annualAmount: 'Custom annual contract',
+    amount: 'Custom pricing',
+    period: '',
+    setupFee: 'Setup scoped with your school',
     students: '1,500+ students',
     features: ['Multi-campus support', 'Custom workflows', 'Dedicated onboarding', 'Custom reporting', 'Future integration options'],
-    annualSummary: 'Annual and custom contract options with dedicated onboarding',
-    bestFor: 'For school groups and multi-campus institutions.',
-    setupNote: 'Onboarding and rollout terms are scoped with your school directly.',
-    aiNote: 'AI limits and rollout model agreed as part of the contract.',
+    bestFor: 'School groups and multi-campus institutions',
+    supportNote: 'Rollout, reporting, and integration options are scoped directly.',
   },
 ]
 
@@ -1402,15 +1394,22 @@ export default function LandingPage() {
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
-          Start with a 2-month guided pilot. Pilot setup starts from Rs. 20,000.
-          Monthly subscription begins after the pilot if your school continues.
-          Early pilot schools may qualify for a founder rate.
+          Start with 2 months free. For selected early schools, Uthaan begins with a guided pilot:
+          Rs. 20,000 setup, 2 months free, then Rs. 25,000/month if your school continues.
         </p>
-        <div className={styles.pricingPilotNote}>Request a demo to start your pilot. There is no self-serve signup — your school is set up with guided onboarding.</div>
-        <div className={styles.pricingAnnualNote}>
-          <div className={styles.pricingAnnualLead}>Annual billing: save 2 months.</div>
-          <div className={styles.pricingAnnualMeta}>
-            Priority onboarding, 12-month price lock, and higher AI limits on Growth and Pro annual plans.
+        <div className={styles.pricingPilotNote}>There is no self-serve signup yet — your school is set up with guided onboarding.</div>
+        <div className={styles.founderPilotBox}>
+          <div>
+            <div className={styles.founderPilotEyebrow}>Founder Pilot Offer</div>
+            <div className={styles.founderPilotOffer}>Rs. 20,000 setup + 2 months free</div>
+            <p>
+              After the free pilot, continue on the Growth plan at Rs. 25,000/month only if Uthaan
+              is working for your school.
+            </p>
+          </div>
+          <div className={styles.founderPilotSupport}>
+            Includes guided setup, admin handoff, teacher onboarding, student import support, and
+            first-week activation help.
           </div>
         </div>
 
@@ -1447,30 +1446,19 @@ export default function LandingPage() {
                 <div className={styles.pricePlan}>{card.plan}</div>
                 <div className={`${styles.priceAmount} ${styles.mono}`}>{card.amount}</div>
                 <div className={styles.pricePeriod}>{card.period}</div>
-                <div className={styles.priceAnnualLine}>
-                  Annual: {card.annualAmount}
-                  {card.plan === 'Enterprise' ? '' : ' · save 2 months'}
-                </div>
+                <div className={styles.priceSetupLine}>{card.setupFee}</div>
                 <div className={styles.priceStudents}>{card.students}</div>
+                <div className={styles.priceBestFor}>{card.bestFor}</div>
                 <ul className={styles.priceFeatures}>
                   {card.features.map((feature) => (
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                <div className={styles.priceAnnualSummary}>{card.annualSummary}</div>
                 <div className={`${styles.planContext} ${isExpanded ? styles.planContextExpanded : ''}`}>
                   <div className={styles.planContextSep} />
                   <div className={styles.planContextBlock}>
-                    <div className={styles.planContextLabel}>Best for</div>
-                    <div className={styles.planContextText}>{card.bestFor}</div>
-                  </div>
-                  <div className={styles.planContextBlock}>
-                    <div className={styles.planContextLabel}>Onboarding</div>
-                    <div className={styles.planContextText}>{card.setupNote}</div>
-                  </div>
-                  <div className={styles.planContextBlock}>
-                    <div className={styles.planContextLabel}>AI and annual plan</div>
-                    <div className={styles.planContextText}>{card.aiNote}</div>
+                    <div className={styles.planContextLabel}>Guided onboarding</div>
+                    <div className={styles.planContextText}>{card.supportNote}</div>
                   </div>
                 </div>
                 <Link

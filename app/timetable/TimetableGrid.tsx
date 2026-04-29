@@ -293,7 +293,6 @@ export default function TimetableGrid({
               background: linear-gradient(135deg, #17301a 0%, #234828 100%);
               color: #ffffff;
               padding: 20px 24px 18px;
-              text-align: center;
               overflow: hidden;
             }
 
@@ -319,19 +318,33 @@ export default function TimetableGrid({
               background: rgba(255, 255, 255, 0.06);
             }
 
-            .school {
+            .brand-lockup {
               position: relative;
               z-index: 1;
-              font-size: 24px;
-              font-weight: 800;
-              letter-spacing: 0.8px;
-              color: #7ee081;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
               margin-bottom: 6px;
+            }
+
+            .brand-lockup img {
+              width: 30px;
+              height: 30px;
+              border-radius: 8px;
+            }
+
+            .school {
+              font-family: Georgia, 'Times New Roman', serif;
+              font-size: 28px;
+              line-height: 1;
+              color: #ffffff;
             }
 
             .title {
               position: relative;
               z-index: 1;
+              text-align: center;
               font-size: 11px;
               letter-spacing: 2px;
               text-transform: uppercase;
@@ -498,7 +511,10 @@ export default function TimetableGrid({
           <div class="page">
             <div class="shell">
               <div class="topbar">
-                <div class="school">UTHAAN SCHOOL MANAGEMENT SYSTEM</div>
+                <div class="brand-lockup">
+                  <img src="/brand/uthaan-icon.svg" alt="" />
+                  <div class="school">Uthaan</div>
+                </div>
                 <div class="title">Official Weekly Timetable</div>
               </div>
 

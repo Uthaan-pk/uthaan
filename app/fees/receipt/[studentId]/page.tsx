@@ -1,4 +1,5 @@
 import { redirect, notFound } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import PrintButton from './PrintButton'
 
@@ -88,6 +89,22 @@ export default async function FeeReceiptPage({
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-100 flex items-start justify-between">
           <div>
+            <div className="mb-4 flex items-center gap-2.5">
+              <Image
+                src="/brand/uthaan-icon.svg"
+                alt=""
+                width={30}
+                height={30}
+                className="h-7 w-7 rounded-lg"
+                priority
+              />
+              <span
+                className="text-2xl leading-none text-[#0F5B3A]"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              >
+                Uthaan
+              </span>
+            </div>
             <div className="text-xl font-bold text-[#1a2e1a]">{schoolName}</div>
             <div className="text-sm text-gray-500 mt-0.5">Fee Receipt</div>
           </div>

@@ -204,7 +204,7 @@ const pricingCards = [
     features: ['Everything in Starter', 'Timetable', 'Assignments/homework', 'Parent/student access', 'Attendance summaries', 'Staff-only AI report comments', 'Attendance alert summaries', 'Guided onboarding support'],
     featured: true,
     bestFor: 'Growing private schools that want daily operations in one place',
-    supportNote: 'Recommended for the founder pilot after the free period.',
+    supportNote: 'A common choice after the founder pilot free period.',
   },
   {
     plan: 'Pro',
@@ -230,8 +230,8 @@ const pricingCards = [
 
 const onboardingSteps = [
   {
-    title: 'Request a demo',
-    body: 'Tell us about your school and what you want to evaluate in Uthaan.',
+    title: 'Request a demo or pilot',
+    body: 'Tell us about your school and whether you want a demo first or founder pilot consideration.',
   },
   {
     title: 'We set up your school',
@@ -1003,7 +1003,7 @@ export default function LandingPage() {
 
         <div className={styles.heroButtons}>
           <Link href="/demo" className={styles.btnPrimary}>
-            Request a demo
+            Request demo or founder pilot
           </Link>
           <a href="#features" className={styles.btnSecondary}>
             See features
@@ -1260,7 +1260,7 @@ export default function LandingPage() {
           Ready to move your school onto one platform?
         </span>
         <Link href="/demo" className={styles.btnPrimary}>
-          Request a demo
+          Request demo or founder pilot
         </Link>
       </div>
 
@@ -1394,22 +1394,28 @@ export default function LandingPage() {
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
-          Start with 2 months free. For selected early schools, Uthaan begins with a guided pilot:
-          Rs. 20,000 setup, 2 months free, then a monthly plan that fits your school.
+          Start with 2 months free. For the first 5 selected schools, Uthaan begins with a
+          guided pilot: Rs. 20,000 setup, 2 months free, then a monthly plan that fits your
+          school.
         </p>
-        <div className={styles.pricingPilotNote}>There is no self-serve signup yet — your school is set up with guided onboarding.</div>
+        <div className={styles.pricingPilotNote}>
+          Use the demo or founder pilot request form — there is no self-serve signup yet, so your
+          school is reviewed and set up with guided onboarding.
+        </div>
         <div className={styles.founderPilotBox}>
           <div>
             <div className={styles.founderPilotEyebrow}>Founder Pilot Offer</div>
-            <div className={styles.founderPilotOffer}>Rs. 20,000 setup + 2 months free</div>
+            <div className={styles.founderPilotOffer}>
+              For the first 5 selected schools: Rs. 20,000 setup + 2 months free.
+            </div>
             <p>
               After the free pilot, continue on the plan that fits your school. Most schools
               continue on Growth at Rs. 25,000/month.
             </p>
           </div>
           <div className={styles.founderPilotSupport}>
-            We help set up your school, create admin and teacher access, support student import, and
-            guide first-week activation.
+            Spots are limited because each pilot includes guided setup, admin handoff, teacher
+            onboarding, student import support, and first-week activation help.
           </div>
         </div>
 
@@ -1466,7 +1472,7 @@ export default function LandingPage() {
                   onClick={(event) => event.stopPropagation()}
                   className={`${styles.priceCta} ${card.featured ? styles.featuredPriceCta : styles.priceCtaOutline}`}
                 >
-                  {card.plan === 'Enterprise' ? 'Talk to us' : 'Request demo'}
+                  {card.plan === 'Enterprise' ? 'Talk to us' : 'Request demo or founder pilot'}
                   <ChevronRight size={14} />
                 </Link>
               </div>
@@ -1499,12 +1505,12 @@ export default function LandingPage() {
           <div className={`${styles.sectionTag} ${styles.mono}`}>Ready to explore Uthaan?</div>
           <h2>Move your school from scattered tools to one cleaner platform</h2>
           <p>
-            Request a demo to start a guided rollout for your school, or log in if your team is
-            already using Uthaan.
+            Request a demo or founder pilot to start a guided rollout for your school, or log in
+            if your team is already using Uthaan.
           </p>
           <div className={styles.heroButtons}>
             <Link href="/demo" className={styles.btnPrimary}>
-              Request a demo
+              Request demo or founder pilot
             </Link>
             <Link href="/login" className={styles.btnSecondary}>
               Existing user login
@@ -1515,7 +1521,7 @@ export default function LandingPage() {
 
       <div className={`${styles.mobileStickyCta} ${showMobileCta ? styles.mobileStickyCtaVisible : ''}`}>
         <Link href="/demo" className={styles.mobileStickyPrimary}>
-          Request demo
+          Demo or pilot
         </Link>
         <Link href="/login" className={styles.mobileStickySecondary}>
           Existing users

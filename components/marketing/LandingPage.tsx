@@ -1394,7 +1394,7 @@ export default function LandingPage() {
         <div className={`${styles.sectionTag} ${styles.mono}`}>Pricing</div>
         <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
         <p className={styles.sectionSub}>
-          Start with 2 months free. For the first 5 selected schools, Uthaan begins with a
+          Start with 2 months free. For the first five selected schools, Uthaan begins with a
           guided pilot: Rs. 20,000 setup, 2 months free, then a monthly plan that fits your
           school.
         </p>
@@ -1406,16 +1406,17 @@ export default function LandingPage() {
           <div>
             <div className={styles.founderPilotEyebrow}>Founder Pilot Offer</div>
             <div className={styles.founderPilotOffer}>
-              For the first 5 selected schools: Rs. 20,000 setup + 2 months free.
+              Rs. 20,000 setup + 2 months free
             </div>
             <p>
-              After the free pilot, continue on the plan that fits your school. Most schools
-              continue on Growth at Rs. 25,000/month.
+              Available for the first five selected schools. After the free pilot, continue on
+              the plan that fits your school. Most schools continue on Growth at Rs.
+              25,000/month.
             </p>
           </div>
           <div className={styles.founderPilotSupport}>
-            Spots are limited because each pilot includes guided setup, admin handoff, teacher
-            onboarding, student import support, and first-week activation help.
+            Each pilot includes guided setup, admin handoff, teacher onboarding, student import
+            support, and first-week activation help.
           </div>
         </div>
 

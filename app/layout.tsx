@@ -4,6 +4,7 @@ import "./globals.css";
 import ToastProvider from "@/components/Toast";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CommandPaletteProvider } from "@/components/CommandPaletteProvider";
+import RouteTransitionIndicator from "@/components/RouteTransitionIndicator";
 import { createClient } from "@/lib/supabase/server";
 import { getSchoolContext } from "@/lib/school";
 
@@ -49,6 +50,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-[#f8f7f4] text-gray-900">
         <LanguageProvider>
           <CommandPaletteProvider initialUserCtx={initialUserCtx}>
+            <RouteTransitionIndicator />
             {children}
             <ToastProvider />
           </CommandPaletteProvider>

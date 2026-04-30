@@ -512,6 +512,21 @@ export default async function FeesPage() {
       pending: 'Pending',
     }
 
+    const totalAmount = totalDue + totalPaid
+    const paidCount = feeList.filter((fee) => fee.paid).length
+    const unpaidCount = feeList.length - paidCount
+    const overdueFees = feeList.filter((fee) => statusOf(fee) === 'overdue')
+    const pendingFees = feeList.filter((fee) => statusOf(fee) === 'pending')
+    const nextDueFee = [...pendingFees]
+      .sort((a, b) => a.due_date.localeCompare(b.due_date))[0] ?? null
+    const paidPercent = totalAmount > 0 ? Math.round((totalPaid / totalAmount) * 100) : 0
+    const currency = (amount: number) =>
+      amount.toLocaleString('en-PK', {
+        style: 'currency',
+        currency: 'PKR',
+        maximumFractionDigits: 0,
+      })
+
     return (
       <div className="uthaan-page-shell">
         <Sidebar email={user.email!} role="student" />
@@ -527,48 +542,170 @@ export default async function FeesPage() {
           </header>
 
           <main className="uthaan-page-content">
-            <div className="max-w-xl space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white rounded-xl border border-gray-100 p-4">
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+            <div className="max-w-5xl space-y-6">
+              <section className="rounded-[28px] border border-gray-200 bg-white p-5 shadow-[0_10px_34px_rgba(16,24,40,0.06)] sm:p-6">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="max-w-2xl">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#5d7a63]">
+                      Student fee statement
+                    </div>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
+                      Your school fee record
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-gray-500">
+                      Review your outstanding balance, paid fees, and fee history. For payments or
+                      corrections, please contact the school office.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#6fcf6f]/25 bg-[#f4fbf6] px-4 py-3">
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-[#5d7a63]">
+                      Current term
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-[#1a2e1a]">
+                      {CURRENT_TERM}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div className={`rounded-2xl border p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ${totalDue > 0 ? 'border-amber-200 bg-amber-50/70' : 'border-gray-200 bg-white'}`}>
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
                     Outstanding
                   </div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {totalDue.toLocaleString('en-PK', {
-                      style: 'currency',
-                      currency: 'PKR',
-                      maximumFractionDigits: 0,
-                    })}
+                  <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+                    {currency(totalDue)}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {unpaidCount} unpaid record{unpaidCount === 1 ? '' : 's'}
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-gray-100 p-4">
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+                <div className="rounded-2xl border border-green-200 bg-green-50/70 p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
                     Paid
                   </div>
-                  <div className="text-2xl font-semibold text-green-700">
-                    {totalPaid.toLocaleString('en-PK', {
-                      style: 'currency',
-                      currency: 'PKR',
-                      maximumFractionDigits: 0,
-                    })}
+                  <div className="mt-2 text-2xl font-semibold tracking-tight text-green-700">
+                    {currency(totalPaid)}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {paidCount} paid record{paidCount === 1 ? '' : 's'}
                   </div>
                 </div>
-              </div>
+
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                    Payment progress
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold tracking-tight text-gray-900">
+                    {paidPercent}%
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+                    <div
+                      className="h-full rounded-full bg-[#2e9e5b] transition-[width] duration-500"
+                      style={{ width: `${paidPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className={`rounded-2xl border p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ${overdueFees.length > 0 ? 'border-red-200 bg-red-50/70' : 'border-gray-200 bg-white'}`}>
+                  <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                    Status
+                  </div>
+                  <div className={`mt-2 text-2xl font-semibold tracking-tight ${overdueFees.length > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                    {overdueFees.length > 0 ? `${overdueFees.length} overdue` : 'On track'}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {nextDueFee ? `Next due: ${nextDueFee.term}` : 'No upcoming unpaid fee'}
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">Total summary</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Your fees recorded by the school office.
+                      </p>
+                    </div>
+                    <div className="rounded-full border border-gray-200 bg-[#fafcf9] px-3 py-1 text-xs font-medium text-gray-600">
+                      {feeList.length} fee record{feeList.length === 1 ? '' : 's'}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                        Total recorded
+                      </div>
+                      <div className="mt-2 text-lg font-semibold text-gray-900">
+                        {currency(totalAmount)}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                        Next due date
+                      </div>
+                      <div className="mt-2 text-lg font-semibold text-gray-900">
+                        {nextDueFee
+                          ? new Date(nextDueFee.due_date).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })
+                          : '—'}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-gray-200 bg-[#fafcf9] px-4 py-4">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                        Overdue items
+                      </div>
+                      <div className={`mt-2 text-lg font-semibold ${overdueFees.length > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                        {overdueFees.length}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#6fcf6f]/25 bg-[#f4fbf6] p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                  <h3 className="text-sm font-semibold text-[#1a2e1a]">School office note</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#46614c]">
+                    This page shows the records entered by your school. If a payment is missing,
+                    please share your receipt or confirmation with the school office so they can
+                    update your fee record.
+                  </p>
+                </div>
+              </section>
 
               {feeList.length === 0 ? (
-                <div className="bg-white rounded-xl border border-gray-100 px-5 py-12 text-center text-sm text-gray-400">
-                  No fees recorded
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-14 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#6fcf6f]/10 text-[#1a7a4a]">
+                    Rs.
+                  </div>
+                  <div className="mt-4 text-sm font-semibold text-gray-900">No fees recorded yet</div>
+                  <div className="mx-auto mt-1 max-w-md text-sm leading-6 text-gray-500">
+                    When your school office adds a fee record, it will appear here with the due
+                    date, amount, and payment status.
+                  </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+                  <div className="border-b border-gray-100 px-5 py-4">
+                    <h3 className="text-sm font-semibold text-gray-900">Fee history</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Each fee record is shown with its due date, amount, and current status.
+                    </p>
+                  </div>
                   {feeList.map((fee, i) => {
                     const status = statusOf(fee)
 
                     return (
                       <div
                         key={fee.id}
-                        className={`px-5 py-4 flex items-center justify-between gap-3 ${
+                        className={`px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ${
                           i < feeList.length - 1 ? 'border-b border-gray-50' : ''
                         }`}
                       >
@@ -599,13 +736,9 @@ export default async function FeesPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap sm:text-right">
                           <span className="text-sm font-semibold text-gray-900">
-                            {fee.amount?.toLocaleString('en-PK', {
-                              style: 'currency',
-                              currency: 'PKR',
-                              maximumFractionDigits: 0,
-                            })}
+                            {currency(fee.amount ?? 0)}
                           </span>
                           <span
                             className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${STATUS_BADGE[status]}`}
@@ -616,7 +749,7 @@ export default async function FeesPage() {
                       </div>
                     )
                   })}
-                </div>
+                </section>
               )}
             </div>
           </main>

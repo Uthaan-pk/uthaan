@@ -24,6 +24,46 @@ body {
   line-height: 1.5;
 }
 
+.uthaan-route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  height: 3px;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.uthaan-route-progress-settling {
+  opacity: 0;
+}
+
+.uthaan-route-progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #0f5b3a, #2e9e5b, #6fcf6f);
+  box-shadow: 0 0 18px rgb(46 158 91 / 45%);
+  animation: uthaan-route-progress 1200ms cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes uthaan-route-progress {
+  0% {
+    transform: scaleX(0.08);
+    opacity: 0.78;
+  }
+  55% {
+    transform: scaleX(0.68);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(0.94);
+    opacity: 0.86;
+  }
+}
+
 @layer components {
   .uthaan-page-shell {
     @apply flex h-screen overflow-hidden bg-[#f8f7f4];

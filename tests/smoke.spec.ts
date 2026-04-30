@@ -7,6 +7,19 @@
 import { test, expect } from '@playwright/test'
 import { authFile } from './helpers/auth'
 
+async function expectAuthenticatedRoute(page: import('@playwright/test').Page, path: RegExp, role: string) {
+  await page.waitForLoadState('domcontentloaded')
+  await page.waitForTimeout(500)
+
+  expect(
+    page.url(),
+    `${role} auth state is invalid: expected ${path} but reached ${page.url()}. ` +
+      'Check Playwright global setup and GitHub Actions TEST_* secrets.'
+  ).not.toMatch(/\/login(?:\?|$)/)
+
+  await expect(page, `${role} should stay on the expected authenticated route`).toHaveURL(path)
+}
+
 // ── 1. Teacher can see and use the attendance save button ─────────────────
 
 test('teacher attendance: save button visible', async ({ browser }) => {
@@ -16,7 +29,7 @@ test('teacher attendance: save button visible', async ({ browser }) => {
   await page.goto('/attendance')
 
   // If auth failed in globalSetup the page redirects to /login — fail fast
-  await expect(page).not.toHaveURL(/\/login/, { timeout: 5000 })
+  await expectAuthenticatedRoute(page, /\/attendance/, 'teacher')
 
   // If teacher has no timetable-linked classes the student list is empty — skip
   if ((await page.getByText(/no students found/i).count()) > 0) {
@@ -40,7 +53,7 @@ test('student quiz result: state persists after reload', async ({ browser }) => 
   const page = await ctx.newPage()
 
   await page.goto('/quizzes')
-  await expect(page).not.toHaveURL(/\/login/, { timeout: 5000 })
+  await expectAuthenticatedRoute(page, /\/quizzes/, 'student')
 
   // Find the first quiz link on the page
   const firstQuizLink = page.locator('a[href*="/quizzes/"]').first()
@@ -85,12 +98,7 @@ test('admin attendance: read-only notice shown, no save button', async ({ browse
 
   await page.goto('/attendance')
 
-  // Skip gracefully if the page is not accessible (auth failed, redirected away)
-  if (!page.url().includes('/attendance')) {
-    await ctx.close()
-    test.skip(true, 'admin attendance page not accessible')
-    return
-  }
+  await expectAuthenticatedRoute(page, /\/attendance/, 'admin')
 
   // We test behaviour, not copy: save button must be absent
   await expect(
@@ -186,6 +194,7 @@ test('role permission: teacher can save attendance, admin cannot', async ({ brow
   const teacherContext = await browser.newContext({ storageState: authFile('teacher') })
   const teacherPage = await teacherContext.newPage()
   await teacherPage.goto('/attendance')
+  await expectAuthenticatedRoute(teacherPage, /\/attendance/, 'teacher')
 
   // Skip if teacher has no classes (same guard as existing test)
   const saveBtn = teacherPage.getByRole('button', { name: /save attendance/i })
@@ -204,6 +213,7 @@ test('role permission: teacher can save attendance, admin cannot', async ({ brow
   const adminContext = await browser.newContext({ storageState: authFile('admin') })
   const adminPage = await adminContext.newPage()
   await adminPage.goto('/attendance')
+  await expectAuthenticatedRoute(adminPage, /\/attendance/, 'admin')
 
   await expect(adminPage.getByRole('button', { name: /save attendance/i }))
     .not.toBeVisible({ timeout: 5000 })
@@ -216,6 +226,7 @@ test('role permission: teacher can save attendance, admin cannot', async ({ brow
 test('role visibility: student cannot see admin nav items', async ({ page }) => {
   // Uses student storageState already configured
   await page.goto('/dashboard')
+  await expectAuthenticatedRoute(page, /\/dashboard/, 'student')
 
   // Student should never see these routes in their nav
   await expect(page.getByRole('link', { name: /student management/i }))

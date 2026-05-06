@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Building2, ChevronDown, ChevronRight, CheckCircle2, Minus, Clock, Lock, Users, GraduationCap, LifeBuoy } from 'lucide-react'
+import { Building2, ChevronDown, ChevronRight, CheckCircle2, Minus, Clock, Users, GraduationCap, LifeBuoy } from 'lucide-react'
 import { Instrument_Serif, JetBrains_Mono, Sora } from 'next/font/google'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useInView, useReducedMotion } from '@/lib/motion'
@@ -29,7 +29,7 @@ const featureCards = [
   {
     key: 'students',
     title: 'Student management',
-    body: 'Add, archive, and bulk import students via CSV. Full profiles with class, roll number, and parent links.',
+    body: 'Find any student\'s class, roll number, parent link, and school record in seconds — no more digging through registers.',
     previewEyebrow: 'Student records',
     previewTitle: 'Keep profiles, class placement, and parent links organized',
     previewSummary: 'Bring imported student records into one clean directory so admins can find class, roll number, and family context without digging.',
@@ -51,7 +51,7 @@ const featureCards = [
   {
     key: 'fees',
     title: 'Fee management',
-    body: 'Assign fees, mark paid/unpaid, view defaulter list. Full fee ledger per student — no separate software needed.',
+    body: 'Know exactly who owes what before the week ends — no phone calls to the accountant, no notebook confusion.',
     previewEyebrow: 'Fee ledger',
     previewTitle: 'Track paid, unpaid, and overdue fees in one view',
     previewSummary: 'Give school admins a structured ledger instead of fee notebooks, with cleaner student-level history and defaulter visibility.',
@@ -71,7 +71,7 @@ const featureCards = [
   {
     key: 'attendance',
     title: 'Attendance marking',
-    body: "Mark present, absent, or late per class. Auto-filtered to each teacher's own classes. No cross-class confusion.",
+    body: 'Every class, every day, logged and searchable. When a parent disputes an absence, you have the record.',
     previewEyebrow: 'Attendance workflow',
     previewTitle: 'Mark attendance class by class without confusion',
     previewSummary: 'Teachers see the right class list, mark attendance quickly, and give admins cleaner daily oversight across the school.',
@@ -91,7 +91,7 @@ const featureCards = [
   {
     key: 'marks',
     title: 'Marks and gradebook',
-    body: 'Enter marks manually or import via CSV. Auto-calculated results, class averages, and downloadable report cards.',
+    body: 'Enter marks, calculate results, and prepare report cards without rebuilding everything in Excel.',
     previewEyebrow: 'Gradebook',
     previewTitle: 'Move from scattered marks sheets to a cleaner gradebook',
     previewSummary: 'Record marks, calculate averages, and prepare report cards from the same workflow instead of stitching together spreadsheets.',
@@ -111,7 +111,7 @@ const featureCards = [
   {
     key: 'timetable',
     title: 'Timetable builder',
-    body: 'Set periods per class per day. Teachers see only their own classes. No scheduling conflicts, no confusion.',
+    body: 'Set periods by class and day so teachers know exactly where they need to be and what they are teaching.',
     previewEyebrow: 'School timetable',
     previewTitle: 'Build a timetable that stays readable for staff',
     previewSummary: 'Keep periods, classes, and teacher allocation in one structured schedule so daily operations are easier to trust.',
@@ -133,7 +133,7 @@ const featureCards = [
   {
     key: 'audit',
     title: 'Audit trail',
-    body: 'Every sensitive action logged — marks, fees, attendance, role changes. Full accountability for your school.',
+    body: 'Track sensitive changes to fees, marks, attendance, and roles so your school has accountability when it matters.',
     previewEyebrow: 'Accountability',
     previewTitle: 'Keep a clean record of sensitive school actions',
     previewSummary: 'When someone edits marks, changes fee status, or updates a role, the school keeps an audit trail for accountability.',
@@ -156,19 +156,19 @@ const aiCards = [
     status: 'Live',
     badgeClass: styles.live,
     title: 'Report card comment generator',
-    body: 'Select a class and generate editable report card comments for students in seconds. Built for teacher and admin workflows inside the app.',
+    body: 'Teachers generate editable first-draft report comments in seconds, then review and adjust before using them. Staff-only.',
   },
   {
     status: 'Live',
     badgeClass: styles.live,
     title: 'Attendance alert summaries',
-    body: 'Attendance risk summaries run inside the app for school staff, helping admins spot repeated absence patterns early.',
+    body: 'Staff spot repeated attendance issues earlier without manually scanning registers. Runs inside the app for admins.',
   },
   {
     status: 'Live',
     badgeClass: styles.live,
     title: 'Smart navigation search',
-    body: 'Staff can type tasks like attendance, fees, or results and jump directly to the right page without hunting through menus.',
+    body: 'Staff jump directly to attendance, fees, results, or student records by typing — no hunting through menus.',
   },
   {
     status: 'Coming soon',
@@ -224,12 +224,12 @@ const pricingCards = [
       { name: 'AI attendance alerts',     plan: 'Growth+' },
       { name: 'Advanced reporting',       plan: 'Pro+' },
     ],
-    bestFor: 'Small schools starting digital operations',
+    bestFor: 'Core school setup for smaller schools moving away from registers and Excel.',
     supportNote: 'A school visit and first-week check-in are included.',
   },
   {
     plan: 'Growth',
-    amount: 'Rs. 25,000',
+    amount: 'Rs. 30,000',
     period: '/ month',
     setupFee: 'One-time setup: Rs. 35,000',
     students: 'Up to 700 students',
@@ -243,17 +243,17 @@ const pricingCards = [
       { name: 'Additional training sessions',   plan: 'Pro+' },
     ],
     featured: true,
-    bestFor: 'Growing private schools that want daily operations in one place',
+    bestFor: 'For schools ready to manage daily operations, parent visibility, and staff AI support.',
     supportNote: 'Best for most private schools that want more staff training time.',
   },
   {
     plan: 'Pro',
-    amount: 'Rs. 50,000',
+    amount: 'Rs. 65,000',
     period: '/ month',
     setupFee: 'One-time setup: Rs. 60,000',
     students: 'Up to 1,500 students',
     features: ['Everything in Growth', 'Faster support', 'Extra training sessions', 'More help for large schools', 'All AI tools with higher limits', 'Better school reports', 'Custom report card formats'],
-    bestFor: 'Larger schools needing more control and support',
+    bestFor: 'For larger schools that need higher limits, more support, and deeper operational control.',
     supportNote: 'Better for larger schools that need faster help and more training.',
   },
   {
@@ -263,27 +263,54 @@ const pricingCards = [
     setupFee: 'Setup scoped with your school',
     students: '1,500+ students',
     features: ['Support for multiple branches', 'Launch planning with your team', 'Senior staff training', 'Custom school needs', 'Custom reports', 'Future integration options'],
-    bestFor: 'School groups and multi-campus institutions',
+    bestFor: 'For large campuses and school groups that need custom onboarding and support.',
     supportNote: 'For school groups that need branch-level planning and senior staff training.',
   },
 ]
 
 const onboardingSteps = [
   {
-    title: 'Request a demo or pilot',
-    body: 'Tell us about your school and whether you want a demo first or founder pilot consideration.',
+    title: 'Request a demo',
+    body: 'Tell us about your school, student count, and the problems you want to solve first.',
   },
   {
-    title: 'We set up your school',
-    body: 'Our team prepares your school workspace and applies the right plan manually.',
+    title: 'We set up your workspace',
+    body: 'We help configure your school, roles, students, classes, and starting workflows.',
   },
   {
-    title: 'You receive admin and teacher logins',
-    body: 'Your staff gets access details after setup so onboarding stays controlled and clean.',
+    title: 'Your team gets trained',
+    body: 'Admins, teachers, and accountants learn only the parts they need to use.',
   },
   {
-    title: 'Your school starts using Uthaan',
-    body: 'You begin with guided onboarding support instead of being left to figure it out alone.',
+    title: 'You go live with support',
+    body: 'Your school starts using Uthaan with guided support from our team during rollout.',
+  },
+]
+
+const faqItems = [
+  {
+    question: 'Will my staff actually use this?',
+    answer: 'Yes. Uthaan is designed around guided onboarding. We help train admins, teachers, and accountants so each person only sees the tools they need.',
+  },
+  {
+    question: 'What happens to our data if we stop using Uthaan?',
+    answer: 'Your school owns its data. Student records, fees, attendance, and results can be exported in a standard format.',
+  },
+  {
+    question: 'Is our school\'s financial data secure?',
+    answer: 'Uthaan uses role-based access so staff only see what they are allowed to see. Fee records stay inside the school workspace instead of being scattered across notebooks, Excel files, or personal WhatsApp chats.',
+  },
+  {
+    question: 'We\'re a small school. Is Uthaan right for us?',
+    answer: 'Yes. Uthaan is especially useful for schools still managing students, fees, attendance, and announcements through registers, Excel, and WhatsApp.',
+  },
+  {
+    question: 'Do parents need to download an app?',
+    answer: 'No. Parents and students access Uthaan through a browser on any phone. Nothing to download.',
+  },
+  {
+    question: 'We\'ve tried software before and it failed. Why is this different?',
+    answer: 'Most software fails because schools are left to figure it out alone. Uthaan uses hands-on setup and role-based training so the rollout is guided from the first day.',
   },
 ]
 
@@ -1027,31 +1054,38 @@ export default function LandingPage() {
           <rect width="100%" height="100%" filter="url(#hero-grain)" />
         </svg>
 
-        <div className={`${styles.heroBadge} ${styles.mono}`}>Pilot programme open — April 2026</div>
+        <div className={`${styles.heroBadge} ${styles.mono}`}>Guided pilot onboarding now open</div>
 
         <h1>
-          School software, built for
+          Built for the school that
           <br />
-          the schools{' '}
-          <em className={styles.serifItalic}>we know.</em>
+          still runs on{' '}
+          <em className={styles.serifItalic}>WhatsApp.</em>
         </h1>
 
         <p>
-          Uthaan is a calmer operating system for Pakistani private schools — attendance, fees,
-          results, announcements, and staff AI in one role-aware platform.
+          Uthaan replaces registers, WhatsApp chains, and Excel sheets with one secure system
+          for attendance, fees, marks, announcements, and staff AI — built for Pakistani private schools.
         </p>
 
         <div className={styles.heroButtons}>
           <Link href="/demo" className={styles.btnPrimary}>
-            Request demo or founder pilot
+            Request a Demo — We&apos;ll Call You Back
           </Link>
-          <a href="#features" className={styles.btnSecondary}>
-            See features
+          <a href="#onboarding" className={styles.btnSecondary}>
+            See how it works
           </a>
         </div>
 
+        <p className={styles.heroTrustLine}>
+          Guided setup included &nbsp;·&nbsp; Priced in PKR &nbsp;·&nbsp; Built for Pakistani private schools
+        </p>
+
         <div className={styles.heroDashWrap}>
           <HeroDashboardCard />
+          <p className={styles.heroDashCaption}>
+            Your school&apos;s daily operation — attendance, fees, results, and announcements — visible at a glance.
+          </p>
         </div>
       </div>
 
@@ -1074,10 +1108,31 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* ── Problem section ────────────────────────────────────────────────── */}
+      <section className={`${styles.problemSection} ${styles.fadeIn}`}>
+        <div className={`${styles.sectionTag} ${styles.mono}`}>The current reality</div>
+        <h2 className={styles.sectionTitle}>This is how most Pakistani private schools actually run right now.</h2>
+        <div className={styles.problemGrid}>
+          <div className={styles.problemCard}>
+            <div className={styles.problemCardTitle}>The Register Problem</div>
+            <p className={styles.problemCardBody}>Attendance is marked on paper registers. Teachers manage their own copies. When a parent asks about last Tuesday, no one has a clean answer.</p>
+          </div>
+          <div className={styles.problemCard}>
+            <div className={styles.problemCardTitle}>The Fee Problem</div>
+            <p className={styles.problemCardBody}>Fee collection is tracked in notebooks or Excel sheets. No one knows who is behind until the owner asks. By then, the conversation is already awkward.</p>
+          </div>
+          <div className={styles.problemCard}>
+            <div className={styles.problemCardTitle}>The WhatsApp Problem</div>
+            <p className={styles.problemCardBody}>Parent communication runs through personal WhatsApp accounts and group chats. There is no structure, no record, and no accountability.</p>
+          </div>
+        </div>
+        <p className={styles.problemTransition}>Uthaan replaces all of it with one role-aware platform built around how your school actually works.</p>
+      </section>
+
       <section id="features" className={`${styles.section} ${styles.fadeIn}`}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>Core platform</div>
-        <h2 className={styles.sectionTitle}>Everything your school needs in one place</h2>
-        <p className={styles.sectionSub}>No more juggling Excel sheets, WhatsApp groups, and paper registers.</p>
+        <h2 className={styles.sectionTitle}>What Uthaan does for your school</h2>
+        <p className={styles.sectionSub}>Attendance, fees, marks, announcements, and staff AI — in one role-aware platform. No more juggling registers, WhatsApp, and Excel.</p>
 
         <div className={styles.featureExperience}>
           <div className={styles.featureGrid}>
@@ -1144,10 +1199,9 @@ export default function LandingPage() {
         onPointerDown={() => setRoleAutoPlay(false)}
       >
         <div className={`${styles.sectionTag} ${styles.mono}`}>Role-based product preview</div>
-        <h2 className={styles.sectionTitle}>Explore how each role experiences the platform</h2>
+        <h2 className={styles.sectionTitle}>Built for every person in your school — not one crowded screen</h2>
         <p className={styles.sectionSub}>
-          Uthaan is not one crowded screen for everyone. Each role sees a cleaner layer built for the
-          work they actually need to do.
+          Admins see what admins need. Teachers see only their classes. Parents see only their child. The system knows who you are.
         </p>
 
         <div className={styles.roleStoryWrap}>
@@ -1199,10 +1253,10 @@ export default function LandingPage() {
       <div id="ai" className={styles.aiSection}>
         <div className={`${styles.aiInner} ${styles.fadeIn}`}>
           <div className={`${styles.sectionTag} ${styles.mono}`}>Artificial intelligence</div>
-          <h2 className={styles.sectionTitle}>AI that actually saves teachers time</h2>
+          <h2 className={styles.sectionTitle}>AI tools built for staff, not students</h2>
           <p className={styles.sectionSub}>
-            Powered by Anthropic&apos;s Claude. These tools are designed for staff and admin use inside
-            the app, while students and parents stay out of AI control surfaces.
+            Uthaan&apos;s AI features help school staff save time while keeping human review in control.
+            Students and parents do not interact with AI in Uthaan.
           </p>
 
           <div className={styles.aiGrid}>
@@ -1218,6 +1272,10 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+
+          <p className={styles.aiTrustNote}>
+            AI features are staff-only. School data is not used to train AI models.
+          </p>
         </div>
       </div>
 
@@ -1274,10 +1332,9 @@ export default function LandingPage() {
 
       <section id="onboarding" className={`${styles.section} ${styles.fadeIn}`}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>How onboarding works</div>
-        <h2 className={styles.sectionTitle}>A simple rollout for school owners</h2>
+        <h2 className={styles.sectionTitle}>From first call to first school day on Uthaan — guided by our team</h2>
         <p className={styles.sectionSub}>
-          Uthaan is not self-serve for new schools yet. We help you get set up properly before your
-          team starts using the system.
+          Uthaan uses guided onboarding so your school is set up correctly before launch. You are not left to figure it out alone.
         </p>
 
         <div className={styles.onboardingGrid}>
@@ -1297,7 +1354,7 @@ export default function LandingPage() {
 
       <div className={styles.midpageCta}>
         <span className={styles.midpageCtaText}>
-          Ready to move your school onto one platform?
+          Your school could be set up in under two weeks.
         </span>
         <Link href="/demo" className={styles.btnPrimary}>
           Request demo or founder pilot
@@ -1306,15 +1363,15 @@ export default function LandingPage() {
 
       <section id="compare" className={`${styles.section} ${styles.fadeIn}`}>
         <div className={`${styles.sectionTag} ${styles.mono}`}>Comparison</div>
-        <h2 className={styles.sectionTitle}>Why not Google Classroom or Canvas?</h2>
+        <h2 className={styles.sectionTitle}>Google Classroom was not built for your school office.</h2>
         <p className={styles.sectionSub}>
-          International platforms were built for Western schools. Your school has different needs.
+          International classroom tools can help with assignments, but they do not manage PKR fee ledgers, school roles, attendance records, parent visibility, and local onboarding the way Uthaan does.
         </p>
 
         <div className={styles.compareLead}>
           <div className={styles.compareLeadCard}>
             <div className={`${styles.sectionTag} ${styles.mono}`}>Built for local realities</div>
-            <h3>Uthaan is trying to solve the full school workflow, not just classroom posting</h3>
+            <h3>Uthaan handles the full school workflow — not just classroom posting</h3>
             <p>
               Fees, attendance, results, announcements, school roles, and staff-facing AI belong in
               the same product story for Pakistani private schools.
@@ -1439,8 +1496,7 @@ export default function LandingPage() {
           school.
         </p>
         <div className={styles.pricingPilotNote}>
-          Use the demo or founder pilot request form — there is no self-serve signup yet, so your
-          school is reviewed and set up with guided onboarding.
+          All schools start with a demo and guided setup — every school is personally reviewed and onboarded by our team.
         </div>
         <div className={styles.founderPilotBox}>
           <div>
@@ -1451,7 +1507,7 @@ export default function LandingPage() {
             <p>
               Available for the first five selected schools. After the free pilot, continue on
               the plan that fits your school. Most schools continue on Growth at Rs.
-              25,000/month.
+              30,000/month.
             </p>
           </div>
           <div className={styles.founderPilotSupport}>
@@ -1517,20 +1573,7 @@ export default function LandingPage() {
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                {'lockedFeatures' in card && card.lockedFeatures && card.lockedFeatures.length > 0 && (
-                  <>
-                    <div className={styles.lockedFeaturesSep} aria-hidden="true" />
-                    <ul className={styles.priceFeaturesLocked}>
-                      {card.lockedFeatures.map((feat) => (
-                        <li key={feat.name} className={styles.lockedFeatureItem}>
-                          <Lock size={11} className={styles.lockIcon} aria-hidden="true" />
-                          <span className={styles.lockedFeatureName}>{feat.name}</span>
-                          <span className={styles.lockedBadge}>{feat.plan}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
+                {/* Locked features removed — pricing only shows what is included */}
                 <div className={`${styles.planContext} ${isExpanded ? styles.planContextExpanded : ''}`}>
                   <div className={styles.planContextSep} />
                   <div className={styles.planContextBlock}>
@@ -1571,22 +1614,36 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── FAQ section ─────────────────────────────────────────────────────── */}
+      <section className={`${styles.section} ${styles.faqSection} ${styles.fadeIn}`}>
+        <div className={`${styles.sectionTag} ${styles.mono}`}>Common questions</div>
+        <h2 className={styles.sectionTitle}>Questions school owners ask before signing up</h2>
+        <div className={styles.faqGrid}>
+          {faqItems.map((item) => (
+            <div key={item.question} className={styles.faqCard}>
+              <div className={styles.faqQuestion}>{item.question}</div>
+              <p className={styles.faqAnswer}>{item.answer}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div id="final-cta" className={`${styles.ctaSection} ${styles.fadeIn}`}>
         <div className={styles.ctaBox}>
-          <div className={`${styles.sectionTag} ${styles.mono}`}>Ready to explore Uthaan?</div>
-          <h2>Move your school from scattered tools to one cleaner platform</h2>
+          <div className={`${styles.sectionTag} ${styles.mono}`}>Get started</div>
+          <h2>Your school deserves better than Excel and WhatsApp.</h2>
           <p>
-            Request a demo or founder pilot to start a guided rollout for your school, or log in
-            if your team is already using Uthaan.
+            Request a demo and we&apos;ll show you how Uthaan can fit your school&apos;s student count, roles, and daily workflow.
           </p>
           <div className={styles.heroButtons}>
             <Link href="/demo" className={styles.btnPrimary}>
-              Request demo or founder pilot
+              Request a Demo — It&apos;s Free
             </Link>
             <Link href="/login" className={styles.btnSecondary}>
               Existing user login
             </Link>
           </div>
+          <p className={styles.ctaSmallNote}>No commitment. A real conversation with our team.</p>
         </div>
       </div>
 
@@ -1600,7 +1657,19 @@ export default function LandingPage() {
       </div>
 
       <footer ref={footerRef} className={styles.footer}>
-        <p>Uthaan — School management, simplified &nbsp;·&nbsp; uthaan-one.vercel.app</p>
+        <div className={styles.footerInner}>
+          <div className={styles.footerBrand}>
+            <span>Uthaan</span>
+            <span className={styles.footerTagline}>School management, simplified</span>
+          </div>
+          <nav className={styles.footerLinks} aria-label="Footer navigation">
+            <Link href="/demo">Request a demo</Link>
+            <Link href="/login">Existing users</Link>
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
+            <a href="mailto:hello@uthaan.app">Contact</a>
+          </nav>
+        </div>
       </footer>
     </div>
   )

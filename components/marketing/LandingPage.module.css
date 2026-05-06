@@ -5852,3 +5852,229 @@
     width: min(100%, 820px);
   }
 }
+
+/* ── Hero trust line ──────────────────────────────────────────────────────── */
+
+.heroTrustLine {
+  position: relative;
+  z-index: 2;
+  margin: 0.85rem 0 0;
+  color: var(--gray);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+}
+
+/* ── Hero dashboard caption ───────────────────────────────────────────────── */
+
+.heroDashCaption {
+  position: relative;
+  z-index: 2;
+  margin: 0.6rem 0 0;
+  color: var(--gray);
+  font-size: 12px;
+  text-align: center;
+  letter-spacing: 0.01em;
+  opacity: 0.75;
+}
+
+/* ── Problem section ──────────────────────────────────────────────────────── */
+
+.problemSection {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.problemGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin: 2.5rem 0 2.25rem;
+  text-align: left;
+}
+
+.problemCard {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.015));
+  border: 1px solid rgb(255 255 255 / 0.07);
+  border-radius: 18px;
+  padding: 1.5rem 1.4rem;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.1);
+  transition: border-color 0.2s;
+}
+
+.problemCard:hover {
+  border-color: rgb(255 255 255 / 0.13);
+}
+
+.problemCardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-light);
+  margin-bottom: 0.65rem;
+  font-family: var(--font-landing-mono);
+  letter-spacing: 0.03em;
+}
+
+.problemCardBody {
+  color: var(--gray);
+  font-size: 14.5px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.problemTransition {
+  color: var(--white);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 620px;
+}
+
+/* ── AI trust note ────────────────────────────────────────────────────────── */
+
+.aiTrustNote {
+  text-align: center;
+  color: var(--gray);
+  font-size: 13px;
+  margin: 1.75rem auto 0;
+  max-width: 540px;
+  opacity: 0.8;
+  line-height: 1.55;
+}
+
+/* ── FAQ section ──────────────────────────────────────────────────────────── */
+
+.faqSection {
+  /* Uses .section base styles; no extra overrides needed */
+}
+
+.faqGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.faqCard {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.015));
+  border: 1px solid rgb(255 255 255 / 0.07);
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.faqCard:hover {
+  border-color: rgb(255 255 255 / 0.13);
+}
+
+.faqQuestion {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 0.55rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.faqAnswer {
+  color: var(--gray);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Final CTA small note ─────────────────────────────────────────────────── */
+
+.ctaSmallNote {
+  margin: 1rem 0 0;
+  color: var(--gray);
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+
+.footerInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.footerBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  font-family: var(--font-instrument-serif), Georgia, serif;
+}
+
+.footerTagline {
+  color: var(--gray);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.footerLinks {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footerLinks a {
+  color: var(--gray);
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.footerLinks a:hover {
+  color: var(--white);
+}
+
+/* ── Responsive: problem + FAQ + footer ───────────────────────────────────── */
+
+@media (max-width: 767px) {
+  .problemGrid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .problemSection {
+    padding: 3rem 1.25rem;
+  }
+
+  .faqGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .footerBrand {
+    flex-direction: column;
+    gap: 0.2rem;
+    text-align: center;
+  }
+
+  .footerLinks {
+    gap: 0.85rem 1.1rem;
+  }
+
+  .heroTrustLine {
+    font-size: 12px;
+    padding: 0 1rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .problemGrid {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+}

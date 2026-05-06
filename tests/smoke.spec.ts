@@ -223,8 +223,10 @@ test('role permission: teacher can save attendance, admin cannot', async ({ brow
 
 // ── 7. Role visibility: student cannot see admin nav items ────────────────
 
-test('role visibility: student cannot see admin nav items', async ({ page }) => {
-  // Uses student storageState already configured
+test('role visibility: student cannot see admin nav items', async ({ browser }) => {
+  const ctx = await browser.newContext({ storageState: authFile('student') })
+  const page = await ctx.newPage()
+
   await page.goto('/dashboard')
   await expectAuthenticatedRoute(page, /\/dashboard/, 'student')
 
@@ -235,4 +237,6 @@ test('role visibility: student cannot see admin nav items', async ({ page }) => 
     .not.toBeVisible()
   await expect(page.getByRole('link', { name: /leave management/i }))
     .not.toBeVisible()
+
+  await ctx.close()
 })

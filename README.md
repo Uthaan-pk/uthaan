@@ -60,6 +60,6 @@ Uthaan is actively developed and has been tested in a live school environment wi
 
 ## Author
 
-**Pasha Chaudhry**  
+**Asad Pasha Chaudhry**  
 Computer Science @ UC San Diego  
 Founder & Full-Stack Engineer, Uthaan

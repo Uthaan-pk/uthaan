@@ -40,3 +40,26 @@ Install dependencies:
 
 ```bash
 npm install
+```
+
+Run the development server:
+
+```bash
+npm run dev
+```
+
+Type-check the project:
+
+```bash
+npx tsc --noEmit
+```
+
+## Status
+
+Uthaan is actively developed and has been tested in a live school environment with real users and stakeholder feedback.
+
+## Author
+
+**Pasha Chaudhry**  
+Computer Science @ UC San Diego  
+Founder & Full-Stack Engineer, Uthaan

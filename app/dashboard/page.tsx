@@ -665,6 +665,24 @@ function LaunchDashboard({
   )
 }
 
+function DashboardUnavailable() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#f8f7f4] p-6">
+      <div className="max-w-md text-center">
+        <h1 className="text-xl font-semibold text-gray-900">Dashboard unavailable</h1>
+        <p className="mt-3 text-sm text-gray-600">
+          We couldn’t load your school. Please try again later or contact your school administrator.
+        </p>
+        <form action="/auth/signout" method="post" className="mt-6">
+          <button type="submit" className="text-sm font-medium text-[#1a2e1a] underline">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </main>
+  )
+}
+
 export default async function DashboardPage() {
   const cookieStore = await cookies()
   const cookieLang = cookieStore.get('uthaan_lang')?.value
@@ -1462,7 +1480,11 @@ export default async function DashboardPage() {
         ? cookieStore.get('impersonate_school_id')?.value ?? null
         : (roleData?.school_id as string | null) ?? null
 
-    if (!dashboardSchoolId) redirect('/dashboard')
+    // A redirect to this same route repeats indefinitely while school context is unavailable.
+    if (!dashboardSchoolId) {
+      console.warn('[dashboard] unavailable', { reason: 'MISSING_SCHOOL_ID', hasSchoolId: false })
+      return <DashboardUnavailable />
+    }
 
     const adminReadClient = createAdminClient()
     const [
@@ -1478,11 +1500,19 @@ export default async function DashboardPage() {
       expensesRes,
       userRolesRes,
     ] = await Promise.all([
-      adminReadClient
-        .from('schools')
-        .select('id, name, plan, slug, is_active')
-        .eq('id', dashboardSchoolId)
-        .single(),
+      (async () => {
+        try {
+          const result = await adminReadClient
+            .from('schools')
+            .select('id, name, plan, slug, is_active')
+            .eq('id', dashboardSchoolId)
+            .maybeSingle()
+          return { ...result, threw: false }
+        } catch {
+          // Never log the exception: upstream errors may contain private request details.
+          return { data: null, error: null, threw: true }
+        }
+      })(),
       adminReadClient
         .from('students')
         .select('id, name, class_num, school_id')
@@ -1533,7 +1563,14 @@ export default async function DashboardPage() {
         .eq('school_id', dashboardSchoolId),
     ])
 
-    if (schoolRes.error || !schoolRes.data) redirect('/dashboard')
+    if (schoolRes.threw || schoolRes.error || !schoolRes.data) {
+      console.warn('[dashboard] unavailable', {
+        reason: schoolRes.threw ? 'SCHOOL_LOOKUP_THROWN'
+          : schoolRes.error ? 'SCHOOL_LOOKUP_ERROR' : 'SCHOOL_NOT_FOUND',
+        hasSchoolId: true,
+      })
+      return <DashboardUnavailable />
+    }
 
     const school = schoolRes.data
     const students = studentsRes.data ?? []
